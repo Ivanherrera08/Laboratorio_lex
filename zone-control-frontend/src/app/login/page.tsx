@@ -1,18 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
-import { Lock, Mail, AlertTriangle, KeyRound, ArrowLeft, Info, Check } from 'lucide-react';
+import { Lock, Mail, AlertTriangle, KeyRound, ArrowLeft, Info, Check, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginFormContent() {
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get('error');
+  const redirectParam = searchParams.get('redirect');
+  const logoutParam = searchParams.get('logout');
+
   const [documento, setDocumento] = useState('');
   const [password, setPassword] = useState('');
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const [isBloqueado, setIsBloqueado] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState(
+    errorParam === 'unauthorized'
+      ? 'Acceso denegado: Debe autenticarse con credenciales válidas para ingresar a esta URL restringida.'
+      : errorParam === 'session_expired'
+      ? 'Su sesión ha expirado por políticas de seguridad farmacéutica.'
+      : ''
+  );
   const [loading, setLoading] = useState(false);
 
   // Modal recuperación
@@ -276,5 +287,17 @@ export default function LoginPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-brand-secondary flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginFormContent />
+    </Suspense>
   );
 }

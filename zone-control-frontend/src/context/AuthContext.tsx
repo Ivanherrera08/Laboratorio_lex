@@ -39,6 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('zone_control_token');
       localStorage.removeItem('zone_control_user');
+      // Borrar cookies de seguridad de ruta
+      document.cookie = 'zone_control_token=; path=/; max-age=0; SameSite=Strict;';
+      document.cookie = 'zone_control_role=; path=/; max-age=0; SameSite=Strict;';
       setUser(null);
       setToken(null);
       setShowConfirmLogout(false);
@@ -50,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setShowConfirmLogout(true);
   };
 
-  // Carga inicial de sesión desde localStorage con verificación
+  // Carga inicial de sesión desde localStorage y cookies con verificación
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('zone_control_token');
@@ -61,6 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (parsedUser && parsedUser.rol) {
             setToken(storedToken);
             setUser(parsedUser);
+            // Asegurar sincronización de cookie de seguridad
+            document.cookie = `zone_control_token=${storedToken}; path=/; max-age=28800; SameSite=Strict;`;
+            document.cookie = `zone_control_role=${parsedUser.rol}; path=/; max-age=28800; SameSite=Strict;`;
           } else {
             logout();
           }
@@ -110,6 +116,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('zone_control_token', newToken);
       localStorage.setItem('zone_control_user', JSON.stringify(newUser));
+      // Sincronizar cookies seguras con expiración (8 horas / 28800 segundos) y SameSite=Strict
+      document.cookie = `zone_control_token=${newToken}; path=/; max-age=28800; SameSite=Strict;`;
+      document.cookie = `zone_control_role=${newUser.rol}; path=/; max-age=28800; SameSite=Strict;`;
       setToken(newToken);
       setUser(newUser);
       setLastActivity(Date.now());
