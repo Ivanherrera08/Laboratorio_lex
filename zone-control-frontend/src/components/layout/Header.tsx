@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
-import { Bell, LogOut, CheckCheck, ExternalLink, ShieldAlert, ArrowRight, Menu } from 'lucide-react';
+import { Bell, LogOut, CheckCheck, ExternalLink, ShieldAlert, ArrowRight, Menu, Sparkles, Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
@@ -39,21 +39,40 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
 
   return (
     <header className="h-16 bg-white/95 backdrop-blur-md border-b border-brand-accent/30 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 transition-all shadow-xs">
-      {/* Botón Menú Hamburguesa + Estado del Sistema */}
+      {/* Identidad Oficial: Laboratorio Lex + Botón Móvil */}
       <div className="flex items-center gap-3">
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="p-2 rounded-xl bg-brand-secondary hover:bg-brand-accent/40 text-brand-dark transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
-            title="Abrir/Cerrar menú lateral"
+            className="lg:hidden p-2 rounded-xl bg-brand-secondary hover:bg-brand-accent/40 text-brand-dark transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
+            title="Abrir menú lateral"
           >
             <Menu className="w-5 h-5 text-brand-primary" />
           </button>
         )}
 
-        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-brand-dark bg-brand-light px-3 py-1.5 rounded-full border border-brand-accent/40">
-          <span className="w-2 h-2 rounded-full bg-status-authorized animate-pulse"></span>
-          <span>Entorno Seguro • FDA 21 CFR Part 11</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 bg-gradient-to-r from-brand-secondary via-emerald-50/60 to-white px-3.5 py-1.5 rounded-2xl border border-brand-accent/50 shadow-2xs">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-primary to-emerald-600 flex items-center justify-center text-white font-black text-xs shadow-xs">
+              L
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-heading font-black text-sm text-brand-dark tracking-tight leading-none">
+                  Laboratorio Lex
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <span className="text-[9.5px] font-bold text-brand-primary uppercase tracking-wider block leading-tight">
+                Zone Control • Farmacéutica
+              </span>
+            </div>
+          </div>
+
+          <div className="hidden md:flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-authorized"></span>
+            <span>Sistema Central Bioseguro</span>
+          </div>
         </div>
       </div>
 
