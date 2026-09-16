@@ -72,8 +72,6 @@ export default function DashboardLayout({
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
         <div className="flex-1 flex flex-col min-h-screen">
           <Header
@@ -109,18 +107,10 @@ export default function DashboardLayout({
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
       <div className="flex-1 flex flex-col overflow-x-hidden min-h-screen">
         <Header
-          onToggleSidebar={() => {
-            if (window.innerWidth >= 1024) {
-              setIsSidebarCollapsed(!isSidebarCollapsed);
-            } else {
-              setIsSidebarOpen(!isSidebarOpen);
-            }
-          }}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
         />
         {/* Contenido protegido */}
