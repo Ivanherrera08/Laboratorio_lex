@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   UserCheck,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -326,23 +327,35 @@ export default function UsuariosSistemaPage() {
 
       {/* MODAL: REGISTRO DE USUARIO CON CREDENCIALES Y REGLAS ESTRICTAS */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center gap-3 mb-4 border-b border-brand-accent/30 pb-3">
-              <div className="p-2.5 rounded-xl bg-brand-secondary text-brand-primary">
-                <UserCog className="w-6 h-6" />
+        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
+          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down my-auto relative max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between gap-3 mb-4 border-b border-brand-accent/30 pb-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-brand-secondary text-brand-primary">
+                  <UserCog className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-heading font-bold text-brand-dark">
+                    Crear Usuario con Credenciales
+                  </h3>
+                  <p className="text-xs text-brand-text/70">
+                    Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-heading font-bold text-brand-dark">
-                  Crear Usuario con Credenciales
-                </h3>
-                <p className="text-xs text-brand-text/70">
-                  Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="p-1.5 rounded-xl hover:bg-brand-secondary text-brand-text/60 hover:text-brand-dark transition-colors"
+                title="Cerrar ventana"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleCrearUsuario} className="space-y-3.5">
+            {/* Modal Scrollable Body */}
+            <form onSubmit={handleCrearUsuario} className="space-y-3.5 overflow-y-auto pr-1">
               {/* Nombres y Apellidos estrictamente solo letras */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
