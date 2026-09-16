@@ -178,30 +178,30 @@ export default function CatalogosPage() {
             <div className="grid grid-cols-3 gap-3 items-center">
               {/* Recuadro de Fotografía Interactivo directamente en el Carnet */}
               <div className="relative">
-                <label className="block w-22 h-28 bg-white rounded-2xl border-2 border-dashed border-brand-primary/60 hover:border-brand-primary shadow-sm flex flex-col items-center justify-center overflow-hidden cursor-pointer group transition-all transform hover:scale-105 active:scale-95 bg-gradient-to-b from-white to-brand-secondary/40">
+                <label className="block w-28 h-32 bg-white rounded-2xl border-2 border-dashed border-brand-primary/60 hover:border-brand-primary shadow-sm flex flex-col items-center justify-center overflow-hidden cursor-pointer group transition-all transform hover:scale-102 active:scale-98 bg-gradient-to-b from-white to-brand-secondary/40">
                   {fotoUrl ? (
-                    <>
+                    <div className="relative w-full h-full flex items-center justify-center bg-slate-100 p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={fotoUrl}
                         alt="Foto del colaborador"
-                        className="w-full h-full object-cover rounded-xl"
+                        className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xs"
                       />
                       {/* Overlay al hacer hover para cambiar foto */}
-                      <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center rounded-xl">
+                      <div className="absolute inset-0 bg-brand-dark/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center rounded-xl">
                         <Camera className="w-5 h-5 mb-0.5 animate-bounce" />
-                        <span className="text-[8px] font-bold">Cambiar</span>
+                        <span className="text-[9px] font-bold">Cambiar Foto</span>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center text-brand-primary p-2 text-center">
-                      <div className="p-2 rounded-full bg-brand-secondary group-hover:bg-brand-primary group-hover:text-white transition-all mb-1 shadow-xs">
+                      <div className="p-2.5 rounded-full bg-brand-secondary group-hover:bg-brand-primary group-hover:text-white transition-all mb-1 shadow-xs">
                         <Camera className="w-5 h-5" />
                       </div>
-                      <span className="text-[9px] font-extrabold text-brand-dark group-hover:text-brand-primary transition-colors">
+                      <span className="text-[10px] font-extrabold text-brand-dark group-hover:text-brand-primary transition-colors">
                         Subir Foto
                       </span>
-                      <span className="text-[7px] text-brand-text/60 font-medium">Click aquí</span>
+                      <span className="text-[8px] text-brand-text/60 font-medium">Click aquí</span>
                     </div>
                   )}
                   <input
