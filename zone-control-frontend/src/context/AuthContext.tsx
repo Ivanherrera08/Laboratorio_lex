@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setToken(null);
       setShowConfirmLogout(false);
-      window.location.href = '/login?logout=success';
+      window.location.href = '/';
     }
   }, []);
 
