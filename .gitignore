@@ -1,0 +1,43 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Next.js / Node ###
+zone-control-frontend/node_modules/
+zone-control-frontend/.next/
+zone-control-frontend/out/
+zone-control-frontend/.pnpm-store/
+zone-control-frontend/npm-debug.log*
+zone-control-frontend/yarn-debug.log*
+zone-control-frontend/yarn-error.log*
+zone-control-frontend/pnpm-debug.log*
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
