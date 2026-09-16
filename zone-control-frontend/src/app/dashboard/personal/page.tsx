@@ -518,17 +518,17 @@ export default function GestionPersonalPage() {
                   </td>
                   <td className="p-4">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all shadow-2xs ${
                         emp.estado === 'ACTIVO'
-                          ? 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-[#d1f7e3] text-[#0f764a] border border-[#a6f0c7]'
                           : emp.estado === 'REVOCADO'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-amber-100 text-amber-800'
+                          ? 'bg-[#fee4e2] text-[#912018] border border-[#fecdca]'
+                          : 'bg-[#fef0c7] text-[#93370d] border border-[#fedf89]'
                       }`}
                     >
-                      {emp.estado === 'ACTIVO' && <CheckCircle className="w-3 h-3" />}
-                      {emp.estado === 'REVOCADO' && <XCircle className="w-3 h-3" />}
-                      {emp.estado === 'SUSPENDIDO' && <Clock className="w-3 h-3" />}
+                      {emp.estado === 'ACTIVO' && <CheckCircle className="w-3.5 h-3.5 text-[#0f764a]" />}
+                      {emp.estado === 'REVOCADO' && <XCircle className="w-3.5 h-3.5 text-[#912018]" />}
+                      {emp.estado === 'SUSPENDIDO' && <Clock className="w-3.5 h-3.5 text-[#93370d]" />}
                       {emp.estado}
                     </span>
                   </td>
@@ -909,11 +909,11 @@ export default function GestionPersonalPage() {
         </div>
       )}
 
-      {/* MODAL 2: CAMBIO DE ESTADO OBLIGATORIO CON MOTIVO */}
+      {/* MODAL 2: CAMBIO DE ESTADO OBLIGATORIO CON SELECTOR VISUAL INTERACTIVO */}
       {showEstadoModal && empleadoSeleccionado && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white max-w-md w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white max-w-md w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down">
+            <div className="flex items-center gap-3 mb-4 border-b border-brand-accent/30 pb-3">
               <div className="p-2.5 rounded-xl bg-brand-secondary text-brand-primary">
                 <ShieldAlert className="w-5 h-5" />
               </div>
@@ -927,33 +927,98 @@ export default function GestionPersonalPage() {
 
             <form onSubmit={handleGuardarEstado} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">Nuevo Estado</label>
-                <select
-                  value={nuevoEstado}
-                  onChange={(e) => setNuevoEstado(e.target.value as EstadoEmpleado)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
-                >
-                  <option value="ACTIVO">ACTIVO (Autorización Vigente)</option>
-                  <option value="SUSPENDIDO">SUSPENDIDO (Temporal)</option>
-                  <option value="REVOCADO">REVOCADO (Acceso Bloqueado Definitivo)</option>
-                </select>
+                <label className="block text-xs font-bold text-brand-text mb-2">
+                  Seleccionar Nuevo Estado de Acceso:
+                </label>
+                
+                {/* Selector Visual Dinámico de Estados (Verde, Amarillo, Rojo) */}
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Opción 1: ACTIVO (Verde) */}
+                  <button
+                    type="button"
+                    onClick={() => setNuevoEstado('ACTIVO')}
+                    className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
+                      nuevoEstado === 'ACTIVO'
+                        ? 'bg-emerald-50 border-emerald-500 shadow-md scale-102 ring-2 ring-emerald-400/20'
+                        : 'bg-white border-slate-200 hover:border-emerald-300 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4" />
+                    </div>
+                    <span className="text-[11px] font-extrabold text-emerald-800">
+                      ACTIVO
+                    </span>
+                    <span className="text-[9px] text-emerald-700 font-medium">
+                      Acceso Total
+                    </span>
+                  </button>
+
+                  {/* Opción 2: SUSPENDIDO (Amarillo) */}
+                  <button
+                    type="button"
+                    onClick={() => setNuevoEstado('SUSPENDIDO')}
+                    className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
+                      nuevoEstado === 'SUSPENDIDO'
+                        ? 'bg-amber-50 border-amber-500 shadow-md scale-102 ring-2 ring-amber-400/20'
+                        : 'bg-white border-slate-200 hover:border-amber-300 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <span className="text-[11px] font-extrabold text-amber-800">
+                      SUSPENDIDO
+                    </span>
+                    <span className="text-[9px] text-amber-700 font-medium">
+                      Temporal
+                    </span>
+                  </button>
+
+                  {/* Opción 3: REVOCADO (Rojo) */}
+                  <button
+                    type="button"
+                    onClick={() => setNuevoEstado('REVOCADO')}
+                    className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
+                      nuevoEstado === 'REVOCADO'
+                        ? 'bg-red-50 border-red-500 shadow-md scale-102 ring-2 ring-red-400/20'
+                        : 'bg-white border-slate-200 hover:border-red-300 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-red-100 text-red-800 flex items-center justify-center">
+                      <XCircle className="w-4 h-4" />
+                    </div>
+                    <span className="text-[11px] font-extrabold text-red-800">
+                      REVOCADO
+                    </span>
+                    <span className="text-[9px] text-red-700 font-medium">
+                      Bloqueado
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-brand-text mb-1.5">
-                  Motivo de Cambio de Estado <span className="text-red-500">* (Obligatorio)</span>
+                  Motivo de Cambio de Estado <span className="text-red-500">* (Obligatorio para Auditoría)</span>
                 </label>
                 <textarea
                   required
                   rows={3}
                   value={motivoEstado}
                   onChange={(e) => setMotivoEstado(e.target.value)}
-                  placeholder="Describa la justificación médica, de seguridad o auditoría..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                  placeholder={
+                    nuevoEstado === 'SUSPENDIDO'
+                      ? 'Ejemplo: Suspensión preventiva temporal por protocolo de seguridad...'
+                      : nuevoEstado === 'REVOCADO'
+                      ? 'Ejemplo: Bloqueo definitivo por finalización de contrato o falta grave...'
+                      : 'Ejemplo: Reactivación autorizada tras cumplimiento de protocolo...'
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40 leading-relaxed"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t border-brand-accent/30">
                 <button
                   type="button"
                   onClick={() => setShowEstadoModal(false)}
@@ -963,8 +1028,15 @@ export default function GestionPersonalPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-primary text-white hover:bg-brand-primary/90 shadow-sm cursor-pointer"
+                  className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
+                    nuevoEstado === 'ACTIVO'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : nuevoEstado === 'SUSPENDIDO'
+                      ? 'bg-amber-600 hover:bg-amber-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
+                  <ShieldCheck className="w-4 h-4" />
                   Guardar en Bitácora
                 </button>
               </div>
@@ -1054,50 +1126,74 @@ export default function GestionPersonalPage() {
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-secondary rounded-full blur-xl pointer-events-none" />
 
             <div className="relative z-10 text-center">
-              {/* Icono de Escudo de Seguridad Animado */}
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-brand-primary/30 text-white mb-4 animate-bounce">
-                <ShieldCheck className="w-8 h-8" />
+              {/* Icono de Seguridad Dinámico según Estado */}
+              <div className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg text-white mb-4 animate-bounce ${
+                bitacoraInfo.nuevoEstado === 'ACTIVO'
+                  ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 shadow-emerald-500/30'
+                  : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                  ? 'bg-gradient-to-tr from-amber-500 to-yellow-600 shadow-amber-500/30'
+                  : 'bg-gradient-to-tr from-red-500 to-rose-600 shadow-red-500/30'
+              }`}>
+                {bitacoraInfo.nuevoEstado === 'ACTIVO' && <CheckCircle className="w-8 h-8" />}
+                {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && <Clock className="w-8 h-8" />}
+                {bitacoraInfo.nuevoEstado === 'REVOCADO' && <XCircle className="w-8 h-8" />}
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-                BITÁCORA AUDITADA 21 CFR PART 11
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold mb-2 ${
+                bitacoraInfo.nuevoEstado === 'ACTIVO'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                  ? 'bg-amber-50 border-amber-200 text-amber-800'
+                  : 'bg-red-50 border-red-200 text-red-800'
+              }`}>
+                <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                {bitacoraInfo.nuevoEstado === 'ACTIVO' && 'AUTORIZACIÓN ACTIVA 21 CFR 11'}
+                {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && 'SUSPENSIÓN TEMPORAL AUDITADA'}
+                {bitacoraInfo.nuevoEstado === 'REVOCADO' && 'BLOQUEO PERMANENTE AUDITADO'}
               </div>
 
               <h2 className="text-xl font-heading font-extrabold text-brand-dark mb-1">
-                ¡Estado Registrado en Bitácora!
+                {bitacoraInfo.nuevoEstado === 'ACTIVO' && '¡Colaborador Activado!'}
+                {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && '¡Suspensión Temporal Registrada!'}
+                {bitacoraInfo.nuevoEstado === 'REVOCADO' && '¡Acceso Revocado y Bloqueado!'}
               </h2>
               <p className="text-xs text-brand-text/75 mb-4">
-                La modificación de estado ha sido procesada e inscrita de forma inmutable en el registro de auditoría.
+                La modificación ha sido procesada e inscrita de forma inmutable en el registro de auditoría.
               </p>
 
               {/* Ficha Resumen de Auditoría */}
-              <div className="bg-brand-secondary/70 p-4 rounded-2xl border border-brand-accent/50 text-left space-y-2 mb-5">
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+              <div className={`p-4 rounded-2xl border text-left space-y-2 mb-5 ${
+                bitacoraInfo.nuevoEstado === 'ACTIVO'
+                  ? 'bg-emerald-50/60 border-emerald-200'
+                  : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                  ? 'bg-amber-50/60 border-amber-200'
+                  : 'bg-red-50/60 border-red-200'
+              }`}>
+                <div className="flex items-center justify-between pb-2 border-b border-black/5">
                   <span className="text-[11px] font-medium text-brand-text/70">Colaborador:</span>
                   <span className="text-xs font-bold text-brand-dark">{bitacoraInfo.empleadoNombre}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                <div className="flex items-center justify-between pb-2 border-b border-black/5">
                   <span className="text-[11px] font-medium text-brand-text/70">Documento / ID:</span>
                   <span className="text-xs font-mono font-bold text-brand-primary">{bitacoraInfo.documento}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                <div className="flex items-center justify-between pb-2 border-b border-black/5">
                   <span className="text-[11px] font-medium text-brand-text/70">Transición de Estado:</span>
                   <div className="flex items-center gap-1.5 text-xs font-bold">
                     <span className="text-slate-500 line-through text-[11px]">{bitacoraInfo.estadoAnterior}</span>
                     <span>→</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold shadow-2xs ${
                       bitacoraInfo.nuevoEstado === 'ACTIVO'
-                        ? 'bg-emerald-100 text-emerald-800'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                         : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                        : 'bg-red-100 text-red-800 border border-red-300'
                     }`}>
                       {bitacoraInfo.nuevoEstado}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-start justify-between pb-2 border-b border-brand-accent/30">
+                <div className="flex items-start justify-between pb-2 border-b border-black/5">
                   <span className="text-[11px] font-medium text-brand-text/70 shrink-0 mr-2">Motivo Registrado:</span>
                   <span className="text-[11px] text-brand-dark font-medium text-right leading-tight italic">
                     &quot;{bitacoraInfo.motivo}&quot;
@@ -1105,20 +1201,26 @@ export default function GestionPersonalPage() {
                 </div>
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[11px] font-medium text-brand-text/70">Folio de Auditoría:</span>
-                  <span className="text-[10px] font-mono font-bold text-brand-primary bg-white px-2 py-0.5 rounded border border-brand-accent/50">
+                  <span className="text-[10px] font-mono font-bold text-brand-dark bg-white px-2 py-0.5 rounded border border-black/10">
                     {bitacoraInfo.codigoAuditoria}
                   </span>
                 </div>
               </div>
 
-              {/* Botón de Confirmación con Animación */}
+              {/* Botón de Confirmación con Color Adaptativo */}
               <button
                 type="button"
                 onClick={() => {
                   setShowBitacoraExitoModal(false);
                   setBitacoraInfo(null);
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                className={`w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs shadow-lg transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2 ${
+                  bitacoraInfo.nuevoEstado === 'ACTIVO'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
+                    : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/30'
+                    : 'bg-red-600 hover:bg-red-700 shadow-red-600/30'
+                }`}
               >
                 <Check className="w-4 h-4" />
                 Aceptar y Continuar
