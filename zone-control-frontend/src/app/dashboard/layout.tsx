@@ -30,6 +30,10 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [accesoPermitido, setAccesoPermitido] = useState<boolean | null>(null);
 
+  // Estados de control del Menú Hamburguesa y Colapso
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated || !user) {
@@ -65,9 +69,17 @@ export default function DashboardLayout({
   if (accesoPermitido === false) {
     return (
       <div className="flex min-h-screen bg-brand-light">
-        <Sidebar />
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
         <div className="flex-1 flex flex-col min-h-screen">
-          <Header />
+          <Header
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            isSidebarOpen={isSidebarOpen}
+          />
           <main className="p-8 flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
             <div className="max-w-md bg-white p-8 rounded-3xl border border-red-200 shadow-lg space-y-4">
               <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-200">
@@ -94,11 +106,25 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-brand-light">
-      <Sidebar />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       <div className="flex-1 flex flex-col overflow-x-hidden min-h-screen">
-        <Header />
+        <Header
+          onToggleSidebar={() => {
+            if (window.innerWidth >= 1024) {
+              setIsSidebarCollapsed(!isSidebarCollapsed);
+            } else {
+              setIsSidebarOpen(!isSidebarOpen);
+            }
+          }}
+          isSidebarOpen={isSidebarOpen}
+        />
         {/* Contenido protegido */}
-        <main className="p-8 flex-1 animate-fade-in">{children}</main>
+        <main className="p-4 sm:p-8 flex-1 animate-fade-in">{children}</main>
       </div>
     </div>
   );

@@ -3,10 +3,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
-import { Bell, LogOut, CheckCheck, ExternalLink, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Bell, LogOut, CheckCheck, ExternalLink, ShieldAlert, ArrowRight, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+}
+
+export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
   const { user, solicitarConfirmacionSalir } = useAuth();
   const { notificacionesFiltradas, noLeidasCount, marcarComoLeida, marcarTodasComoLeidas } = useNotifications();
   const [showMenu, setShowMenu] = useState(false);
@@ -33,10 +38,20 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-brand-accent/30 px-8 flex items-center justify-between sticky top-0 z-40 transition-all shadow-xs">
-      {/* Estado del Sistema */}
+    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-brand-accent/30 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 transition-all shadow-xs">
+      {/* Botón Menú Hamburguesa + Estado del Sistema */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-xs font-semibold text-brand-dark bg-brand-light px-3 py-1.5 rounded-full border border-brand-accent/40">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="p-2 rounded-xl bg-brand-secondary hover:bg-brand-accent/40 text-brand-dark transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center"
+            title="Abrir/Cerrar menú lateral"
+          >
+            <Menu className="w-5 h-5 text-brand-primary" />
+          </button>
+        )}
+
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-brand-dark bg-brand-light px-3 py-1.5 rounded-full border border-brand-accent/40">
           <span className="w-2 h-2 rounded-full bg-status-authorized animate-pulse"></span>
           <span>Entorno Seguro • FDA 21 CFR Part 11</span>
         </div>
