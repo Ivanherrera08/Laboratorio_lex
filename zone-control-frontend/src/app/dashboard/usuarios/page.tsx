@@ -74,6 +74,8 @@ export default function UsuariosSistemaPage() {
   const [usuarioCreado, setUsuarioCreado] = useState<UsuarioAuth | null>(null);
   const [showExitoModal, setShowExitoModal] = useState(false);
 
+  const { agregarNotificacion } = useNotifications();
+
   // Validación de Nombres: Solo letras, espacios, tildes y ñ (Sin números ni signos)
   const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
