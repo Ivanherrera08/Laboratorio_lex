@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Historial de Accesos')}"></head>
+<body class="bg-brand-light min-h-screen flex">
+    <aside th:replace="~{layout/base :: sidebar}"></aside>
+
+    <div class="flex-1 flex flex-col">
+        <header class="h-16 bg-white border-b border-brand-accent/20 px-8 flex items-center justify-between">
+            <span class="text-xs font-semibold text-brand-text/70">Módulo de Auditoría • Zone Control</span>
+        </header>
+
+        <main class="p-8 space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-brand-dark">Historial Inmutable de Accesos</h1>
+                    <p class="text-xs text-brand-text/70">Trazabilidad de todos los ingresos por esclusas y torniquetes.</p>
+                </div>
+            </div>
+
+            <!-- Tabla de Historial -->
+            <div class="bg-white rounded-2xl border border-brand-accent/40 shadow-xs overflow-hidden">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-brand-secondary/70 border-b border-brand-accent/30 text-brand-dark font-bold">
+                        <tr>
+                            <th class="p-4">Timestamp</th>
+                            <th class="p-4">Documento / Tarjeta</th>
+                            <th class="p-4">Persona</th>
+                            <th class="p-4">Área</th>
+                            <th class="p-4">Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-brand-accent/20">
+                        <tr class="hover:bg-brand-light/50">
+                            <td class="p-4 font-mono text-gray-500">2026-09-16 08:15:22</td>
+                            <td class="p-4 font-mono font-bold">1012345678</td>
+                            <td class="p-4 font-semibold">Dr. Carlos Mendoza</td>
+                            <td class="p-4">Laboratorio de Síntesis Molecular</td>
+                            <td class="p-4"><span class="badge-authorized">AUTORIZADO</span></td>
+                        </tr>
+                        <tr class="hover:bg-brand-light/50">
+                            <td class="p-4 font-mono text-gray-500">2026-09-16 08:18:45</td>
+                            <td class="p-4 font-mono font-bold">1087654321</td>
+                            <td class="p-4 font-semibold">Ing. Laura Restrepo</td>
+                            <td class="p-4">Laboratorio de Síntesis Molecular</td>
+                            <td class="p-4"><span class="badge-denied">DENEGADO</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

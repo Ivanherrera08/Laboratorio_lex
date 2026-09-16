@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Institucional — Laboratorio XYZ (Zone Control)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/zone-control.css}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#FFFFFF',
+                            secondary: '#EAF5EE',
+                            primary: '#6B9B7C',
+                            accent: '#A8D5BA',
+                            text: '#2E3D34',
+                            dark: '#1C2721',
+                            light: '#F4FAF6',
+                        },
+                        status: {
+                            authorized: '#4A9B8E',
+                            denied: '#E8A0A0',
+                            warning: '#E8C687',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-brand-text flex flex-col justify-between min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-brand-accent/30 bg-white sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-primary flex items-center justify-center text-white font-bold text-xl shadow-sm">
+                    Z
+                </div>
+                <div>
+                    <span class="font-bold text-xl text-brand-dark tracking-tight">Zone Control</span>
+                    <span class="block text-xs font-semibold text-brand-primary">Laboratorio XYZ • Farmacéutica</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a th:href="@{/login}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-primary text-white font-medium text-sm hover:bg-brand-primary/90 transition-all shadow-sm">
+                    Acceso a Personal Interno
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Hero -->
+    <main class="max-w-7xl mx-auto px-6 py-16 flex-1 flex flex-col justify-center">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-secondary text-brand-primary text-xs font-bold mb-6">
+                    🛡️ Infraestructura Farmacéutica de Alta Seguridad
+                </div>
+                <h1 class="text-4xl lg:text-5xl font-extrabold text-brand-dark leading-tight tracking-tight mb-6">
+                    Innovación y Rigor en la Producción de Medicamentos de Alto Costo
+                </h1>
+                <p class="text-base text-brand-text/80 leading-relaxed mb-8">
+                    En Laboratorio XYZ garantizamos la máxima calidad, pureza e integridad biológica en cada proceso. 
+                    El sistema <strong>Zone Control</strong> asegura la trazabilidad inmutable y el acceso físico restringido 
+                    a nuestras salas estériles y áreas de síntesis molecular.
+                </p>
+                <a th:href="@{/login}" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-primary text-white font-semibold text-sm hover:bg-brand-primary/90 transition-all shadow-md">
+                    Ingresar al Sistema →
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="p-6 rounded-2xl bg-brand-secondary border border-brand-accent/40">
+                    <div class="text-2xl mb-2">🏆</div>
+                    <h3 class="font-bold text-base text-brand-dark mb-1">Estándares GMP & FDA</h3>
+                    <p class="text-xs text-brand-text/80 leading-relaxed">
+                        Cumplimiento estricto con normativas internacionales de manufactura farmacéutica y registros 21 CFR Part 11.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-brand-secondary border border-brand-accent/40">
+                    <div class="text-2xl mb-2">🔬</div>
+                    <h3 class="font-bold text-base text-brand-dark mb-1">Zonas Bioseguras</h3>
+                    <p class="text-xs text-brand-text/80 leading-relaxed">
+                        Control de esclusas, presión positiva y esclusas de aire con validación instantánea de credenciales.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-brand-secondary border border-brand-accent/40">
+                    <div class="text-2xl mb-2">🔒</div>
+                    <h3 class="font-bold text-base text-brand-dark mb-1">Trazabilidad Total</h3>
+                    <p class="text-xs text-brand-text/80 leading-relaxed">
+                        Registro inmutable en PostgreSQL de cada intento de acceso, garantizando auditoría al 100%.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-brand-secondary border border-brand-accent/40">
+                    <div class="text-2xl mb-2">🌐</div>
+                    <h3 class="font-bold text-base text-brand-dark mb-1">Alianza Internacional</h3>
+                    <p class="text-xs text-brand-text/80 leading-relaxed">
+                        Sincronización automatizada de reportes de actividad con socios estratégicos en el exterior.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-brand-accent/30 bg-brand-secondary py-8">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-text/70">
+            <p>© 2026 Laboratorio XYZ S.A. Todos los derechos reservados. Zone Control v1.0.</p>
+            <p>Contacto de Seguridad: seguridad@laboratorioxyz.com | Línea Directa: +57 (601) 555-0199</p>
+        </div>
+    </footer>
+</body>
+</html>

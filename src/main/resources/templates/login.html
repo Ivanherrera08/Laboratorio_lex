@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — Zone Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/zone-control.css}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#FFFFFF',
+                            secondary: '#EAF5EE',
+                            primary: '#6B9B7C',
+                            accent: '#A8D5BA',
+                            text: '#2E3D34',
+                            dark: '#1C2721',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-secondary min-h-screen flex flex-col justify-center items-center px-4 py-12">
+    <div class="w-full max-w-md bg-white rounded-3xl p-8 border border-brand-accent/40 shadow-lg">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 rounded-2xl bg-brand-primary mx-auto flex items-center justify-center text-white font-bold text-2xl shadow-sm mb-3">
+                Z
+            </div>
+            <h2 class="text-2xl font-bold text-brand-dark">Zone Control</h2>
+            <p class="text-xs text-brand-primary font-semibold">Autenticación de Personal Autorizado</p>
+        </div>
+
+        <!-- Alerta de error de Spring Security -->
+        <div th:if="${param.error}" class="p-4 rounded-xl mb-6 bg-red-50 text-red-700 border border-red-200 text-xs font-medium">
+            Credenciales inválidas o cuenta temporalmente bloqueada.
+        </div>
+        <div th:if="${param.logout}" class="p-4 rounded-xl mb-6 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium">
+            Ha cerrado su sesión correctamente.
+        </div>
+
+        <form th:action="@{/login}" method="post" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-brand-text mb-1.5">Documento / Usuario</label>
+                <input type="text" name="username" required placeholder="Ej. 10203040 o admin"
+                    class="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/40">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-brand-text mb-1.5">Contraseña</label>
+                <input type="password" name="password" required placeholder="••••••••"
+                    class="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/40">
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-sm transition-all shadow-md mt-2">
+                Ingresar al Sistema
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-brand-accent/30 text-center">
+            <a th:href="@{/}" class="text-xs font-medium text-brand-text/70 hover:text-brand-primary">
+                ← Volver al Portal Institucional
+            </a>
+        </div>
+    </div>
+</body>
+</html>
