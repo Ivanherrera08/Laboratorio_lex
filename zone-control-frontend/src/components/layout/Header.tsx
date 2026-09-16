@@ -10,13 +10,9 @@ import {
   ArrowRight,
   Menu,
   ChevronDown,
-  User,
-  ShieldCheck,
-  Layers,
-  Radio,
   FlaskConical,
 } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface HeaderProps {
@@ -25,22 +21,13 @@ interface HeaderProps {
 }
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
-  const { user, solicitarConfirmacionSalir, hasRole } = useAuth();
+  const { user, solicitarConfirmacionSalir } = useAuth();
   const { notificacionesFiltradas, noLeidasCount, marcarComoLeida, marcarTodasComoLeidas } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const pathname = usePathname();
-
-  // Pestañas dinámicas centrales con los colores oficiales de la plataforma
-  const quickTabs = [
-    { name: 'Simulador RFID', href: '/dashboard/simulador', icon: Radio, roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'] },
-    { name: 'Personal', href: '/dashboard/personal', icon: User, roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL'] },
-    { name: 'Catálogo', href: '/dashboard/catalogos', icon: Layers, roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL'] },
-    { name: 'Auditoría', href: '/dashboard/auditoria', icon: ShieldCheck, roles: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'] },
-  ];
 
   // Cerrar paneles flotantes al hacer clic afuera
   useEffect(() => {
@@ -100,33 +87,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         </Link>
       </div>
 
-      {/* 2. SECCIÓN CENTRAL: Pestañas de Navegación Rápida Tipo Facebook con Colores Verdes Institucionales */}
-      <nav className="hidden md:flex items-center gap-1.5 bg-brand-secondary/70 p-1 rounded-2xl border border-brand-accent/40 shadow-2xs">
-        {quickTabs.map((tab) => {
-          const isAllowed = hasRole(tab.roles as any);
-          if (!isAllowed) return null;
-
-          const isActive = pathname === tab.href;
-          const Icon = tab.icon;
-
-          return (
-            <Link
-              key={tab.name}
-              href={tab.href}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                isActive
-                  ? 'bg-brand-primary text-white shadow-sm scale-[1.02]'
-                  : 'text-brand-text/75 hover:text-brand-dark hover:bg-white/80'
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-brand-primary'}`} />
-              <span>{tab.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* 3. SECCIÓN DERECHA: Notificaciones + Avatar y Menú de Usuario */}
+      {/* 2. SECCIÓN DERECHA: Notificaciones + Avatar y Menú de Usuario */}
       <div className="flex items-center gap-3">
         {/* Campanita de Notificaciones */}
         <div className="relative" ref={notifRef}>
