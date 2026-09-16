@@ -10,7 +10,12 @@ import {
   Clock,
   ArrowUpRight,
   ShieldAlert,
+  Send,
+  Sparkles,
+  Server,
+  Zap,
 } from 'lucide-react';
+import { useNotifications } from '@/context/NotificationContext';
 
 const mockSincronizaciones: SincronizacionSocio[] = [
   {
@@ -39,13 +44,37 @@ const mockSincronizaciones: SincronizacionSocio[] = [
 export default function SocioSyncPage() {
   const [sincronizaciones, setSincronizaciones] = useState<SincronizacionSocio[]>(mockSincronizaciones);
   const [forzando, setForzando] = useState(false);
+  const [progreso, setProgreso] = useState(0);
+  const [pasoTexto, setPasoTexto] = useState('');
+  const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'EXITO' | 'ERROR'; texto: string } | null>(null);
+
+  const { agregarNotificacion } = useNotifications();
 
   const handleForzarEnvio = () => {
     setForzando(true);
+    setAlertaMsg(null);
+    setProgreso(20);
+    setPasoTexto('1/3: Empaquetando registros de accesos y firmas digitales...');
+
     setTimeout(() => {
+      setProgreso(60);
+      setPasoTexto('2/3: Conectando con servidor B2B seguro (partner-api.pharma-cloud.org)...');
+    }, 600);
+
+    setTimeout(() => {
+      setProgreso(90);
+      setPasoTexto('3/3: Transmitiendo payload cifrado y esperando ACK (HTTP 200)...');
+    }, 1200);
+
+    setTimeout(() => {
+      setProgreso(100);
       setForzando(false);
-      const nueva: SincronizacionSocio = {
-        id: Math.floor(Math.random() * 1000) + 200,
+      setPasoTexto('');
+
+      const nuevoLoteId = Math.floor(Math.random() * 900) + 103;
+      const nuevoRegistro: SincronizacionSocio = {
+        id: nuevoLoteId,
+        departamentoId: 1,
         periodoInicio: '2026-09-15T00:00:00Z',
         periodoFin: new Date().toISOString(),
         estado: 'EXITOSO',
@@ -53,8 +82,22 @@ export default function SocioSyncPage() {
         codigoRespuestaHttp: 200,
         fechaEnvio: new Date().toISOString(),
       };
-      setSincronizaciones([nueva, ...sincronizaciones]);
-      alert('Lote sincronizado satisfactoriamente con el servidor B2B del socio internacional.');
+
+      setSincronizaciones((prev) => [nuevoRegistro, ...prev]);
+
+      setAlertaMsg({
+        tipo: 'EXITO',
+        texto: `¡Transmisión forzada con éxito! El lote #SYNC-${nuevoLoteId} fue recibido y confirmado por el socio internacional con código HTTP 200 OK.`,
+      });
+
+      // Disparar notificación al sistema en tiempo real
+      agregarNotificacion({
+        titulo: `🌐 Sincronización Manual #SYNC-${nuevoLoteId}`,
+        mensaje: `Lote de trazabilidad transmitido exitosamente al socio internacional con código 200 OK.`,
+        tipo: 'SISTEMA',
+        rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
+        accionUrl: '/dashboard/socio-sync',
+      });
     }, 1800);
   };
 
@@ -72,16 +115,60 @@ export default function SocioSyncPage() {
         <button
           onClick={handleForzarEnvio}
           disabled={forzando}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <RefreshCw className={`w-4 h-4 ${forzando ? 'animate-spin' : ''}`} />
-          {forzando ? 'Transmitiendo datos...' : 'Forzar Sincronización Manual'}
+          <span>{forzando ? 'Transmitiendo al Socio...' : 'Forzar Sincronización Manual'}</span>
         </button>
       </div>
 
+      {/* Alerta de Resultado de Sincronización */}
+      {alertaMsg && (
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-start justify-between gap-3 shadow-xs animate-slide-down">
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 rounded-lg bg-emerald-200 text-emerald-800 shrink-0 mt-0.5">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-heading font-bold text-sm text-emerald-900">
+                Transmisión B2B Completada
+              </h4>
+              <p className="text-xs text-emerald-800 mt-0.5">
+                {alertaMsg.texto}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setAlertaMsg(null)}
+            className="text-emerald-700 hover:text-emerald-900 text-xs font-bold px-2 py-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Barra de Progreso en Vivo cuando se pulsa Forzar */}
+      {forzando && (
+        <div className="bg-white p-6 rounded-3xl border border-brand-accent/40 shadow-xs space-y-3 animate-fade-in">
+          <div className="flex items-center justify-between text-xs font-bold text-brand-dark">
+            <span className="flex items-center gap-2 text-brand-primary">
+              <Sparkles className="w-4 h-4 animate-spin" />
+              {pasoTexto}
+            </span>
+            <span className="font-mono text-brand-primary font-extrabold">{progreso}%</span>
+          </div>
+          <div className="w-full bg-brand-secondary/70 rounded-full h-3 overflow-hidden p-0.5 border border-brand-accent/30">
+            <div
+              className="bg-brand-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progreso}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
       {/* Tarjetas de Estado del Enlace */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-brand-accent/40 shadow-xs">
+        <div className="bg-white p-5 rounded-3xl border border-brand-accent/40 shadow-xs hover:shadow-sm transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-brand-text/70">Estado del Endpoint</span>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
@@ -90,10 +177,10 @@ export default function SocioSyncPage() {
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             Conectado (HTTP 200)
           </p>
-          <span className="text-[11px] text-gray-500 mt-1 block">partner-api.pharma-cloud.org</span>
+          <span className="text-[11px] text-gray-500 mt-1 block font-mono">partner-api.pharma-cloud.org</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-brand-accent/40 shadow-xs">
+        <div className="bg-white p-5 rounded-3xl border border-brand-accent/40 shadow-xs hover:shadow-sm transition-all">
           <span className="text-xs font-bold text-brand-text/70">Frecuencia Automática</span>
           <p className="text-lg font-heading font-bold text-brand-dark mt-2 flex items-center gap-1.5">
             <Clock className="w-5 h-5 text-brand-primary" />
@@ -102,7 +189,7 @@ export default function SocioSyncPage() {
           <span className="text-[11px] text-gray-500 mt-1 block">Próxima ejecución programada hoy</span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-brand-accent/40 shadow-xs">
+        <div className="bg-white p-5 rounded-3xl border border-brand-accent/40 shadow-xs hover:shadow-sm transition-all">
           <span className="text-xs font-bold text-brand-text/70">Reintentos Exponenciales</span>
           <p className="text-lg font-heading font-bold text-brand-dark mt-2 flex items-center gap-1.5">
             <ShieldAlert className="w-5 h-5 text-amber-500" />
@@ -113,10 +200,13 @@ export default function SocioSyncPage() {
       </div>
 
       {/* Tabla de Lotes Sincronizados */}
-      <div className="bg-white rounded-2xl border border-brand-accent/40 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-brand-accent/40 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-brand-accent/30 bg-brand-secondary/40 flex items-center justify-between">
-          <h3 className="font-heading font-bold text-sm text-brand-dark">Historial de Transmisiones de Lotes</h3>
-          <span className="text-xs text-brand-text/60">Trazabilidad por Departamento</span>
+          <div className="flex items-center gap-2">
+            <Globe2 className="w-4 h-4 text-brand-primary" />
+            <h3 className="font-heading font-bold text-sm text-brand-dark">Historial de Transmisiones de Lotes</h3>
+          </div>
+          <span className="text-xs text-brand-text/60 font-semibold">Trazabilidad Internacional</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -145,7 +235,7 @@ export default function SocioSyncPage() {
                   <td className="p-4 font-semibold text-brand-dark">{sync.intentosRealizados} / 3</td>
                   <td className="p-4 font-mono font-bold">
                     <span
-                      className={`px-2 py-0.5 rounded text-[11px] ${
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                         sync.codigoRespuestaHttp === 200
                           ? 'bg-emerald-100 text-emerald-800'
                           : 'bg-red-100 text-red-800'
@@ -164,6 +254,8 @@ export default function SocioSyncPage() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
+                      {sync.estado === 'EXITOSO' && <CheckCircle2 className="w-3 h-3" />}
+                      {sync.estado === 'REINTENTANDO' && <Clock className="w-3 h-3" />}
                       {sync.estado}
                     </span>
                   </td>
