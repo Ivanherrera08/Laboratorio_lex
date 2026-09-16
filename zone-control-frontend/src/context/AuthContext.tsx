@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UsuarioAuth, RolUsuario } from '@/types';
-import { LogOut, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { api } from '@/lib/api';
+import { LogOut } from 'lucide-react';
 
 interface AuthContextType {
   user: UsuarioAuth | null;
@@ -26,28 +27,69 @@ const AuthContext = createContext<AuthContextType>({
   hasRole: () => false,
 });
 
-const INACTIVITY_LIMIT_MS = 5 * 60 * 1000; // 5 minutos de inactividad (RF F-03, CU-10)
+// Timeout Estricto de 5 Minutos (300,000 ms) según RF F-03 y CU-10
+const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UsuarioAuth | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showConfirmLogout, setShowConfirmLogout] = useState<boolean>(false);
-  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  // Inicialización SÍNCRONA de sesión desde sessionStorage
+  const [user, setUser] = useState<UsuarioAuth | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUser = sessionStorage.getItem('zone_control_user');
+        return storedUser ? JSON.parse(storedUser) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('zone_control_token') || null;
+    }
+    return null;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showConfirmLogout, setShowConfirmLogout] = useState<boolean>(false);
+  const timerInactividadRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Función de Logout Manual y Automático (RF F-04, CU-02)
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('zone_control_token');
-      sessionStorage.removeItem('zone_control_user');
-      localStorage.removeItem('zone_control_token');
-      localStorage.removeItem('zone_control_user');
-      // Borrar cookies de seguridad de ruta
-      document.cookie = 'zone_control_token=; path=/; max-age=0; SameSite=Strict;';
-      document.cookie = 'zone_control_role=; path=/; max-age=0; SameSite=Strict;';
+      // 1. Notificar al backend si el endpoint existe
+      try {
+        api.post('/auth/logout').catch(() => {});
+      } catch {}
+
+      // 2. Limpiar headers de autorización de Axios
+      delete api.defaults.headers.common['Authorization'];
+
+      // 3. Destrucción total de almacenamiento local y de sesión
+      try {
+        sessionStorage.clear();
+        localStorage.clear();
+      } catch {}
+
+      // 4. Eliminación de cookies seguras de sesión
+      const isHttps = window.location.protocol === 'https:';
+      const secureFlag = isHttps ? '; Secure' : '';
+
+      document.cookie = `zone_control_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag};`;
+      document.cookie = `zone_control_role=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag};`;
+
+      // 5. Limpieza de estado local
       setUser(null);
       setToken(null);
       setShowConfirmLogout(false);
-      window.location.href = '/';
+
+      if (timerInactividadRef.current) {
+        clearTimeout(timerInactividadRef.current);
+      }
+
+      // 6. Reemplazo atómico del historial del navegador
+      window.location.replace('/login');
     }
   }, []);
 
@@ -55,20 +97,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setShowConfirmLogout(true);
   };
 
-  // Carga inicial de sesión desde sessionStorage y cookies de sesión única
+  // Función de Login con identificador único (jti) y cabeceras Axios
+  const login = (newToken: string, newUser: UsuarioAuth) => {
+    if (typeof window !== 'undefined') {
+      // Inyección en Axios
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
+      // Persistencia en sessionStorage
+      sessionStorage.setItem('zone_control_token', newToken);
+      sessionStorage.setItem('zone_control_user', JSON.stringify(newUser));
+
+      // Cookies de sesión
+      const isHttps = window.location.protocol === 'https:';
+      const secureFlag = isHttps ? '; Secure' : '';
+
+      document.cookie = `zone_control_token=${newToken}; path=/; SameSite=Lax${secureFlag};`;
+      document.cookie = `zone_control_role=${newUser.rol}; path=/; SameSite=Lax${secureFlag};`;
+
+      setToken(newToken);
+      setUser(newUser);
+    }
+  };
+
+  // Temporizador Estricto de Inactividad de 5 Minutos (RF F-03, CU-10)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !token) return;
+
+    const reiniciarTemporizador = () => {
+      if (timerInactividadRef.current) {
+        clearTimeout(timerInactividadRef.current);
+      }
+
+      timerInactividadRef.current = setTimeout(() => {
+        alert('Sesión cerrada automáticamente por 5 minutos de inactividad (Políticas de Seguridad Laboratorio XYZ).');
+        logout();
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    // Escuchar eventos globales del usuario (mousemove, keydown, click, scroll)
+    const eventos = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    eventos.forEach((evento) => {
+      window.addEventListener(evento, reiniciarTemporizador);
+    });
+
+    // Iniciar temporizador
+    reiniciarTemporizador();
+
+    return () => {
+      if (timerInactividadRef.current) {
+        clearTimeout(timerInactividadRef.current);
+      }
+      eventos.forEach((evento) => {
+        window.removeEventListener(evento, reiniciarTemporizador);
+      });
+    };
+  }, [token, logout]);
+
+  // Sincronización continua de cookies de sesión
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedToken = sessionStorage.getItem('zone_control_token');
       const storedUser = sessionStorage.getItem('zone_control_user');
+      const isHttps = window.location.protocol === 'https:';
+      const secureFlag = isHttps ? '; Secure' : '';
+
       if (storedToken && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
           if (parsedUser && parsedUser.rol) {
             setToken(storedToken);
             setUser(parsedUser);
-            // Asegurar cookie de sesión volátil (sin max-age para expirar al cerrar)
-            document.cookie = `zone_control_token=${storedToken}; path=/; SameSite=Strict;`;
-            document.cookie = `zone_control_role=${parsedUser.rol}; path=/; SameSite=Strict;`;
+            api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            document.cookie = `zone_control_token=${storedToken}; path=/; SameSite=Lax${secureFlag};`;
+            document.cookie = `zone_control_role=${parsedUser.rol}; path=/; SameSite=Lax${secureFlag};`;
           } else {
             logout();
           }
@@ -76,60 +177,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           logout();
         }
       } else {
-        // Si no hay sesión en la pestaña actual, limpiar cookies para evitar bypass
-        document.cookie = 'zone_control_token=; path=/; max-age=0; SameSite=Strict;';
-        document.cookie = 'zone_control_role=; path=/; max-age=0; SameSite=Strict;';
+        document.cookie = `zone_control_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag};`;
+        document.cookie = `zone_control_role=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag};`;
+        setUser(null);
+        setToken(null);
       }
-      setIsLoading(false);
     }
   }, [logout]);
-
-  // Listener para resetear timer de inactividad
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleUserActivity = () => {
-      setLastActivity(Date.now());
-    };
-
-    window.addEventListener('mousemove', handleUserActivity);
-    window.addEventListener('keydown', handleUserActivity);
-    window.addEventListener('click', handleUserActivity);
-
-    return () => {
-      window.removeEventListener('mousemove', handleUserActivity);
-      window.removeEventListener('keydown', handleUserActivity);
-      window.removeEventListener('click', handleUserActivity);
-    };
-  }, []);
-
-  // Intervalo de control de inactividad de 5 minutos
-  useEffect(() => {
-    if (!token || typeof window === 'undefined') return;
-
-    const interval = setInterval(() => {
-      const now = Date.now();
-      if (now - lastActivity > INACTIVITY_LIMIT_MS) {
-        alert('Su sesión ha caducado por 5 minutos de inactividad (Políticas de Seguridad Zone Control).');
-        logout();
-      }
-    }, 10000); // Check cada 10s
-
-    return () => clearInterval(interval);
-  }, [lastActivity, token, logout]);
-
-  const login = (newToken: string, newUser: UsuarioAuth) => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('zone_control_token', newToken);
-      sessionStorage.setItem('zone_control_user', JSON.stringify(newUser));
-      // Cookies volátiles de sesión única: se autodestruyen al cerrar o abrir nuevo navegador
-      document.cookie = `zone_control_token=${newToken}; path=/; SameSite=Strict;`;
-      document.cookie = `zone_control_role=${newUser.rol}; path=/; SameSite=Strict;`;
-      setToken(newToken);
-      setUser(newUser);
-      setLastActivity(Date.now());
-    }
-  };
 
   const hasRole = (allowedRoles: RolUsuario[]): boolean => {
     if (!user) return false;

@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Prefijo de rutas protegidas del sistema
-const PROTECTED_PREFIX = '/dashboard';
-
-// Matriz de permisos RBAC para rutas de Next.js en el Servidor / Edge
+// Matriz de permisos RBAC para rutas de Next.js en el Servidor / Edge (Vercel)
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   '/dashboard/simulador': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
   '/dashboard/personal': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
@@ -16,13 +13,24 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   '/dashboard/auditoria': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
 };
 
-// Lista de rutas válidas públicas conocidas
-const VALID_PUBLIC_ROUTES = ['/', '/login'];
+// Función auxiliar para decodificar el payload de JWT sin dependencias en Edge
+function parseJwtPayload(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = atob(base64);
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Ignorar archivos estáticos, api interna y favicon de next
+  // Ignorar archivos estáticos, api interna de next y favicon
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -32,33 +40,57 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 1. Interceptar rutas protegidas que empiezan con /dashboard
-  if (pathname.startsWith(PROTECTED_PREFIX)) {
-    const token = request.cookies.get('zone_control_token')?.value;
-    const userRole = request.cookies.get('zone_control_role')?.value;
+  // 1. Leer el token JWT y el rol desde cookies seguras
+  const token = request.cookies.get('zone_control_token')?.value;
+  let userRole = request.cookies.get('zone_control_role')?.value;
 
-    // Si no hay token de autenticación, redirigir a la página principal por seguridad
-    if (!token) {
-      return NextResponse.redirect(new URL('/', request.url));
+  // Si no hay rol en la cookie, intentar extraerlo del payload JWT
+  if (token && !userRole) {
+    const payload = parseJwtPayload(token);
+    if (payload && payload.rol) {
+      userRole = payload.rol;
+    }
+  }
+
+  // 2. Si un usuario autenticado intenta entrar a /login, redirigirlo a /dashboard/simulador
+  if (pathname === '/login' && token && token.trim() !== '') {
+    return NextResponse.redirect(new URL('/dashboard/simulador', request.url), 307);
+  }
+
+  // 3. Si un usuario sin token intenta entrar a /dashboard/:path*, redirigirlo a /login (HTTP 307)
+  if (pathname.startsWith('/dashboard')) {
+    if (!token || token.trim() === '') {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('error', 'unauthorized');
+      return NextResponse.redirect(loginUrl, 307);
     }
 
-    // Validación de Rol (RBAC)
+    // 4. Verificación de Roles en el Edge (RBAC)
     const allowedRoles = ROLE_PERMISSIONS[pathname];
     if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/dashboard/simulador', request.url));
+      return NextResponse.redirect(new URL('/dashboard/simulador', request.url), 307);
     }
-  } else if (!VALID_PUBLIC_ROUTES.includes(pathname)) {
-    // 2. Si la ruta ingresada no existe o es desconocida, redirigir a la página de inicio (/) para evitar 404
-    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // 5. Redirección limpia de rutas no reconocidas a la raíz
+  const validPublicRoutes = ['/', '/login'];
+  if (!pathname.startsWith('/dashboard') && !validPublicRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL('/', request.url), 307);
   }
 
   const response = NextResponse.next();
 
-  // Headers de Seguridad Farmacéutica y Prevención de Clickjacking / XSS
+  // 6. Inyección dinámica de cabeceras anti-caché (no-store) en cada petición evaluada
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  response.headers.set('Surrogate-Control', 'no-store');
+
+  // Cabeceras de protección
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set('Referrer-Policy', 'no-referrer');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), browsing-topics=()');
 
   return response;
 }

@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import {
   ShieldCheck,
   Lock,
@@ -12,10 +15,14 @@ import {
   AlertOctagon,
   Database,
   Layers,
-  KeyRound
+  KeyRound,
+  LayoutDashboard,
+  LogOut
 } from 'lucide-react';
 
 export default function PortalPublicoPage() {
+  const { isAuthenticated, user, logout, solicitarConfirmacionSalir } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between selection:bg-brand-primary selection:text-white">
       {/* 1. Header / Navbar Institucional */}
@@ -43,13 +50,35 @@ export default function PortalPublicoPage() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               <span>Plataforma Segura SSL/TLS</span>
             </div>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white font-semibold text-xs hover:bg-brand-primary/90 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
-            >
-              <KeyRound className="w-4 h-4" />
-              Acceso a Personal Autorizado
-            </Link>
+
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard/simulador"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-primary text-white font-semibold text-xs hover:bg-brand-primary/90 transition-all shadow-md hover:scale-105 active:scale-95"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Ir al Panel ({user.rol})</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={solicitarConfirmacionSalir}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs border border-red-200 transition-all cursor-pointer"
+                  title="Cerrar Sesión Activa"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Salir</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white font-semibold text-xs hover:bg-brand-primary/90 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              >
+                <KeyRound className="w-4 h-4" />
+                Acceso a Personal Autorizado
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -77,14 +106,25 @@ export default function PortalPublicoPage() {
               </p>
 
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-brand-primary text-white font-bold text-sm hover:bg-brand-primary/90 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
-                >
-                  <Lock className="w-4 h-4" />
-                  Iniciar Sesión en el Sistema
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {isAuthenticated && user ? (
+                  <Link
+                    href="/dashboard/simulador"
+                    className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-brand-primary text-white font-bold text-sm hover:bg-brand-primary/90 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Ingresar al Panel de Control
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-brand-primary text-white font-bold text-sm hover:bg-brand-primary/90 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    <Lock className="w-4 h-4" />
+                    Iniciar Sesión en el Sistema
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
                 
                 <a
                   href="#modulos-info"
@@ -108,95 +148,81 @@ export default function PortalPublicoPage() {
               </div>
 
               <div className="space-y-3.5 text-xs text-slate-600 leading-relaxed">
-                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-brand-dark mb-0.5">Control de Áreas Críticas</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Acceso restringido únicamente a personal debidamente acreditado y capacitado en bioseguridad.
-                    </p>
+                <div className="flex items-start gap-3">
+                  <div className="p-1 rounded-md bg-emerald-100 text-emerald-800 shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
+                  <p>
+                    <strong className="text-brand-dark">Control Estricto de Esclusas (Airlocks):</strong> Bloqueo electromagnético automático que impide la apertura simultánea de puertas para preservar el gradiente de presión estéril.
+                  </p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
-                  <Award className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-brand-dark mb-0.5">Estándares Internacionales GMP</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Garantía de calidad e integridad en la síntesis de medicamentos y productos biológicos.
-                    </p>
+                <div className="flex items-start gap-3">
+                  <div className="p-1 rounded-md bg-emerald-100 text-emerald-800 shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
+                  <p>
+                    <strong className="text-brand-dark">Integridad de Auditoría (21 CFR Part 11):</strong> Registro criptográfico inmutable con sellos de tiempo y justificación obligatoria para cada evento.
+                  </p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-brand-dark mb-0.5">Seguridad y Trazabilidad</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Monitoreo permanente para preservar la esterilidad y el cumplimiento regulatorio.
-                    </p>
+                <div className="flex items-start gap-3">
+                  <div className="p-1 rounded-md bg-emerald-100 text-emerald-800 shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
+                  <p>
+                    <strong className="text-brand-dark">Gestión de Credenciales RFID:</strong> Autorización multinivel segmentada por departamentos y perfiles de bioseguridad.
+                  </p>
                 </div>
               </div>
 
-              <div className="pt-2 text-center">
-                <span className="text-[11px] font-semibold text-brand-primary">
-                  Sede Central • Dirección de Calidad y Bioseguridad
-                </span>
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span className="font-semibold text-brand-primary">Estándar ISO 14644 / GMP</span>
+                <span className="bg-slate-100 px-2.5 py-1 rounded-lg font-mono font-bold text-brand-dark">SALAS LIMPIAS A-B-C-D</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3. Módulos y Capacidades del Sistema */}
+        {/* 3. Sección de Módulos del Sistema */}
         <section id="modulos-info" className="bg-white border-y border-slate-200 py-16">
-          <div className="max-w-7xl mx-auto px-6 space-y-10">
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <span className="text-xs font-bold text-brand-primary uppercase tracking-wider">
-                Módulos Integrados en Zone Control
-              </span>
-              <h2 className="text-3xl font-heading font-extrabold text-brand-dark">
-                Seguridad Integral para Laboratorios Farmacéuticos
+          <div className="max-w-7xl mx-auto px-6 space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-brand-dark">
+                Módulos de Seguridad y Trazabilidad
               </h2>
-              <p className="text-sm text-slate-600">
-                El sistema proporciona una solución completa de extremo a extremo para la gestión de accesos y el cumplimiento regulatorio.
+              <p className="text-xs sm:text-sm text-slate-500">
+                Arquitectura diseñada para garantizar el cumplimiento regulatorio en plantas farmacéuticas y biológicas.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200 space-y-3 hover:border-brand-primary/60 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Card 1 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 hover:border-brand-primary/40 hover:shadow-md transition-all space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <h3 className="font-heading font-bold text-base text-brand-dark">Simulador de Esclusas</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Monitoreo de interbloqueo de puertas, sensores de presión diferencial y paso secuencial en tiempo real.
+                </p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 hover:border-brand-primary/40 hover:shadow-md transition-all space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
                   <Microscope className="w-5 h-5" />
                 </div>
-                <h3 className="font-heading font-bold text-base text-brand-dark">Gestión de Personal y Zonas</h3>
+                <h3 className="font-heading font-bold text-base text-brand-dark">Padrón de Personal y RFID</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Registro de colaboradores con asignación de laboratorios principales y matriz de áreas autorizadas (RF F-21).
+                  Asignación y revocación inmediata de credenciales con bitácora obligatoria de justificación.
                 </p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200 space-y-3 hover:border-brand-primary/60 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <h3 className="font-heading font-bold text-base text-brand-dark">Simulador de Esclusas RFID</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Emulador de hardware para validar tarjetas magnéticas, reglas de paso y detección de intrusiones en tiempo real.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200 space-y-3 hover:border-brand-primary/60 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold">
+              {/* Card 3 */}
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 hover:border-brand-primary/40 hover:shadow-md transition-all space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
                   <FileCheck2 className="w-5 h-5" />
-                </div>
-                <h3 className="font-heading font-bold text-base text-brand-dark">Auditoría 21 CFR Part 11</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Historial inmutable con triggers de base de datos que impiden la alteración o borrado de registros de acceso.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200 space-y-3 hover:border-brand-primary/60 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-                  <Building2 className="w-5 h-5" />
                 </div>
                 <h3 className="font-heading font-bold text-base text-brand-dark">Socio Internacional Sync</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
@@ -224,12 +250,21 @@ export default function PortalPublicoPage() {
             </div>
 
             <div className="shrink-0 flex flex-col gap-3 w-full sm:w-auto">
-              <Link
-                href="/login"
-                className="px-6 py-3.5 rounded-xl bg-brand-primary text-white font-bold text-xs text-center hover:bg-brand-primary/90 transition-all shadow-md"
-              >
-                Ingreso de Funcionarios
-              </Link>
+              {isAuthenticated && user ? (
+                <Link
+                  href="/dashboard/simulador"
+                  className="px-6 py-3.5 rounded-xl bg-brand-primary text-white font-bold text-xs text-center hover:bg-brand-primary/90 transition-all shadow-md"
+                >
+                  Ir al Panel de Control
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-6 py-3.5 rounded-xl bg-brand-primary text-white font-bold text-xs text-center hover:bg-brand-primary/90 transition-all shadow-md"
+                >
+                  Ingreso de Funcionarios
+                </Link>
+              )}
             </div>
           </div>
         </section>

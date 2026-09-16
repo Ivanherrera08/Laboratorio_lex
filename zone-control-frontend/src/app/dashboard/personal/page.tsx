@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Empleado, EstadoEmpleado } from '@/types';
 import { useNotifications } from '@/context/NotificationContext';
+import { getEmpleados, saveEmpleados } from '@/lib/personalStore';
 import {
   Users,
   Search,
@@ -98,7 +99,7 @@ const mockEmpleados: Empleado[] = [
 ];
 
 export default function GestionPersonalPage() {
-  const [empleados, setEmpleados] = useState<Empleado[]>(mockEmpleados);
+  const [empleados, setEmpleados] = useState<Empleado[]>(() => getEmpleados());
   const [busqueda, setBusqueda] = useState('');
   const [deptoFiltro, setDeptoFiltro] = useState('TODOS');
   const [areaFiltro, setAreaFiltro] = useState('TODAS');
@@ -120,6 +121,7 @@ export default function GestionPersonalPage() {
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>(['Laboratorio de Síntesis Molecular (Área A)']);
   const [showDropdownAreas, setShowDropdownAreas] = useState<boolean>(false);
   const [nuevoRfid, setNuevoRfid] = useState('');
+  const [nuevoFotoPerfil, setNuevoFotoPerfil] = useState<string>(''); // base64 de la foto
 
   const { agregarNotificacion } = useNotifications();
 
@@ -328,9 +330,12 @@ export default function GestionPersonalPage() {
       telefono: nuevoTelefono,
       codigoTarjetaRfid: nuevoRfid.trim() ? nuevoRfid.trim() : `CRN-XYZ-${Math.floor(100000 + Math.random() * 900000)}`,
       estado: 'ACTIVO',
+      fotoPerfil: nuevoFotoPerfil || undefined,
     };
 
-    setEmpleados([nuevo, ...empleados]);
+    const updatedList = [nuevo, ...empleados];
+    setEmpleados(updatedList);
+    saveEmpleados(updatedList);
     setEmpleadoCreado(nuevo);
 
     // Notificación en el sistema global
@@ -349,6 +354,7 @@ export default function GestionPersonalPage() {
     setNuevoCorreo('');
     setNuevoTelefono('');
     setNuevoRfid('');
+    setNuevoFotoPerfil('');
     setAreasPermitidas([catalogoLaboratoriosAreas[0].nombre]);
     setNuevoLaboratorioPrincipal(catalogoLaboratoriosAreas[0].nombre);
     setErroresForm({});
@@ -375,13 +381,15 @@ export default function GestionPersonalPage() {
     const estadoPrevio = empleadoSeleccionado.estado;
     const codigoAudit = `AUD-SEC-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    setEmpleados((prev) =>
-      prev.map((emp) =>
+    setEmpleados((prev) => {
+      const updated = prev.map((emp) =>
         emp.id === empleadoSeleccionado.id
           ? { ...emp, estado: nuevoEstado, motivoCambioEstado: motivoEstado }
           : emp
-      )
-    );
+      );
+      saveEmpleados(updated);
+      return updated;
+    });
 
     // Notificación en el sistema global
     agregarNotificacion({
@@ -887,6 +895,60 @@ export default function GestionPersonalPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Campo de Foto de Perfil */}
+              <div>
+                <label className="block text-[11px] font-bold text-brand-text mb-1.5 flex items-center gap-1.5">
+                  <span>📷</span> Foto de Perfil <span className="text-gray-400 font-normal">(Opcional)</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  {/* Preview de la foto */}
+                  <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-brand-accent/60 bg-brand-secondary/30 flex items-center justify-center overflow-hidden shrink-0">
+                    {nuevoFotoPerfil ? (
+                      <img src={nuevoFotoPerfil} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl">👤</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="foto-perfil-input"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 2 * 1024 * 1024) {
+                          alert('La imagen no puede superar 2 MB.');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setNuevoFotoPerfil(ev.target?.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <label
+                      htmlFor="foto-perfil-input"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-accent/60 bg-white text-[11px] font-semibold text-brand-dark cursor-pointer hover:border-brand-primary hover:bg-brand-secondary/30 transition-all"
+                    >
+                      📁 Seleccionar imagen
+                    </label>
+                    {nuevoFotoPerfil && (
+                      <button
+                        type="button"
+                        onClick={() => setNuevoFotoPerfil('')}
+                        className="ml-2 text-[10px] text-red-500 hover:underline font-semibold"
+                      >
+                        Quitar foto
+                      </button>
+                    )}
+                    <p className="text-[10px] text-brand-text/50 mt-1">JPG, PNG o WEBP · Máx 2 MB</p>
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-brand-accent/30">

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
+import { getUsuariosSistema, saveUsuariosSistema } from '@/lib/usuariosStore';
 
 const mockUsuariosSistema: UsuarioAuth[] = [
   {
@@ -53,7 +54,7 @@ const mockUsuariosSistema: UsuarioAuth[] = [
 ];
 
 export default function UsuariosSistemaPage() {
-  const [usuarios, setUsuarios] = useState<UsuarioAuth[]>(mockUsuariosSistema);
+  const [usuarios, setUsuarios] = useState<UsuarioAuth[]>(() => getUsuariosSistema());
   const [busqueda, setBusqueda] = useState('');
   const [showModal, setShowModal] = useState(false);
 
@@ -209,7 +210,9 @@ export default function UsuariosSistemaPage() {
       estado: 'ACTIVO',
     };
 
-    setUsuarios([nuevoUsuario, ...usuarios]);
+    const updatedList = [nuevoUsuario, ...usuarios];
+    setUsuarios(updatedList);
+    saveUsuariosSistema(updatedList);
     setUsuarioCreado(nuevoUsuario);
 
     agregarNotificacion({

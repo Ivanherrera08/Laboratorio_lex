@@ -31,8 +31,15 @@ function LoginFormContent() {
   const [recuperarCorreo, setRecuperarCorreo] = useState('');
   const [recuperarMsg, setRecuperarMsg] = useState('');
 
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // Si el usuario ya está autenticado, redirigir al simulador y no mostrar el formulario
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard/simulador');
+    }
+  }, [isAuthenticated, router]);
 
   // Usuarios Demo para pruebas directas
   const usuariosDemo: Record<string, { pass: string; user: any }> = {
@@ -85,14 +92,14 @@ function LoginFormContent() {
       // Intentar primero con backend real si está corriendo
       const res = await api.post('/auth/login', { documento, password });
       login(res.data.token, res.data.usuario);
-      router.push('/dashboard/simulador');
+      router.replace('/dashboard/simulador');
     } catch (err: any) {
       // Validación con cuentas demo para desarrollo frontend
       const demoAccount = usuariosDemo[documento.toLowerCase()];
 
       if (demoAccount && (password === demoAccount.pass || password === 'admin')) {
         login(`mock_jwt_${demoAccount.user.rol.toLowerCase()}`, demoAccount.user);
-        router.push('/dashboard/simulador');
+        router.replace('/dashboard/simulador');
         return;
       }
 

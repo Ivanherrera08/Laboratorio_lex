@@ -20,6 +20,9 @@ export interface Empleado {
   id: number;
   departamentoId: number;
   departamentoNombre?: string;
+  areaPrincipalId?: number;
+  areaPrincipalNombre?: string;
+  areasAutorizadas?: string[];
   tipoDocumento: string;
   numeroDocumento: string;
   nombres: string;
@@ -30,7 +33,9 @@ export interface Empleado {
   estado: EstadoEmpleado;
   motivoCambioEstado?: string;
   createdAt?: string;
+  fotoPerfil?: string; // Base64 o URL de la foto del empleado
 }
+
 
 export interface Departamento {
   id: number;
