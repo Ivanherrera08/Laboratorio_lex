@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   ShieldCheck,
   Users,
+  UserCog,
   Building2,
   ScanLine,
   FileSpreadsheet,
@@ -32,6 +33,12 @@ export default function Sidebar() {
       href: '/dashboard/personal',
       icon: Users,
       roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
+    },
+    {
+      name: 'Usuarios y Credenciales',
+      href: '/dashboard/usuarios',
+      icon: UserCog,
+      roles: ['ADMINISTRADOR'],
     },
     {
       name: 'Carga Masiva',
@@ -125,7 +132,7 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer / Logout con confirmación */}
+      {/* Footer / Logout */}
       <div className="p-4 border-t border-brand-accent/30">
         <button
           onClick={solicitarConfirmacionSalir}

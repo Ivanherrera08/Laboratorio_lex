@@ -25,7 +25,7 @@ const mockEmpleados: Empleado[] = [
     nombres: 'Carlos Andrés',
     apellidos: 'Mendoza Pérez',
     correo: 'carlos.mendoza@laboratorioxyz.com',
-    telefono: '+57 310 998 8776',
+    telefono: '3109988776',
     codigoTarjetaRfid: 'RFID-001',
     estado: 'ACTIVO',
   },
@@ -38,7 +38,7 @@ const mockEmpleados: Empleado[] = [
     nombres: 'Laura Sofía',
     apellidos: 'Restrepo Villa',
     correo: 'laura.restrepo@laboratorioxyz.com',
-    telefono: '+57 320 112 3344',
+    telefono: '3201123344',
     codigoTarjetaRfid: 'RFID-002',
     estado: 'REVOCADO',
     motivoCambioEstado: 'Finalización de contrato temporal y auditoría de seguridad.',
@@ -52,7 +52,7 @@ const mockEmpleados: Empleado[] = [
     nombres: 'Guillermo',
     apellidos: 'Von Hassen',
     correo: 'guillermo.von@laboratorioxyz.com',
-    telefono: '+57 315 443 2211',
+    telefono: '3154432211',
     codigoTarjetaRfid: 'RFID-003',
     estado: 'SUSPENDIDO',
     motivoCambioEstado: 'Incumplimiento de protocolo de esterilidad en esclusa.',
@@ -69,7 +69,7 @@ export default function GestionPersonalPage() {
   const [showEstadoModal, setShowEstadoModal] = useState(false);
   const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState<Empleado | null>(null);
 
-  // Formulario de Registro de Nuevo Empleado
+  // Formulario con validaciones estrictas requeridas
   const [nuevoDoc, setNuevoDoc] = useState('');
   const [nuevoTipoDoc, setNuevoTipoDoc] = useState('CC');
   const [nuevosNombres, setNuevosNombres] = useState('');
@@ -79,9 +79,62 @@ export default function GestionPersonalPage() {
   const [nuevoDepto, setNuevoDepto] = useState('Producción y Síntesis');
   const [nuevoRfid, setNuevoRfid] = useState('');
 
+  // Errores de validación en tiempo real
+  const [erroresForm, setErroresForm] = useState<Record<string, string>>({});
+
   // Formulario de estado
   const [nuevoEstado, setNuevoEstado] = useState<EstadoEmpleado>('ACTIVO');
   const [motivoEstado, setMotivoEstado] = useState('');
+
+  // Manejo de Documento: Máximo 12 dígitos si es CC/Numérico
+  const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value.replace(/\D/g, '');
+    if (valor.length <= 12) {
+      setNuevoDoc(valor);
+      if (valor.length < 6 && valor.length > 0) {
+        setErroresForm((prev) => ({ ...prev, doc: 'La cédula debe contener entre 6 y 12 dígitos.' }));
+      } else {
+        setErroresForm((prev) => {
+          const c = { ...prev };
+          delete c.doc;
+          return c;
+        });
+      }
+    }
+  };
+
+  // Manejo de Teléfono Celular: Máximo 10 dígitos numéricos
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value.replace(/\D/g, '');
+    if (valor.length <= 10) {
+      setNuevoTelefono(valor);
+      if (valor.length !== 10 && valor.length > 0) {
+        setErroresForm((prev) => ({ ...prev, tel: 'El número de celular debe tener exactamente 10 dígitos.' }));
+      } else {
+        setErroresForm((prev) => {
+          const c = { ...prev };
+          delete c.tel;
+          return c;
+        });
+      }
+    }
+  };
+
+  // Manejo de Correo Institucional
+  const handleCorreoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    setNuevoCorreo(valor);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (valor && !emailRegex.test(valor)) {
+      setErroresForm((prev) => ({ ...prev, email: 'Formato de correo electrónico institucional inválido.' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.email;
+        return c;
+      });
+    }
+  };
 
   const empleadosFiltrados = empleados.filter((emp) => {
     const coincideTexto =
@@ -97,14 +150,25 @@ export default function GestionPersonalPage() {
   const handleRegistrarEmpleado = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nuevoDoc || !nuevosNombres || !nuevosApellidos || !nuevoCorreo) {
-      alert('Por favor complete todos los campos obligatorios (*)');
+    if (nuevoDoc.length < 6 || nuevoDoc.length > 12) {
+      alert('Error: La cédula debe tener entre 6 y 12 dígitos.');
+      return;
+    }
+
+    if (nuevoTelefono.length !== 10) {
+      alert('Error: El celular debe contener exactamente 10 dígitos.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(nuevoCorreo)) {
+      alert('Error: Ingrese un correo electrónico válido (ejemplo: usuario@laboratorioxyz.com).');
       return;
     }
 
     const existe = empleados.some((emp) => emp.numeroDocumento === nuevoDoc);
     if (existe) {
-      alert('Error: Ya existe un empleado registrado con este número de documento.');
+      alert('Error: Ya existe un empleado registrado con este número de cédula.');
       return;
     }
 
@@ -114,10 +178,10 @@ export default function GestionPersonalPage() {
       departamentoNombre: nuevoDepto,
       tipoDocumento: nuevoTipoDoc,
       numeroDocumento: nuevoDoc,
-      nombres: nuevosNombres,
-      apellidos: nuevosApellidos,
-      correo: nuevoCorreo,
-      telefono: nuevoTelefono || '+57 300 000 0000',
+      nombres: nuevosNombres.trim(),
+      apellidos: nuevosApellidos.trim(),
+      correo: nuevoCorreo.trim().toLowerCase(),
+      telefono: nuevoTelefono,
       codigoTarjetaRfid: nuevoRfid.trim() ? nuevoRfid.trim() : `RFID-${Math.floor(100 + Math.random() * 900)}`,
       estado: 'ACTIVO',
     };
@@ -132,6 +196,7 @@ export default function GestionPersonalPage() {
     setNuevoCorreo('');
     setNuevoTelefono('');
     setNuevoRfid('');
+    setErroresForm({});
     setShowRegistrarModal(false);
   };
 
@@ -176,7 +241,7 @@ export default function GestionPersonalPage() {
 
         <button
           onClick={() => setShowRegistrarModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
         >
           <Plus className="w-4 h-4" />
           Registrar Empleado
@@ -189,7 +254,7 @@ export default function GestionPersonalPage() {
           <Search className="w-4 h-4 text-brand-text/50 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="Buscar por documento, nombre o correo..."
+            placeholder="Buscar por cédula, nombre o correo..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
@@ -217,9 +282,10 @@ export default function GestionPersonalPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-brand-secondary/70 border-b border-brand-accent/30 text-brand-dark font-bold">
               <tr>
-                <th className="p-4">Documento / Tipo</th>
+                <th className="p-4">Cédula (Máx 12)</th>
                 <th className="p-4">Nombres y Apellidos</th>
                 <th className="p-4">Departamento</th>
+                <th className="p-4">Celular (10 d.)</th>
                 <th className="p-4">Credencial RFID</th>
                 <th className="p-4">Estado</th>
                 <th className="p-4 text-right">Acciones</th>
@@ -237,6 +303,7 @@ export default function GestionPersonalPage() {
                     <p className="text-[11px] text-brand-text/60">{emp.correo}</p>
                   </td>
                   <td className="p-4 font-medium text-brand-text">{emp.departamentoNombre}</td>
+                  <td className="p-4 font-mono text-gray-600">{emp.telefono}</td>
                   <td className="p-4">
                     <span className="px-2 py-0.5 rounded-md bg-brand-secondary font-mono text-[11px] text-brand-primary font-bold border border-brand-accent/40">
                       {emp.codigoTarjetaRfid || 'SIN_VINCULAR'}
@@ -273,17 +340,17 @@ export default function GestionPersonalPage() {
         </div>
       </div>
 
-      {/* MODAL 1: REGISTRAR NUEVO EMPLEADO */}
+      {/* MODAL 1: REGISTRAR NUEVO EMPLEADO CON REGLAS DE VALIDACIÓN */}
       {showRegistrarModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down max-h-[90vh] overflow-y-auto">
             <div className="flex items-center gap-3 mb-5 border-b border-brand-accent/30 pb-3">
               <div className="p-2.5 rounded-xl bg-brand-secondary text-brand-primary">
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base font-heading font-bold text-brand-dark">Registrar Nuevo Empleado Autorizado</h3>
-                <p className="text-xs text-brand-text/70">Padrón de control de acceso físico — Laboratorio XYZ</p>
+                <p className="text-xs text-brand-text/70">Cédula (máx 12), Celular (máx 10) y Correo institucional</p>
               </div>
             </div>
 
@@ -302,15 +369,21 @@ export default function GestionPersonalPage() {
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Número de Documento *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-brand-text">Cédula * (Máx 12 dígitos)</label>
+                    <span className="text-[10px] font-mono text-brand-primary">{nuevoDoc.length}/12</span>
+                  </div>
                   <input
                     type="text"
                     required
                     value={nuevoDoc}
-                    onChange={(e) => setNuevoDoc(e.target.value)}
+                    onChange={handleDocChange}
                     placeholder="Ej. 1020304050"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono font-bold"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold focus:outline-none focus:ring-2 ${
+                      erroresForm.doc ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
                   />
+                  {erroresForm.doc && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.doc}</p>}
                 </div>
               </div>
 
@@ -323,7 +396,7 @@ export default function GestionPersonalPage() {
                     value={nuevosNombres}
                     onChange={(e) => setNuevosNombres(e.target.value)}
                     placeholder="Ej. Roberto"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs"
+                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
                   />
                 </div>
                 <div>
@@ -334,7 +407,7 @@ export default function GestionPersonalPage() {
                     value={nuevosApellidos}
                     onChange={(e) => setNuevosApellidos(e.target.value)}
                     placeholder="Ej. Gómez"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs"
+                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
                   />
                 </div>
               </div>
@@ -346,20 +419,30 @@ export default function GestionPersonalPage() {
                     type="email"
                     required
                     value={nuevoCorreo}
-                    onChange={(e) => setNuevoCorreo(e.target.value)}
+                    onChange={handleCorreoChange}
                     placeholder="r.gomez@laboratorioxyz.com"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
+                      erroresForm.email ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
                   />
+                  {erroresForm.email && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.email}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Teléfono Móvil</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-brand-text">Celular * (10 dígitos)</label>
+                    <span className="text-[10px] font-mono text-brand-primary">{nuevoTelefono.length}/10</span>
+                  </div>
                   <input
                     type="text"
+                    required
                     value={nuevoTelefono}
-                    onChange={(e) => setNuevoTelefono(e.target.value)}
-                    placeholder="+57 300 123 4567"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs"
+                    onChange={handleTelefonoChange}
+                    placeholder="3001234567"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-mono focus:outline-none focus:ring-2 ${
+                      erroresForm.tel ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
                   />
+                  {erroresForm.tel && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.tel}</p>}
                 </div>
               </div>
 
@@ -377,12 +460,12 @@ export default function GestionPersonalPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Código RFID / Chip (Opcional)</label>
+                  <label className="block text-[11px] font-bold text-brand-text mb-1">Código RFID / Carnet</label>
                   <input
                     type="text"
                     value={nuevoRfid}
                     onChange={(e) => setNuevoRfid(e.target.value)}
-                    placeholder="Ej. RFID-990"
+                    placeholder="Ej. CARNET-XYZ-901"
                     className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono"
                   />
                 </div>
@@ -398,7 +481,7 @@ export default function GestionPersonalPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-primary text-white hover:bg-brand-primary/90 shadow-sm cursor-pointer"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-brand-primary text-white hover:bg-brand-primary/90 shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                 >
                   Guardar Empleado
                 </button>
