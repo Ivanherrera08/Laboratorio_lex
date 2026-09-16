@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Rutas protegidas que requieren autenticación obligatoria
+// Prefijo de rutas protegidas del sistema
 const PROTECTED_PREFIX = '/dashboard';
 
 // Matriz de permisos RBAC para rutas de Next.js en el Servidor / Edge
@@ -16,38 +16,45 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   '/dashboard/auditoria': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
 };
 
+// Lista de rutas válidas públicas conocidas
+const VALID_PUBLIC_ROUTES = ['/', '/login'];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Interceptar solo las rutas que empiezan con /dashboard
+  // Ignorar archivos estáticos, api interna y favicon de next
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+
+  // 1. Interceptar rutas protegidas que empiezan con /dashboard
   if (pathname.startsWith(PROTECTED_PREFIX)) {
     const token = request.cookies.get('zone_control_token')?.value;
     const userRole = request.cookies.get('zone_control_role')?.value;
 
-    // 1. Si no hay cookie de sesión autenticada en la petición HTTP
-    // Redirigir de inmediato al Login con razón de seguridad
+    // Si no hay token de autenticación, redirigir a la página principal por seguridad
     if (!token) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('error', 'unauthorized');
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // 2. Validación de Rol (RBAC) a nivel de Servidor / Red
+    // Validación de Rol (RBAC)
     const allowedRoles = ROLE_PERMISSIONS[pathname];
     if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
-      // Redirigir a simulador o pantalla de denegado si intenta forzar la URL
-      const deniedUrl = new URL('/dashboard/simulador', request.url);
-      deniedUrl.searchParams.set('error', 'forbidden_role');
-      return NextResponse.redirect(deniedUrl);
+      return NextResponse.redirect(new URL('/dashboard/simulador', request.url));
     }
+  } else if (!VALID_PUBLIC_ROUTES.includes(pathname)) {
+    // 2. Si la ruta ingresada no existe o es desconocida, redirigir a la página de inicio (/) para evitar 404
+    return NextResponse.redirect(new URL('/', request.url));
   }
-
-  // Permitir siempre la visualización de la página de Login para ingresar credenciales explícitamente
 
   const response = NextResponse.next();
 
-  // Agregar Headers de Seguridad Farmacéutica y Prevención de Clickjacking / XSS
+  // Headers de Seguridad Farmacéutica y Prevención de Clickjacking / XSS
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -56,7 +63,6 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Matcher para interceptar dashboard y login
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
