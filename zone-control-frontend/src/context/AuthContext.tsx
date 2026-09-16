@@ -37,6 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('zone_control_token');
+      sessionStorage.removeItem('zone_control_user');
       localStorage.removeItem('zone_control_token');
       localStorage.removeItem('zone_control_user');
       // Borrar cookies de seguridad de ruta
@@ -53,26 +55,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setShowConfirmLogout(true);
   };
 
-  // Carga inicial de sesión desde localStorage y cookies con verificación
+  // Carga inicial de sesión desde sessionStorage y cookies de sesión única
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('zone_control_token');
-      const storedUser = localStorage.getItem('zone_control_user');
+      const storedToken = sessionStorage.getItem('zone_control_token');
+      const storedUser = sessionStorage.getItem('zone_control_user');
       if (storedToken && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
           if (parsedUser && parsedUser.rol) {
             setToken(storedToken);
             setUser(parsedUser);
-            // Asegurar sincronización de cookie de seguridad
-            document.cookie = `zone_control_token=${storedToken}; path=/; max-age=28800; SameSite=Strict;`;
-            document.cookie = `zone_control_role=${parsedUser.rol}; path=/; max-age=28800; SameSite=Strict;`;
+            // Asegurar cookie de sesión volátil (sin max-age para expirar al cerrar)
+            document.cookie = `zone_control_token=${storedToken}; path=/; SameSite=Strict;`;
+            document.cookie = `zone_control_role=${parsedUser.rol}; path=/; SameSite=Strict;`;
           } else {
             logout();
           }
         } catch {
           logout();
         }
+      } else {
+        // Si no hay sesión en la pestaña actual, limpiar cookies para evitar bypass
+        document.cookie = 'zone_control_token=; path=/; max-age=0; SameSite=Strict;';
+        document.cookie = 'zone_control_role=; path=/; max-age=0; SameSite=Strict;';
       }
       setIsLoading(false);
     }
@@ -114,11 +120,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = (newToken: string, newUser: UsuarioAuth) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('zone_control_token', newToken);
-      localStorage.setItem('zone_control_user', JSON.stringify(newUser));
-      // Sincronizar cookies seguras con expiración (8 horas / 28800 segundos) y SameSite=Strict
-      document.cookie = `zone_control_token=${newToken}; path=/; max-age=28800; SameSite=Strict;`;
-      document.cookie = `zone_control_role=${newUser.rol}; path=/; max-age=28800; SameSite=Strict;`;
+      sessionStorage.setItem('zone_control_token', newToken);
+      sessionStorage.setItem('zone_control_user', JSON.stringify(newUser));
+      // Cookies volátiles de sesión única: se autodestruyen al cerrar o abrir nuevo navegador
+      document.cookie = `zone_control_token=${newToken}; path=/; SameSite=Strict;`;
+      document.cookie = `zone_control_role=${newUser.rol}; path=/; SameSite=Strict;`;
       setToken(newToken);
       setUser(newUser);
       setLastActivity(Date.now());

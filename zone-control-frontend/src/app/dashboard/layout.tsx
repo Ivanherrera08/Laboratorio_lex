@@ -33,7 +33,7 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated || !user) {
-        router.replace('/login?error=unauthorized');
+        router.replace('/');
         return;
       }
 

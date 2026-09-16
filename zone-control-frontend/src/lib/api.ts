@@ -14,7 +14,7 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('zone_control_token');
+      const token = sessionStorage.getItem('zone_control_token') || localStorage.getItem('zone_control_token');
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -31,11 +31,13 @@ api.interceptors.response.use(
     if (typeof window !== 'undefined') {
       if (error.response?.status === 401) {
         // Token expirado o inválido
+        sessionStorage.removeItem('zone_control_token');
+        sessionStorage.removeItem('zone_control_user');
         localStorage.removeItem('zone_control_token');
         localStorage.removeItem('zone_control_user');
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login?error=session_expired';
-        }
+        document.cookie = 'zone_control_token=; path=/; max-age=0; SameSite=Strict;';
+        document.cookie = 'zone_control_role=; path=/; max-age=0; SameSite=Strict;';
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);
