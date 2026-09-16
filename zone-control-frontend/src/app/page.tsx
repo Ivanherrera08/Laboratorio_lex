@@ -95,41 +95,53 @@ export default function PortalPublicoPage() {
               </div>
             </div>
 
-            {/* Tarjeta Visual de Estado del Sistema */}
-            <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-brand-accent/60 shadow-xl space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-2.5">
-                  <Activity className="w-5 h-5 text-brand-primary" />
-                  <span className="font-heading font-bold text-sm text-brand-dark">Estado del Complejo en Vivo</span>
+            {/* Tarjeta Institucional de Bioseguridad Farmacéutica */}
+            <div className="lg:col-span-5 bg-white p-7 rounded-3xl border border-brand-accent/60 shadow-xl space-y-5">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                  <Building2 className="w-5 h-5" />
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
-                  Operativo 100%
-                </span>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                  <span className="font-medium text-slate-700">🔐 Control RFID & Biometría:</span>
-                  <span className="font-bold text-emerald-700">Calibrado y Activo</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                  <span className="font-medium text-slate-700">🗄️ Base de Datos Inmutable:</span>
-                  <span className="font-bold text-brand-primary font-mono">PostgreSQL 14+</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                  <span className="font-medium text-slate-700">🛡️ Protección de Rutas (Edge RBAC):</span>
-                  <span className="font-bold text-indigo-700">Next.js Shield</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                  <span className="font-medium text-slate-700">🌍 Sincronización Socio Internacional:</span>
-                  <span className="font-bold text-emerald-700">Conectado (SFTP/API)</span>
+                <div>
+                  <h3 className="font-heading font-bold text-sm text-brand-dark">Laboratorio Farmacéutico XYZ</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Complejo de Investigación y Producción Estéril</p>
                 </div>
               </div>
 
-              <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-                <AlertOctagon className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-                <span>
-                  <strong>Aviso de Seguridad:</strong> Todas las transacciones y accesos a las URLs internas quedan auditados bajo firma digital y registro de IP.
+              <div className="space-y-3.5 text-xs text-slate-600 leading-relaxed">
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-brand-dark mb-0.5">Control de Áreas Críticas</h4>
+                    <p className="text-[11px] text-slate-500">
+                      Acceso restringido únicamente a personal debidamente acreditado y capacitado en bioseguridad.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
+                  <Award className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-brand-dark mb-0.5">Estándares Internacionales GMP</h4>
+                    <p className="text-[11px] text-slate-500">
+                      Garantía de calidad e integridad en la síntesis de medicamentos y productos biológicos.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
+                  <Lock className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-brand-dark mb-0.5">Seguridad y Trazabilidad</h4>
+                    <p className="text-[11px] text-slate-500">
+                      Monitoreo permanente para preservar la esterilidad y el cumplimiento regulatorio.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 text-center">
+                <span className="text-[11px] font-semibold text-brand-primary">
+                  Sede Central • Dirección de Calidad y Bioseguridad
                 </span>
               </div>
             </div>
