@@ -37,11 +37,29 @@ export default function CatalogosPage() {
   const [rfidCodigo, setRfidCodigo] = useState('');
   const [tipoCarnet, setTipoCarnet] = useState('CHIP_RFID_NFC');
   const [rfidMsg, setRfidMsg] = useState('');
+  const [errorCarnet, setErrorCarnet] = useState('');
+
+  const handleCarnetCodigoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let valor = e.target.value;
+    if (valor.length <= 14) {
+      setRfidCodigo(valor);
+      if (valor.length > 0 && valor.length < 4) {
+        setErrorCarnet('El número del carnet debe tener entre 4 y 14 caracteres.');
+      } else {
+        setErrorCarnet('');
+      }
+    }
+  };
 
   const handleVincularTarjeta = (e: React.FormEvent) => {
     e.preventDefault();
     const doc = rfidDoc.trim();
     const code = rfidCodigo.trim();
+
+    if (code.length > 14) {
+      alert('Error: El número de carnet no puede superar los 14 caracteres.');
+      return;
+    }
 
     setRfidMsg(`¡Carnet Institucional [${code}] vinculado y habilitado con éxito para el personal [Documento: ${doc}]!`);
     setTimeout(() => {
@@ -49,12 +67,15 @@ export default function CatalogosPage() {
       setRfidDoc('');
       setNombreEmpleado('');
       setRfidCodigo('');
+      setErrorCarnet('');
     }, 4500);
   };
 
   const generarCodigoCarnet = () => {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    setRfidCodigo(`CARNET-XYZ-${randomNum}`);
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    // Formato exacto dentro del rango máximo de 14 caracteres: 'CRN-XYZ-123456' (14 chars)
+    setRfidCodigo(`CRN-XYZ-${randomNum}`);
+    setErrorCarnet('');
   };
 
   return (
@@ -205,15 +226,22 @@ export default function CatalogosPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-text mb-1">Código del Chip RFID/NFC *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-brand-text">Código / Número del Carnet *</label>
+                    <span className="text-[10px] font-medium text-gray-500">{rfidCodigo.length}/14 máx.</span>
+                  </div>
                   <input
                     type="text"
                     required
+                    maxLength={14}
                     value={rfidCodigo}
-                    onChange={(e) => setRfidCodigo(e.target.value)}
-                    placeholder="Ej. CARNET-XYZ-901"
+                    onChange={handleCarnetCodigoChange}
+                    placeholder="Ej. CRN-XYZ-123456"
                     className="w-full px-3.5 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
                   />
+                  {errorCarnet && (
+                    <p className="text-[10px] text-red-600 font-semibold mt-1">{errorCarnet}</p>
+                  )}
                 </div>
               </div>
 

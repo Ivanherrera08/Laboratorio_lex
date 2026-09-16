@@ -170,6 +170,23 @@ export default function GestionPersonalPage() {
     }
   };
 
+  // Manejo de Código de Carnet / RFID: Máximo 14 caracteres
+  const handleRfidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    if (valor.length <= 14) {
+      setNuevoRfid(valor);
+      if (valor.length > 0 && valor.length < 4) {
+        setErroresForm((prev) => ({ ...prev, rfid: 'El número de carnet debe tener entre 4 y 14 caracteres.' }));
+      } else {
+        setErroresForm((prev) => {
+          const c = { ...prev };
+          delete c.rfid;
+          return c;
+        });
+      }
+    }
+  };
+
   const empleadosFiltrados = empleados.filter((emp) => {
     const coincideTexto =
       emp.numeroDocumento.includes(busqueda) ||
@@ -510,14 +527,21 @@ export default function GestionPersonalPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Código RFID / Carnet</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-brand-text">Código / N° Carnet</label>
+                    <span className="text-[9px] text-gray-500 font-medium">{nuevoRfid.length}/14 máx.</span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={14}
                     value={nuevoRfid}
-                    onChange={(e) => setNuevoRfid(e.target.value)}
-                    placeholder="Ej. CARNET-XYZ-901"
+                    onChange={handleRfidChange}
+                    placeholder="Ej. CRN-XYZ-901"
                     className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono"
                   />
+                  {erroresForm.rfid && (
+                    <p className="text-[10px] text-red-600 font-semibold mt-1">{erroresForm.rfid}</p>
+                  )}
                 </div>
               </div>
 
