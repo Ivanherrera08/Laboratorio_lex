@@ -167,20 +167,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               Al salir, se cerrará tu sesión activa y se protegerá la información de biometría y trazabilidad farmacéutica.
             </p>
 
-            <div className="flex items-center justify-end gap-2.5">
+            <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowConfirmLogout(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-brand-text hover:bg-gray-100 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-all cursor-pointer"
               >
                 Permanecer en el Sistema
               </button>
               <button
                 type="button"
                 onClick={logout}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+                style={{ backgroundColor: '#DC2626', color: '#FFFFFF' }}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer hover:opacity-95 hover:scale-105 active:scale-95 flex items-center gap-1.5"
               >
-                Sí, Cerrar Sesión
+                <LogOut className="w-3.5 h-3.5 text-white" />
+                <span>Sí, Cerrar Sesión</span>
               </button>
             </div>
           </div>
