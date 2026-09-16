@@ -127,6 +127,17 @@ export default function GestionPersonalPage() {
   const [showExitoModal, setShowExitoModal] = useState(false);
   const [empleadoCreado, setEmpleadoCreado] = useState<Empleado | null>(null);
 
+  // Modal de Confirmación de Bitácora / Auditoría Dinámico y Animado
+  const [showBitacoraExitoModal, setShowBitacoraExitoModal] = useState(false);
+  const [bitacoraInfo, setBitacoraInfo] = useState<{
+    empleadoNombre: string;
+    documento: string;
+    estadoAnterior: string;
+    nuevoEstado: string;
+    motivo: string;
+    codigoAuditoria: string;
+  } | null>(null);
+
   // Errores de validación en tiempo real
   const [erroresForm, setErroresForm] = useState<Record<string, string>>({});
 
@@ -357,9 +368,12 @@ export default function GestionPersonalPage() {
     if (!empleadoSeleccionado) return;
 
     if ((nuevoEstado === 'REVOCADO' || nuevoEstado === 'SUSPENDIDO') && !motivoEstado.trim()) {
-      alert('Es obligatorio ingresar el motivo técnico/administrativo del cambio de estado.');
+      setErroresForm((prev) => ({ ...prev, estadoMotivo: 'Es obligatorio ingresar el motivo del cambio de estado.' }));
       return;
     }
+
+    const estadoPrevio = empleadoSeleccionado.estado;
+    const codigoAudit = `AUD-SEC-${Math.floor(100000 + Math.random() * 900000)}`;
 
     setEmpleados((prev) =>
       prev.map((emp) =>
@@ -369,8 +383,27 @@ export default function GestionPersonalPage() {
       )
     );
 
-    alert(`Estado de ${empleadoSeleccionado.nombres} actualizado a ${nuevoEstado} y registrado en auditoría.`);
+    // Notificación en el sistema global
+    agregarNotificacion({
+      titulo: `🛡️ Auditoría: Modificación de Estado (${nuevoEstado})`,
+      mensaje: `Colaborador ${empleadoSeleccionado.nombres} ${empleadoSeleccionado.apellidos} cambió de [${estadoPrevio}] a [${nuevoEstado}]. Ref: ${codigoAudit}.`,
+      tipo: nuevoEstado === 'ACTIVO' ? 'SISTEMA' : 'SEGURIDAD',
+      rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
+      accionUrl: '/dashboard/auditoria',
+    });
+
+    // Configurar información para el modal de éxito animado
+    setBitacoraInfo({
+      empleadoNombre: `${empleadoSeleccionado.nombres} ${empleadoSeleccionado.apellidos}`,
+      documento: empleadoSeleccionado.numeroDocumento,
+      estadoAnterior: estadoPrevio,
+      nuevoEstado: nuevoEstado,
+      motivo: motivoEstado.trim() || 'Modificación administrativa autorizada',
+      codigoAuditoria: codigoAudit,
+    });
+
     setShowEstadoModal(false);
+    setShowBitacoraExitoModal(true);
   };
 
   return (
@@ -1001,6 +1034,89 @@ export default function GestionPersonalPage() {
                 onClick={() => {
                   setShowExitoModal(false);
                   setEmpleadoCreado(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Aceptar y Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dinámico Interactivo de Bitácora y Auditoría 21 CFR Part 11 */}
+      {showBitacoraExitoModal && bitacoraInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-brand-accent/40 relative overflow-hidden transform animate-scale-up">
+            {/* Efectos de fondo */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-100 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-secondary rounded-full blur-xl pointer-events-none" />
+
+            <div className="relative z-10 text-center">
+              {/* Icono de Escudo de Seguridad Animado */}
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-brand-primary/30 text-white mb-4 animate-bounce">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+                BITÁCORA AUDITADA 21 CFR PART 11
+              </div>
+
+              <h2 className="text-xl font-heading font-extrabold text-brand-dark mb-1">
+                ¡Estado Registrado en Bitácora!
+              </h2>
+              <p className="text-xs text-brand-text/75 mb-4">
+                La modificación de estado ha sido procesada e inscrita de forma inmutable en el registro de auditoría.
+              </p>
+
+              {/* Ficha Resumen de Auditoría */}
+              <div className="bg-brand-secondary/70 p-4 rounded-2xl border border-brand-accent/50 text-left space-y-2 mb-5">
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Colaborador:</span>
+                  <span className="text-xs font-bold text-brand-dark">{bitacoraInfo.empleadoNombre}</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Documento / ID:</span>
+                  <span className="text-xs font-mono font-bold text-brand-primary">{bitacoraInfo.documento}</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Transición de Estado:</span>
+                  <div className="flex items-center gap-1.5 text-xs font-bold">
+                    <span className="text-slate-500 line-through text-[11px]">{bitacoraInfo.estadoAnterior}</span>
+                    <span>→</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                      bitacoraInfo.nuevoEstado === 'ACTIVO'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {bitacoraInfo.nuevoEstado}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-start justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70 shrink-0 mr-2">Motivo Registrado:</span>
+                  <span className="text-[11px] text-brand-dark font-medium text-right leading-tight italic">
+                    &quot;{bitacoraInfo.motivo}&quot;
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] font-medium text-brand-text/70">Folio de Auditoría:</span>
+                  <span className="text-[10px] font-mono font-bold text-brand-primary bg-white px-2 py-0.5 rounded border border-brand-accent/50">
+                    {bitacoraInfo.codigoAuditoria}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón de Confirmación con Animación */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBitacoraExitoModal(false);
+                  setBitacoraInfo(null);
                 }}
                 className="w-full py-3.5 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
