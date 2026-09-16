@@ -13,6 +13,10 @@ import {
   UserCheck,
   CheckCircle2,
   Sparkles,
+  Camera,
+  Image as ImageIcon,
+  Upload,
+  Trash2,
 } from 'lucide-react';
 
 const mockDeptos: Departamento[] = [
@@ -36,8 +40,31 @@ export default function CatalogosPage() {
   const [nombreEmpleado, setNombreEmpleado] = useState('');
   const [rfidCodigo, setRfidCodigo] = useState('');
   const [tipoCarnet, setTipoCarnet] = useState('CHIP_RFID_NFC');
+  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const [fotoNombre, setFotoNombre] = useState('');
   const [rfidMsg, setRfidMsg] = useState('');
   const [errorCarnet, setErrorCarnet] = useState('');
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('La fotografía no debe superar 2MB de tamaño.');
+        return;
+      }
+      setFotoNombre(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFotoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEliminarFoto = () => {
+    setFotoUrl(null);
+    setFotoNombre('');
+  };
 
   const handleCarnetCodigoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let valor = e.target.value;
@@ -149,9 +176,20 @@ export default function CatalogosPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-3 items-center">
-              <div className="w-16 h-20 bg-white/80 rounded-xl border border-brand-accent/60 flex flex-col items-center justify-center text-brand-primary/60">
-                <UserCheck className="w-8 h-8 text-brand-primary" />
-                <span className="text-[8px] font-bold text-brand-dark mt-1">FOTO</span>
+              <div className="w-20 h-24 bg-white rounded-2xl border-2 border-brand-primary/40 shadow-sm flex flex-col items-center justify-center overflow-hidden relative group">
+                {fotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={fotoUrl}
+                    alt="Foto del colaborador"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-brand-primary/60 p-1">
+                    <UserCheck className="w-8 h-8 text-brand-primary" />
+                    <span className="text-[8px] font-bold text-brand-dark mt-1">SIN FOTO</span>
+                  </div>
+                )}
               </div>
 
               <div className="col-span-2 space-y-1 text-xs">
@@ -243,6 +281,46 @@ export default function CatalogosPage() {
                     <p className="text-[10px] text-red-600 font-semibold mt-1">{errorCarnet}</p>
                   )}
                 </div>
+              </div>
+
+              {/* Subida de Fotografía del Colaborador */}
+              <div className="p-3.5 bg-brand-light rounded-2xl border border-brand-accent/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-brand-dark">
+                    <Camera className="w-4 h-4 text-brand-primary" />
+                    <span>Fotografía del Colaborador para el Carnet</span>
+                  </div>
+                  {fotoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleEliminarFoto}
+                      className="inline-flex items-center gap-1 text-[10px] text-red-600 hover:text-red-800 font-semibold cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Quitar foto
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="flex-1 cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-brand-primary/50 bg-white hover:bg-brand-secondary/40 text-xs text-brand-text font-medium transition-all">
+                      <Upload className="w-4 h-4 text-brand-primary" />
+                      <span className="truncate">
+                        {fotoNombre ? fotoNombre : 'Seleccionar foto desde tu equipo (JPG, PNG)...'}
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      onChange={handleFotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <p className="text-[10px] text-brand-text/60">
+                  La foto se recortará y estampará automáticamente en el carnet físico con chip de proximidad.
+                </p>
               </div>
 
               <button
