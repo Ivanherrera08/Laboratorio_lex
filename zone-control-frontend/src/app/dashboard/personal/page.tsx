@@ -261,9 +261,9 @@ export default function GestionPersonalPage() {
     agregarNotificacion({
       titulo: `👤 Alta de Personal: ${nuevo.nombres} ${nuevo.apellidos}`,
       mensaje: `Se ha registrado el personal con cédula ${nuevo.numeroDocumento} en el depto. ${nuevo.departamentoNombre} y carnet [${nuevo.codigoTarjetaRfid}].`,
-      tipo: 'INFO',
-      rutaDestino: '/dashboard/personal',
-      rolesPermitidos: ['ADMIN_GLOBAL', 'GESTOR_PERSONAL', 'AUDITOR_SEGURIDAD'],
+      tipo: 'PERSONAL',
+      rolesDestino: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
+      accionUrl: '/dashboard/personal',
     });
 
     // Limpiar formulario y cerrar modal de registro para abrir el modal dinámico de éxito

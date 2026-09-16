@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   UserCheck,
   X,
+  Sparkles,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -69,7 +71,8 @@ export default function UsuariosSistemaPage() {
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [alertaExito, setAlertaExito] = useState('');
 
-  const { agregarNotificacion } = useNotifications();
+  const [usuarioCreado, setUsuarioCreado] = useState<UsuarioAuth | null>(null);
+  const [showExitoModal, setShowExitoModal] = useState(false);
 
   // Validación de Nombres: Solo letras, espacios, tildes y ñ (Sin números ni signos)
   const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,46 +162,44 @@ export default function UsuariosSistemaPage() {
   const handleCrearUsuario = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nombres.trim() || !apellidos.trim()) {
-      alert('Error: Debe ingresar nombres y apellidos válidos (solo letras).');
-      return;
-    }
+    const nuevosErrores: Record<string, string> = {};
 
-    if (doc.length < 6 || doc.length > 12) {
-      alert('Error: La cédula debe contener entre 6 y 12 dígitos.');
-      return;
+    if (!nombres.trim()) {
+      nuevosErrores.nombres = 'Ingrese los nombres (solo letras).';
     }
-
-    if (telefono.length !== 10) {
-      alert('Error: El celular debe contener exactamente 10 dígitos.');
-      return;
+    if (!apellidos.trim()) {
+      nuevosErrores.apellidos = 'Ingrese los apellidos (solo letras).';
     }
-
+    if (doc.length < 4 || doc.length > 12) {
+      nuevosErrores.doc = 'La cédula debe contener entre 4 y 12 dígitos.';
+    }
+    if (telefono.length > 0 && telefono.length !== 10) {
+      nuevosErrores.telefono = 'El celular debe contener exactamente 10 dígitos.';
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(correo)) {
-      alert('Error: Ingrese un correo electrónico válido (ejemplo: usuario@laboratorioxyz.com).');
-      return;
+    if (!emailRegex.test(correo.trim())) {
+      nuevosErrores.correo = 'Ingrese un correo electrónico válido (ejemplo: usuario@laboratorioxyz.com).';
     }
-
     if (password.length < 6) {
-      alert('Error: La contraseña de acceso debe tener mínimo 6 caracteres.');
-      return;
+      nuevosErrores.password = 'La contraseña debe tener mínimo 6 caracteres.';
     }
-
     if (password !== confirmPassword) {
-      alert('Error: Las contraseñas ingresadas no coinciden.');
-      return;
+      nuevosErrores.confirmPassword = 'Las contraseñas no coinciden.';
     }
 
-    const existe = usuarios.some((u) => u.documento === doc || u.correo.toLowerCase() === correo.toLowerCase());
+    const existe = usuarios.some((u) => u.documento === doc.trim() || u.correo.toLowerCase() === correo.trim().toLowerCase());
     if (existe) {
-      alert('Error: Ya existe un usuario registrado con esta cédula o correo.');
+      nuevosErrores.doc = 'Ya existe un usuario registrado con esta cédula o correo.';
+    }
+
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
       return;
     }
 
     const nuevoUsuario: UsuarioAuth = {
       id: Date.now(),
-      documento: doc,
+      documento: doc.trim(),
       nombres: nombres.trim(),
       apellidos: apellidos.trim(),
       correo: correo.trim().toLowerCase(),
@@ -207,17 +208,17 @@ export default function UsuariosSistemaPage() {
     };
 
     setUsuarios([nuevoUsuario, ...usuarios]);
-    setAlertaExito(`¡Usuario ${nuevoUsuario.nombres} ${nuevoUsuario.apellidos} (${nuevoUsuario.rol}) registrado con éxito en el sistema!`);
+    setUsuarioCreado(nuevoUsuario);
 
     agregarNotificacion({
-      titulo: `👤 Nuevo Usuario Creado: ${nuevoUsuario.nombres}`,
-      mensaje: `Se asignaron credenciales institucionales y rol ${nuevoUsuario.rol} al documento ${nuevoUsuario.documento}.`,
+      titulo: `👤 Nuevo Usuario Creado: ${nuevoUsuario.nombres} ${nuevoUsuario.apellidos}`,
+      mensaje: `Se asignaron credenciales institucionales y rol [${nuevoUsuario.rol}] al documento ${nuevoUsuario.documento}.`,
       tipo: 'SISTEMA',
       rolesDestino: ['ADMINISTRADOR'],
       accionUrl: '/dashboard/usuarios',
     });
 
-    // Reset Formulario
+    // Reset Formulario y abrir Modal de Éxito
     setDoc('');
     setNombres('');
     setApellidos('');
@@ -225,9 +226,9 @@ export default function UsuariosSistemaPage() {
     setTelefono('');
     setPassword('');
     setConfirmPassword('');
+    setErrores({});
     setShowModal(false);
-
-    setTimeout(() => setAlertaExito(''), 5000);
+    setShowExitoModal(true);
   };
 
   const usuariosFiltrados = usuarios.filter(
@@ -480,8 +481,11 @@ export default function UsuariosSistemaPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                      className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
+                        errores.password ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      }`}
                     />
+                    {errores.password && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.password}</p>}
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-brand-text mb-1">Confirmar Contraseña *</label>
@@ -491,8 +495,11 @@ export default function UsuariosSistemaPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                      className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
+                        errores.confirmPassword ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      }`}
                     />
+                    {errores.confirmPassword && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.confirmPassword}</p>}
                   </div>
                 </div>
               </div>
@@ -513,6 +520,78 @@ export default function UsuariosSistemaPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dinámico de Registro Exitoso con Estilo y Animación */}
+      {showExitoModal && usuarioCreado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-brand-accent/40 relative overflow-hidden transform animate-scale-up">
+            {/* Elementos visuales decorativos */}
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-brand-light rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-accent/30 rounded-full blur-xl pointer-events-none" />
+
+            <div className="relative z-10 text-center">
+              {/* Icono con halo luminoso */}
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-accent/80 flex items-center justify-center shadow-lg shadow-brand-primary/30 text-white mb-4 animate-bounce">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-light border border-brand-accent/60 text-brand-dark text-[11px] font-bold mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-brand-primary animate-spin" />
+                USUARIO CREADO CON ÉXITO
+              </div>
+
+              <h2 className="text-xl font-heading font-extrabold text-brand-dark mb-1">
+                ¡Credenciales Asignadas!
+              </h2>
+              <p className="text-xs text-brand-text/75 mb-5">
+                El usuario interno ya cuenta con autorización para autenticarse en el portal institucional de <strong className="text-brand-dark font-semibold">Laboratorio XYZ</strong>.
+              </p>
+
+              {/* Ficha Resumen del Usuario */}
+              <div className="bg-brand-secondary/70 p-4 rounded-2xl border border-brand-accent/50 text-left space-y-2 mb-6">
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Operador:</span>
+                  <span className="text-xs font-bold text-brand-dark">{usuarioCreado.nombres} {usuarioCreado.apellidos}</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Documento / Cédula:</span>
+                  <span className="text-xs font-mono font-bold text-brand-primary">{usuarioCreado.documento}</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Correo Institucional:</span>
+                  <span className="text-xs font-medium text-brand-dark">{usuarioCreado.correo}</span>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
+                  <span className="text-[11px] font-medium text-brand-text/70">Rol de Seguridad:</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                    {usuarioCreado.rol}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] font-medium text-brand-text/70">Estado de la Cuenta:</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#4A9B8E]/15 text-[#2E6F64]">
+                    <ShieldCheck className="w-3 h-3" />
+                    ACTIVO
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón de Aceptar con micro-interacción */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExitoModal(false);
+                  setUsuarioCreado(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Aceptar y Continuar
+              </button>
+            </div>
           </div>
         </div>
       )}
