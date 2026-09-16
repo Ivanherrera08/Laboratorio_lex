@@ -43,13 +43,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Si ya está autenticado e intenta ir a /login, mandarlo a su dashboard
-  if (pathname === '/login') {
-    const token = request.cookies.get('zone_control_token')?.value;
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard/simulador', request.url));
-    }
-  }
+  // Permitir siempre la visualización de la página de Login para ingresar credenciales explícitamente
 
   const response = NextResponse.next();
 
