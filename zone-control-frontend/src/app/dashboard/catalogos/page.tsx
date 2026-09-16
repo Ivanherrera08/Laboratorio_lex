@@ -176,34 +176,73 @@ export default function CatalogosPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-3 items-center">
-              <div className="w-20 h-24 bg-white rounded-2xl border-2 border-brand-primary/40 shadow-sm flex flex-col items-center justify-center overflow-hidden relative group">
-                {fotoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={fotoUrl}
-                    alt="Foto del colaborador"
-                    className="w-full h-full object-cover rounded-xl"
+              {/* Recuadro de Fotografía Interactivo directamente en el Carnet */}
+              <div className="relative">
+                <label className="block w-22 h-28 bg-white rounded-2xl border-2 border-dashed border-brand-primary/60 hover:border-brand-primary shadow-sm flex flex-col items-center justify-center overflow-hidden cursor-pointer group transition-all transform hover:scale-105 active:scale-95 bg-gradient-to-b from-white to-brand-secondary/40">
+                  {fotoUrl ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={fotoUrl}
+                        alt="Foto del colaborador"
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                      {/* Overlay al hacer hover para cambiar foto */}
+                      <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center rounded-xl">
+                        <Camera className="w-5 h-5 mb-0.5 animate-bounce" />
+                        <span className="text-[8px] font-bold">Cambiar</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-brand-primary p-2 text-center">
+                      <div className="p-2 rounded-full bg-brand-secondary group-hover:bg-brand-primary group-hover:text-white transition-all mb-1 shadow-xs">
+                        <Camera className="w-5 h-5" />
+                      </div>
+                      <span className="text-[9px] font-extrabold text-brand-dark group-hover:text-brand-primary transition-colors">
+                        Subir Foto
+                      </span>
+                      <span className="text-[7px] text-brand-text/60 font-medium">Click aquí</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/webp"
+                    onChange={handleFotoChange}
+                    className="hidden"
                   />
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-brand-primary/60 p-1">
-                    <UserCheck className="w-8 h-8 text-brand-primary" />
-                    <span className="text-[8px] font-bold text-brand-dark mt-1">SIN FOTO</span>
-                  </div>
+                </label>
+
+                {/* Botón de quitar foto */}
+                {fotoUrl && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEliminarFoto();
+                    }}
+                    title="Eliminar foto"
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition-transform hover:scale-110 active:scale-90 cursor-pointer z-10"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 )}
               </div>
 
-              <div className="col-span-2 space-y-1 text-xs">
+              <div className="col-span-2 space-y-1.5 text-xs pl-1">
                 <p className="font-bold text-brand-dark text-sm leading-tight">
                   {nombreEmpleado || 'NOMBRE DEL EMPLEADO'}
                 </p>
                 <p className="text-[11px] text-brand-text/80 font-mono">
                   Doc: {rfidDoc || '••••••••••'}
                 </p>
-                <div className="flex items-center gap-1.5 pt-1">
-                  <span className="px-2 py-0.5 rounded bg-white text-[10px] font-mono font-bold text-brand-primary border border-brand-accent/50">
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <span className="px-2 py-0.5 rounded bg-white text-[10px] font-mono font-bold text-brand-primary border border-brand-accent/50 shadow-2xs">
                     {rfidCodigo || 'CHIP-RFID-NO-ASIGNADO'}
                   </span>
                 </div>
+                <p className="text-[9px] text-brand-text/60 italic pt-1">
+                  {fotoUrl ? '✅ Fotografía biométrica enlazada' : '👈 Haz clic en el recuadro para cargar tu foto'}
+                </p>
               </div>
             </div>
           </div>
@@ -281,46 +320,6 @@ export default function CatalogosPage() {
                     <p className="text-[10px] text-red-600 font-semibold mt-1">{errorCarnet}</p>
                   )}
                 </div>
-              </div>
-
-              {/* Subida de Fotografía del Colaborador */}
-              <div className="p-3.5 bg-brand-light rounded-2xl border border-brand-accent/40 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-brand-dark">
-                    <Camera className="w-4 h-4 text-brand-primary" />
-                    <span>Fotografía del Colaborador para el Carnet</span>
-                  </div>
-                  {fotoUrl && (
-                    <button
-                      type="button"
-                      onClick={handleEliminarFoto}
-                      className="inline-flex items-center gap-1 text-[10px] text-red-600 hover:text-red-800 font-semibold cursor-pointer"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Quitar foto
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="flex-1 cursor-pointer">
-                    <div className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-brand-primary/50 bg-white hover:bg-brand-secondary/40 text-xs text-brand-text font-medium transition-all">
-                      <Upload className="w-4 h-4 text-brand-primary" />
-                      <span className="truncate">
-                        {fotoNombre ? fotoNombre : 'Seleccionar foto desde tu equipo (JPG, PNG)...'}
-                      </span>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/png, image/jpeg, image/webp"
-                      onChange={handleFotoChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <p className="text-[10px] text-brand-text/60">
-                  La foto se recortará y estampará automáticamente en el carnet físico con chip de proximidad.
-                </p>
               </div>
 
               <button
