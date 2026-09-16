@@ -19,13 +19,39 @@ import {
   ShieldCheck,
   Award,
   X,
+  FlaskConical,
+  Microscope,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
 } from 'lucide-react';
+
+export interface CatalogoAreaLab {
+  id: number;
+  codigo: string;
+  nombre: string;
+  deptoAsociado: string;
+  nivelRiesgo: 'ALTO' | 'MEDIO' | 'BAJO';
+}
+
+const catalogoLaboratoriosAreas: CatalogoAreaLab[] = [
+  { id: 1, codigo: 'LAB-01', nombre: 'Laboratorio de Síntesis Molecular (Área A)', deptoAsociado: 'Producción y Síntesis', nivelRiesgo: 'ALTO' },
+  { id: 2, codigo: 'LAB-02', nombre: 'Sala Limpia de Liofilización e Inyectables (Área B)', deptoAsociado: 'Producción y Síntesis', nivelRiesgo: 'ALTO' },
+  { id: 3, codigo: 'LAB-03', nombre: 'Laboratorio de Cromatografía y Espectrometría', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'ALTO' },
+  { id: 4, codigo: 'LAB-04', nombre: 'Laboratorio de Microbiología y Cultivos Celulares', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'ALTO' },
+  { id: 5, codigo: 'ALM-01', nombre: 'Almacén Central de Materias Primas y Reactivos (Área C)', deptoAsociado: 'Bioseguridad y Mantenimiento', nivelRiesgo: 'MEDIO' },
+  { id: 6, codigo: 'ESC-01', nombre: 'Esclusa de Desinfección y Cuarentena', deptoAsociado: 'Bioseguridad y Mantenimiento', nivelRiesgo: 'ALTO' },
+  { id: 7, codigo: 'ADM-01', nombre: 'Oficinas Administrativas y Auditoría (Área D)', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'BAJO' },
+];
 
 const mockEmpleados: Empleado[] = [
   {
     id: 1,
     departamentoId: 1,
     departamentoNombre: 'Producción y Síntesis',
+    areaPrincipalId: 1,
+    areaPrincipalNombre: 'Laboratorio de Síntesis Molecular (Área A)',
+    areasAutorizadas: ['Laboratorio de Síntesis Molecular (Área A)', 'Sala Limpia de Liofilización e Inyectables (Área B)'],
     tipoDocumento: 'CC',
     numeroDocumento: '1012345678',
     nombres: 'Carlos Andrés',
@@ -39,6 +65,9 @@ const mockEmpleados: Empleado[] = [
     id: 2,
     departamentoId: 2,
     departamentoNombre: 'Control de Calidad',
+    areaPrincipalId: 3,
+    areaPrincipalNombre: 'Laboratorio de Cromatografía y Espectrometría',
+    areasAutorizadas: ['Laboratorio de Cromatografía y Espectrometría'],
     tipoDocumento: 'CC',
     numeroDocumento: '1087654321',
     nombres: 'Laura Sofía',
@@ -53,6 +82,9 @@ const mockEmpleados: Empleado[] = [
     id: 3,
     departamentoId: 1,
     departamentoNombre: 'Producción y Síntesis',
+    areaPrincipalId: 2,
+    areaPrincipalNombre: 'Sala Limpia de Liofilización e Inyectables (Área B)',
+    areasAutorizadas: ['Sala Limpia de Liofilización e Inyectables (Área B)'],
     tipoDocumento: 'CE',
     numeroDocumento: '98765432',
     nombres: 'Guillermo',
@@ -69,6 +101,7 @@ export default function GestionPersonalPage() {
   const [empleados, setEmpleados] = useState<Empleado[]>(mockEmpleados);
   const [busqueda, setBusqueda] = useState('');
   const [deptoFiltro, setDeptoFiltro] = useState('TODOS');
+  const [areaFiltro, setAreaFiltro] = useState('TODAS');
 
   // Modales
   const [showRegistrarModal, setShowRegistrarModal] = useState(false);
@@ -83,6 +116,9 @@ export default function GestionPersonalPage() {
   const [nuevoCorreo, setNuevoCorreo] = useState('');
   const [nuevoTelefono, setNuevoTelefono] = useState('');
   const [nuevoDepto, setNuevoDepto] = useState('Producción y Síntesis');
+  const [nuevoLaboratorioPrincipal, setNuevoLaboratorioPrincipal] = useState('Laboratorio de Síntesis Molecular (Área A)');
+  const [areasPermitidas, setAreasPermitidas] = useState<string[]>(['Laboratorio de Síntesis Molecular (Área A)']);
+  const [showDropdownAreas, setShowDropdownAreas] = useState<boolean>(false);
   const [nuevoRfid, setNuevoRfid] = useState('');
 
   const { agregarNotificacion } = useNotifications();
@@ -199,15 +235,39 @@ export default function GestionPersonalPage() {
     }
   };
 
+  const handleToggleArea = (areaNombre: string) => {
+    setAreasPermitidas((prev) =>
+      prev.includes(areaNombre)
+        ? prev.length > 1
+          ? prev.filter((a) => a !== areaNombre)
+          : prev
+        : [...prev, areaNombre]
+    );
+  };
+
+  const handleDeptoChange = (depto: string) => {
+    setNuevoDepto(depto);
+    const primerLabDelDepto = catalogoLaboratoriosAreas.find((l) => l.deptoAsociado === depto);
+    if (primerLabDelDepto) {
+      setNuevoLaboratorioPrincipal(primerLabDelDepto.nombre);
+      setAreasPermitidas([primerLabDelDepto.nombre]);
+    }
+  };
+
   const empleadosFiltrados = empleados.filter((emp) => {
     const coincideTexto =
       emp.numeroDocumento.includes(busqueda) ||
       `${emp.nombres} ${emp.apellidos}`.toLowerCase().includes(busqueda.toLowerCase()) ||
-      emp.correo.toLowerCase().includes(busqueda.toLowerCase());
+      emp.correo.toLowerCase().includes(busqueda.toLowerCase()) ||
+      (emp.areaPrincipalNombre && emp.areaPrincipalNombre.toLowerCase().includes(busqueda.toLowerCase()));
 
     const coincideDepto = deptoFiltro === 'TODOS' || emp.departamentoNombre === deptoFiltro;
+    const coincideArea =
+      areaFiltro === 'TODAS' ||
+      emp.areaPrincipalNombre === areaFiltro ||
+      (emp.areasAutorizadas && emp.areasAutorizadas.includes(areaFiltro));
 
-    return coincideTexto && coincideDepto;
+    return coincideTexto && coincideDepto && coincideArea;
   });
 
   const handleRegistrarEmpleado = (e: React.FormEvent) => {
@@ -240,10 +300,15 @@ export default function GestionPersonalPage() {
       return;
     }
 
+    const labObj = catalogoLaboratoriosAreas.find((l) => l.nombre === nuevoLaboratorioPrincipal);
+
     const nuevo: Empleado = {
       id: Date.now(),
       departamentoId: nuevoDepto === 'Producción y Síntesis' ? 1 : nuevoDepto === 'Control de Calidad' ? 2 : 3,
       departamentoNombre: nuevoDepto,
+      areaPrincipalId: labObj ? labObj.id : 1,
+      areaPrincipalNombre: nuevoLaboratorioPrincipal,
+      areasAutorizadas: areasPermitidas.length > 0 ? areasPermitidas : [nuevoLaboratorioPrincipal],
       tipoDocumento: nuevoTipoDoc,
       numeroDocumento: nuevoDoc,
       nombres: nuevosNombres.trim(),
@@ -260,7 +325,7 @@ export default function GestionPersonalPage() {
     // Notificación en el sistema global
     agregarNotificacion({
       titulo: `👤 Alta de Personal: ${nuevo.nombres} ${nuevo.apellidos}`,
-      mensaje: `Se ha registrado el personal con cédula ${nuevo.numeroDocumento} en el depto. ${nuevo.departamentoNombre} y carnet [${nuevo.codigoTarjetaRfid}].`,
+      mensaje: `Asignado a [${nuevo.areaPrincipalNombre}] (${nuevo.departamentoNombre}) con carnet [${nuevo.codigoTarjetaRfid}].`,
       tipo: 'PERSONAL',
       rolesDestino: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
       accionUrl: '/dashboard/personal',
@@ -273,6 +338,8 @@ export default function GestionPersonalPage() {
     setNuevoCorreo('');
     setNuevoTelefono('');
     setNuevoRfid('');
+    setAreasPermitidas([catalogoLaboratoriosAreas[0].nombre]);
+    setNuevoLaboratorioPrincipal(catalogoLaboratoriosAreas[0].nombre);
     setErroresForm({});
     setShowRegistrarModal(false);
     setShowExitoModal(true);
@@ -339,18 +406,36 @@ export default function GestionPersonalPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-brand-primary" />
-          <select
-            value={deptoFiltro}
-            onChange={(e) => setDeptoFiltro(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
-          >
-            <option value="TODOS">Todos los Departamentos</option>
-            <option value="Producción y Síntesis">Producción y Síntesis</option>
-            <option value="Control de Calidad">Control de Calidad</option>
-            <option value="Bioseguridad y Mantenimiento">Bioseguridad y Mantenimiento</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-4 h-4 text-brand-primary" />
+            <select
+              value={deptoFiltro}
+              onChange={(e) => setDeptoFiltro(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+            >
+              <option value="TODOS">Todos los Deptos</option>
+              <option value="Producción y Síntesis">Producción y Síntesis</option>
+              <option value="Control de Calidad">Control de Calidad</option>
+              <option value="Bioseguridad y Mantenimiento">Bioseguridad y Mantenimiento</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <FlaskConical className="w-4 h-4 text-brand-primary" />
+            <select
+              value={areaFiltro}
+              onChange={(e) => setAreaFiltro(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40 max-w-[210px] truncate"
+            >
+              <option value="TODAS">Todos los Laboratorios/Zonas</option>
+              {catalogoLaboratoriosAreas.map((lab) => (
+                <option key={lab.id} value={lab.nombre}>
+                  {lab.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -362,7 +447,7 @@ export default function GestionPersonalPage() {
               <tr>
                 <th className="p-4">Cédula (Máx 12)</th>
                 <th className="p-4">Nombres y Apellidos</th>
-                <th className="p-4">Departamento</th>
+                <th className="p-4">Departamento / Laboratorio</th>
                 <th className="p-4">Celular (10 d.)</th>
                 <th className="p-4">Credencial RFID</th>
                 <th className="p-4">Estado</th>
@@ -380,7 +465,18 @@ export default function GestionPersonalPage() {
                     <p className="font-semibold text-brand-dark">{emp.nombres} {emp.apellidos}</p>
                     <p className="text-[11px] text-brand-text/60">{emp.correo}</p>
                   </td>
-                  <td className="p-4 font-medium text-brand-text">{emp.departamentoNombre}</td>
+                  <td className="p-4">
+                    <p className="font-semibold text-brand-dark">{emp.departamentoNombre}</p>
+                    <p className="text-[10.5px] text-brand-primary font-medium flex items-center gap-1 mt-0.5">
+                      <FlaskConical className="w-3 h-3 shrink-0" />
+                      {emp.areaPrincipalNombre || 'Laboratorio de Síntesis Molecular'}
+                    </p>
+                    {emp.areasAutorizadas && emp.areasAutorizadas.length > 1 && (
+                      <span className="inline-block text-[9px] bg-brand-secondary text-brand-text/80 px-1.5 py-0.2 rounded mt-1 font-medium">
+                        +{emp.areasAutorizadas.length - 1} áreas autorizadas
+                      </span>
+                    )}
+                  </td>
                   <td className="p-4 font-mono text-gray-600">{emp.telefono}</td>
                   <td className="p-4">
                     <span className="px-2 py-0.5 rounded-md bg-brand-secondary font-mono text-[11px] text-brand-primary font-bold border border-brand-accent/40">
@@ -551,8 +647,8 @@ export default function GestionPersonalPage() {
                   <label className="block text-[11px] font-bold text-brand-text mb-1">Departamento</label>
                   <select
                     value={nuevoDepto}
-                    onChange={(e) => setNuevoDepto(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white"
+                    onChange={(e) => handleDeptoChange(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
                   >
                     <option value="Producción y Síntesis">Producción y Síntesis</option>
                     <option value="Control de Calidad">Control de Calidad</option>
@@ -570,12 +666,194 @@ export default function GestionPersonalPage() {
                     value={nuevoRfid}
                     onChange={handleRfidChange}
                     placeholder="Ej. CRN-XYZ-901"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono"
+                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono font-bold"
                   />
                   {erroresForm.rfid && (
                     <p className="text-[10px] text-red-600 font-semibold mt-1">{erroresForm.rfid}</p>
                   )}
                 </div>
+              </div>
+
+              {/* Selector de Laboratorio / Área Principal */}
+              <div>
+                <label className="block text-[11px] font-bold text-brand-text mb-1">
+                  Laboratorio / Área Principal de Trabajo *
+                </label>
+                <div className="relative">
+                  <select
+                    value={nuevoLaboratorioPrincipal}
+                    onChange={(e) => {
+                      const sel = e.target.value;
+                      setNuevoLaboratorioPrincipal(sel);
+                      if (!areasPermitidas.includes(sel)) {
+                        setAreasPermitidas((prev) => [...prev, sel]);
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl border border-brand-accent/60 text-xs bg-white font-semibold text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                  >
+                    {catalogoLaboratoriosAreas.map((lab) => (
+                      <option key={lab.id} value={lab.nombre}>
+                        [{lab.codigo}] {lab.nombre} — (Riesgo {lab.nivelRiesgo})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Selector Dinámico Desplegable de Zonas y Laboratorios Autorizados (RF F-21) */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold text-brand-text flex items-center gap-1.5">
+                    <Microscope className="w-3.5 h-3.5 text-brand-primary" />
+                    Zonas y Laboratorios con Acceso Autorizado (RFID)
+                  </label>
+                  <span className="text-[10px] font-bold text-brand-primary bg-brand-secondary px-2 py-0.5 rounded-full border border-brand-accent/40">
+                    {areasPermitidas.length} de {catalogoLaboratoriosAreas.length} seleccionada(s)
+                  </span>
+                </div>
+
+                {/* Botón trigger del dropdown desplegable */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowDropdownAreas(!showDropdownAreas)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 bg-white hover:border-brand-primary text-xs font-medium text-left flex items-center justify-between shadow-2xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden pr-2">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+                      <span className="truncate text-brand-dark font-medium">
+                        {areasPermitidas.length === 0
+                          ? 'Haga clic para autorizar laboratorios...'
+                          : areasPermitidas.length === 1
+                          ? `${areasPermitidas[0]} (1 laboratorio)`
+                          : `${areasPermitidas[0]} (+${areasPermitidas.length - 1} laboratorio${areasPermitidas.length > 2 ? 's' : ''} más)`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {showDropdownAreas ? (
+                        <ChevronUp className="w-4 h-4 text-brand-primary" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-brand-text/60" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Panel Desplegable Dinámico Flotante */}
+                  {showDropdownAreas && (
+                    <div className="mt-1.5 p-2 bg-white rounded-2xl border border-brand-accent/60 shadow-xl space-y-2 animate-slide-down">
+                      {/* Cabecera con acciones rápidas */}
+                      <div className="flex items-center justify-between px-1.5 pt-1 pb-1.5 border-b border-brand-accent/30 text-[11px]">
+                        <span className="font-bold text-brand-dark">Catálogo de Esclusas y Laboratorios</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setAreasPermitidas(catalogoLaboratoriosAreas.map((l) => l.nombre))}
+                            className="text-[10px] text-brand-primary hover:underline font-semibold cursor-pointer"
+                          >
+                            Marcar Todas
+                          </button>
+                          <span className="text-gray-300">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setAreasPermitidas([nuevoLaboratorioPrincipal])}
+                            className="text-[10px] text-red-600 hover:underline font-semibold cursor-pointer"
+                          >
+                            Solo Principal
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lista de opciones scrolleable */}
+                      <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                        {catalogoLaboratoriosAreas.map((area) => {
+                          const isChecked = areasPermitidas.includes(area.nombre);
+                          const isPrincipal = nuevoLaboratorioPrincipal === area.nombre;
+                          return (
+                            <div
+                              key={area.id}
+                              onClick={() => handleToggleArea(area.nombre)}
+                              className={`flex items-center justify-between p-2 rounded-xl border text-[11px] cursor-pointer transition-all ${
+                                isChecked
+                                  ? 'bg-brand-secondary/70 border-brand-primary/60 text-brand-dark font-semibold'
+                                  : 'bg-white border-transparent hover:bg-slate-50 text-slate-700'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 overflow-hidden">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => {}} // Manejado por el onClick del contenedor
+                                  className="rounded text-brand-primary focus:ring-brand-primary/40 cursor-pointer shrink-0"
+                                />
+                                <div className="truncate">
+                                  <span className="block truncate">{area.nombre}</span>
+                                  <span className="text-[9px] font-normal text-slate-500">
+                                    {area.deptoAsociado}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                                <span
+                                  className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                                    area.nivelRiesgo === 'ALTO'
+                                      ? 'bg-red-100 text-red-700'
+                                      : area.nivelRiesgo === 'MEDIO'
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-emerald-100 text-emerald-700'
+                                  }`}
+                                >
+                                  {area.codigo}
+                                </span>
+                                {isPrincipal && (
+                                  <span className="text-[8.5px] bg-brand-primary text-white px-1.5 py-0.5 rounded-md font-bold">
+                                    PRINCIPAL
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Botón para cerrar el dropdown */}
+                      <div className="pt-1 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setShowDropdownAreas(false)}
+                          className="px-3 py-1 bg-brand-primary text-white text-[10px] font-bold rounded-lg hover:bg-brand-primary/90 transition-all cursor-pointer"
+                        >
+                          Listo ({areasPermitidas.length})
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Badges tipo Tags de las áreas seleccionadas cuando el dropdown está cerrado */}
+                {!showDropdownAreas && areasPermitidas.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1 max-h-16 overflow-y-auto">
+                    {areasPermitidas.map((areaNombre) => (
+                      <span
+                        key={areaNombre}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-brand-accent/50 text-[10px] text-brand-dark font-medium shadow-2xs"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="truncate max-w-[200px]">{areaNombre}</span>
+                        {areaNombre !== nuevoLaboratorioPrincipal && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleArea(areaNombre)}
+                            className="text-slate-400 hover:text-red-500 transition-colors ml-0.5"
+                            title="Quitar autorización"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-brand-accent/30">
