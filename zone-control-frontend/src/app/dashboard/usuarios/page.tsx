@@ -70,6 +70,41 @@ export default function UsuariosSistemaPage() {
 
   const { agregarNotificacion } = useNotifications();
 
+  // Validación de Nombres: Solo letras, espacios, tildes y ñ (Sin números ni signos)
+  const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    // Permite únicamente letras del alfabeto español y espacios
+    const sanitized = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    setNombres(sanitized);
+
+    if (valor !== sanitized) {
+      setErrores((prev) => ({ ...prev, nombres: 'El nombre solo debe contener letras (sin números ni signos de puntuación).' }));
+    } else {
+      setErrores((prev) => {
+        const copia = { ...prev };
+        delete copia.nombres;
+        return copia;
+      });
+    }
+  };
+
+  // Validación de Apellidos: Solo letras, espacios, tildes y ñ (Sin números ni signos)
+  const handleApellidosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    const sanitized = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    setApellidos(sanitized);
+
+    if (valor !== sanitized) {
+      setErrores((prev) => ({ ...prev, apellidos: 'El apellido solo debe contener letras (sin números ni signos de puntuación).' }));
+    } else {
+      setErrores((prev) => {
+        const copia = { ...prev };
+        delete copia.apellidos;
+        return copia;
+      });
+    }
+  };
+
   // Validación de Documento: solo números, máximo 12 dígitos
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value.replace(/\D/g, ''); // solo dígitos
@@ -123,7 +158,11 @@ export default function UsuariosSistemaPage() {
   const handleCrearUsuario = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validaciones finales
+    if (!nombres.trim() || !apellidos.trim()) {
+      alert('Error: Debe ingresar nombres y apellidos válidos (solo letras).');
+      return;
+    }
+
     if (doc.length < 6 || doc.length > 12) {
       alert('Error: La cédula debe contener entre 6 y 12 dígitos.');
       return;
@@ -167,7 +206,7 @@ export default function UsuariosSistemaPage() {
     };
 
     setUsuarios([nuevoUsuario, ...usuarios]);
-    setAlertaExito(`¡Usuario ${nuevoUsuario.nombres} (${nuevoUsuario.rol}) registrado con éxito en el sistema!`);
+    setAlertaExito(`¡Usuario ${nuevoUsuario.nombres} ${nuevoUsuario.apellidos} (${nuevoUsuario.rol}) registrado con éxito en el sistema!`);
 
     agregarNotificacion({
       titulo: `👤 Nuevo Usuario Creado: ${nuevoUsuario.nombres}`,
@@ -298,12 +337,48 @@ export default function UsuariosSistemaPage() {
                   Crear Usuario con Credenciales
                 </h3>
                 <p className="text-xs text-brand-text/70">
-                  Control de formatos: Cédula (máx 12), Celular (máx 10) y Correo institucional
+                  Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleCrearUsuario} className="space-y-3.5">
+              {/* Nombres y Apellidos estrictamente solo letras */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-brand-text mb-1">
+                    Nombres * <span className="text-gray-400 font-normal">(Solo letras)</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nombres}
+                    onChange={handleNombresChange}
+                    placeholder="Ej. Roberto Carlos"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
+                      errores.nombres ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
+                  />
+                  {errores.nombres && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.nombres}</p>}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-brand-text mb-1">
+                    Apellidos * <span className="text-gray-400 font-normal">(Solo letras)</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={apellidos}
+                    onChange={handleApellidosChange}
+                    placeholder="Ej. Gómez Pérez"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
+                      errores.apellidos ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
+                  />
+                  {errores.apellidos && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.apellidos}</p>}
+                </div>
+              </div>
+
               {/* Cédula con tope de 12 dígitos */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -323,32 +398,6 @@ export default function UsuariosSistemaPage() {
                   }`}
                 />
                 {errores.doc && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.doc}</p>}
-              </div>
-
-              {/* Nombres y Apellidos */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Nombres *</label>
-                  <input
-                    type="text"
-                    required
-                    value={nombres}
-                    onChange={(e) => setNombres(e.target.value)}
-                    placeholder="Ej. Roberto Carlos"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Apellidos *</label>
-                  <input
-                    type="text"
-                    required
-                    value={apellidos}
-                    onChange={(e) => setApellidos(e.target.value)}
-                    placeholder="Ej. Gómez Pérez"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
-                  />
-                </div>
               </div>
 
               {/* Correo y Celular */}

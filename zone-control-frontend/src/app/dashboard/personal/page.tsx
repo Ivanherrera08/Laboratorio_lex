@@ -86,6 +86,40 @@ export default function GestionPersonalPage() {
   const [nuevoEstado, setNuevoEstado] = useState<EstadoEmpleado>('ACTIVO');
   const [motivoEstado, setMotivoEstado] = useState('');
 
+  // Validación de Nombres: Solo letras, espacios, tildes y ñ (Sin números ni signos)
+  const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    const sanitized = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    setNuevosNombres(sanitized);
+
+    if (valor !== sanitized) {
+      setErroresForm((prev) => ({ ...prev, nombres: 'El nombre solo debe contener letras (sin números ni signos).' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.nombres;
+        return c;
+      });
+    }
+  };
+
+  // Validación de Apellidos: Solo letras, espacios, tildes y ñ (Sin números ni signos)
+  const handleApellidosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    const sanitized = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    setNuevosApellidos(sanitized);
+
+    if (valor !== sanitized) {
+      setErroresForm((prev) => ({ ...prev, apellidos: 'El apellido solo debe contener letras (sin números ni signos).' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.apellidos;
+        return c;
+      });
+    }
+  };
+
   // Manejo de Documento: Máximo 12 dígitos si es CC/Numérico
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value.replace(/\D/g, '');
@@ -149,6 +183,11 @@ export default function GestionPersonalPage() {
 
   const handleRegistrarEmpleado = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!nuevosNombres.trim() || !nuevosApellidos.trim()) {
+      alert('Error: Debe ingresar nombres y apellidos válidos (solo letras).');
+      return;
+    }
 
     if (nuevoDoc.length < 6 || nuevoDoc.length > 12) {
       alert('Error: La cédula debe tener entre 6 y 12 dígitos.');
@@ -350,7 +389,7 @@ export default function GestionPersonalPage() {
               </div>
               <div>
                 <h3 className="text-base font-heading font-bold text-brand-dark">Registrar Nuevo Empleado Autorizado</h3>
-                <p className="text-xs text-brand-text/70">Cédula (máx 12), Celular (máx 10) y Correo institucional</p>
+                <p className="text-xs text-brand-text/70">Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)</p>
               </div>
             </div>
 
@@ -387,28 +426,39 @@ export default function GestionPersonalPage() {
                 </div>
               </div>
 
+              {/* Nombres y Apellidos estrictamente solo letras */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Nombres *</label>
+                  <label className="block text-[11px] font-bold text-brand-text mb-1">
+                    Nombres * <span className="text-gray-400 font-normal">(Solo letras)</span>
+                  </label>
                   <input
                     type="text"
                     required
                     value={nuevosNombres}
-                    onChange={(e) => setNuevosNombres(e.target.value)}
-                    placeholder="Ej. Roberto"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                    onChange={handleNombresChange}
+                    placeholder="Ej. Roberto Carlos"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
+                      erroresForm.nombres ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
                   />
+                  {erroresForm.nombres && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.nombres}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Apellidos *</label>
+                  <label className="block text-[11px] font-bold text-brand-text mb-1">
+                    Apellidos * <span className="text-gray-400 font-normal">(Solo letras)</span>
+                  </label>
                   <input
                     type="text"
                     required
                     value={nuevosApellidos}
-                    onChange={(e) => setNuevosApellidos(e.target.value)}
-                    placeholder="Ej. Gómez"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                    onChange={handleApellidosChange}
+                    placeholder="Ej. Gómez Pérez"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
+                      erroresForm.apellidos ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                    }`}
                   />
+                  {erroresForm.apellidos && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.apellidos}</p>}
                 </div>
               </div>
 
