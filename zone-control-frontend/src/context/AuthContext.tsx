@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 6. Reemplazo atómico del historial del navegador
-      window.location.replace('/login');
+      window.location.replace('/');
     }
   }, []);
 

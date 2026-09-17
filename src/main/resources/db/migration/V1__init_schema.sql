@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS areas_restringidas (
     nivel_riesgo    VARCHAR(20)  NOT NULL DEFAULT 'MEDIO'
                         CHECK (nivel_riesgo IN ('BAJO', 'MEDIO', 'ALTO', 'CRITICO')),
     descripcion     VARCHAR(255),
+    departamento_id INTEGER NOT NULL REFERENCES departamentos(id) ON DELETE RESTRICT,
     activa          BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -356,9 +357,9 @@ INSERT INTO departamentos (codigo, nombre, descripcion, activo) VALUES
     ('DEP-CAL',  'Control de Calidad','Departamento encargado del aseguramiento y control de calidad.', TRUE)
 ON CONFLICT (codigo) DO NOTHING;
 
-INSERT INTO areas_restringidas (codigo, nombre, nivel_riesgo, descripcion, activa) VALUES
-    ('ZR-LAB01', 'Laboratorio de Bioseguridad 1', 'ALTO',  'Zona de manipulación de principios activos de alto riesgo.', TRUE),
-    ('ZR-EMP01', 'Zona de Empaque 1',             'MEDIO', 'Área de empaque y etiquetado de producto terminado.', TRUE)
+INSERT INTO areas_restringidas (codigo, nombre, nivel_riesgo, descripcion, departamento_id, activa) VALUES
+    ('ZR-LAB01', 'Laboratorio de Bioseguridad 1', 'ALTO',  'Zona de manipulación de principios activos de alto riesgo.', 1, TRUE),
+    ('ZR-EMP01', 'Zona de Empaque 1',             'MEDIO', 'Área de empaque y etiquetado de producto terminado.', 1, TRUE)
 ON CONFLICT (codigo) DO NOTHING;
 
 INSERT INTO usuarios (documento, nombres, apellidos, correo, password_hash, estado, intentos_fallidos, rol_id) VALUES

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Zone Control — Laboratorio XYZ',
@@ -25,7 +26,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-brand-bg text-brand-text antialiased">
         <AuthProvider>
-          <NotificationProvider>{children}</NotificationProvider>
+          <NotificationProvider>
+            {children}
+            <Toaster position="bottom-right" richColors theme="light" />
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>

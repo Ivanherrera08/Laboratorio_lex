@@ -112,3 +112,24 @@ export function buscarPorRfid(codigoRfid: string): Empleado | null {
     (e) => e.codigoTarjetaRfid?.trim().toUpperCase() === codigoRfid.trim().toUpperCase()
   ) ?? null;
 }
+
+/**
+ * Agrega o actualiza un empleado en el store.
+ */
+export function agregarEmpleado(nuevoEmpleado: Empleado): void {
+  const empleados = getEmpleados();
+  // Si ya existe por documento, lo reemplaza
+  const index = empleados.findIndex(e => e.numeroDocumento === nuevoEmpleado.numeroDocumento);
+  if (index >= 0) {
+    empleados[index] = { ...empleados[index], ...nuevoEmpleado };
+  } else {
+    // Si no tiene id, le asigna uno consecutivo
+    if (!nuevoEmpleado.id) {
+      const maxId = empleados.length > 0 ? Math.max(...empleados.map(e => e.id)) : 0;
+      nuevoEmpleado.id = maxId + 1;
+    }
+    empleados.push(nuevoEmpleado);
+  }
+  saveEmpleados(empleados);
+}
+

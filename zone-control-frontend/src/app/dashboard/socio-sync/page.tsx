@@ -14,8 +14,11 @@ import {
   Sparkles,
   Server,
   Zap,
+  Mail,
+  List
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import { HistorialAcceso } from '@/types';
 
 const mockSincronizaciones: SincronizacionSocio[] = [
   {
@@ -39,6 +42,32 @@ const mockSincronizaciones: SincronizacionSocio[] = [
     fechaEnvio: '2026-09-15T02:00:00Z',
     fechaProximoReintento: '2026-09-16T10:00:00Z',
   },
+];
+
+const mockLoteActual: HistorialAcceso[] = [
+  {
+    id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+    empleadoId: 1,
+    empleadoNombreCompleto: 'Dr. Carlos Mendoza',
+    areaId: 1,
+    areaNombre: 'Laboratorio de Síntesis Molecular',
+    numeroDocumentoIngresado: '1012345678',
+    codigoTarjetaIngresado: 'RFID-001',
+    resultadoAcceso: 'AUTORIZADO',
+    timestamp: new Date().toISOString(),
+  },
+  {
+    id: 'f9e8d7c6-b5a4-3210-fedc-ba9876543210',
+    empleadoId: 2,
+    empleadoNombreCompleto: 'Ing. Laura Restrepo',
+    areaId: 1,
+    areaNombre: 'Laboratorio de Síntesis Molecular',
+    numeroDocumentoIngresado: '1087654321',
+    codigoTarjetaIngresado: 'RFID-002',
+    resultadoAcceso: 'DENEGADO',
+    motivoDenegacion: 'Permiso REVOCADO en área de alto riesgo',
+    timestamp: new Date().toISOString(),
+  }
 ];
 
 export default function SocioSyncPage() {
@@ -112,14 +141,27 @@ export default function SocioSyncPage() {
           </p>
         </div>
 
-        <button
-          onClick={handleForzarEnvio}
-          disabled={forzando}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          <RefreshCw className={`w-4 h-4 ${forzando ? 'animate-spin' : ''}`} />
-          <span>{forzando ? 'Transmitiendo al Socio...' : 'Forzar Sincronización Manual'}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const textoReporte = mockLoteActual.map(r => `Fecha: ${new Date(r.timestamp).toLocaleString()} | Persona: ${r.empleadoNombreCompleto} | Área: ${r.areaNombre} | Resultado: ${r.resultadoAcceso}`).join('%0D%0A');
+              window.location.href = `mailto:auditor@partner.com?subject=Reporte de Trazabilidad B2B - Zone Control&body=A continuación el registro de accesos (Lote actual):%0D%0A%0D%0A${textoReporte}`;
+            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-brand-accent/60 text-brand-dark font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <Mail className="w-4 h-4 text-brand-primary" />
+            <span>Abrir en Gmail / Correo</span>
+          </button>
+          
+          <button
+            onClick={handleForzarEnvio}
+            disabled={forzando}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-4 h-4 ${forzando ? 'animate-spin' : ''}`} />
+            <span>{forzando ? 'Transmitiendo al Socio...' : 'Forzar Sincronización Manual'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Alerta de Resultado de Sincronización */}
@@ -196,6 +238,51 @@ export default function SocioSyncPage() {
             Máximo 3 Intentos
           </p>
           <span className="text-[11px] text-gray-500 mt-1 block">Backoff con alerta a administradores</span>
+        </div>
+      </div>
+
+      {/* Previsualización del Lote Actual (La "Información Real") */}
+      <div className="bg-white rounded-3xl border border-brand-accent/40 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-brand-accent/30 bg-brand-secondary/40 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <List className="w-4 h-4 text-brand-primary" />
+            <h3 className="font-heading font-bold text-sm text-brand-dark">Registros Actuales Pendientes de Envío (Vista Previa)</h3>
+          </div>
+          <span className="text-xs text-brand-text/60 font-semibold">{mockLoteActual.length} Registros Nuevos</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-brand-light border-b border-brand-accent/30 text-brand-dark font-bold">
+              <tr>
+                <th className="p-3">Persona Asociada</th>
+                <th className="p-3">Área Restringida</th>
+                <th className="p-3">Resultado</th>
+                <th className="p-3">Marca de Tiempo</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-brand-accent/20">
+              {mockLoteActual.map((item) => (
+                <tr key={item.id} className="hover:bg-brand-light/60 transition-colors">
+                  <td className="p-3 font-semibold text-brand-dark">{item.empleadoNombreCompleto}</td>
+                  <td className="p-3 text-brand-text font-medium">{item.areaNombre}</td>
+                  <td className="p-3">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                        item.resultadoAcceso === 'AUTORIZADO'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {item.resultadoAcceso}
+                    </span>
+                  </td>
+                  <td className="p-3 font-mono text-[11px] text-brand-text/80">
+                    {new Date(item.timestamp).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

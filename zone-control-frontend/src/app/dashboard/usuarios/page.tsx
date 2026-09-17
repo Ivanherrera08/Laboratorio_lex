@@ -245,7 +245,7 @@ export default function UsuariosSistemaPage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -333,8 +333,8 @@ export default function UsuariosSistemaPage() {
 
       {/* MODAL: REGISTRO DE USUARIO CON CREDENCIALES Y REGLAS ESTRICTAS */}
       {showModal && (
-        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
-          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down my-auto relative max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down relative max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between gap-3 mb-4 border-b border-brand-accent/30 pb-3 shrink-0">
               <div className="flex items-center gap-3">
@@ -350,30 +350,26 @@ export default function UsuariosSistemaPage() {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="p-1.5 rounded-xl hover:bg-brand-secondary text-brand-text/60 hover:text-brand-dark transition-colors"
-                title="Cerrar ventana"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
             {/* Modal Scrollable Body */}
-            <form onSubmit={handleCrearUsuario} className="space-y-3.5 overflow-y-auto pr-1">
+            <form onSubmit={handleCrearUsuario} className="space-y-3.5 overflow-y-auto pr-1 flex-1 min-h-0">
               {/* Nombres y Apellidos estrictamente solo letras */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">
-                    Nombres * <span className="text-gray-400 font-normal">(Solo letras)</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-brand-text">
+                      Nombres * <span className="text-gray-400 font-normal">(Solo letras)</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-brand-primary">{nombres.length}/50</span>
+                  </div>
                   <input
                     type="text"
                     required
                     value={nombres}
                     onChange={handleNombresChange}
                     placeholder="Ej. Roberto Carlos"
+                    maxLength={50}
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
                       errores.nombres ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                     }`}
@@ -381,15 +377,19 @@ export default function UsuariosSistemaPage() {
                   {errores.nombres && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.nombres}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">
-                    Apellidos * <span className="text-gray-400 font-normal">(Solo letras)</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-brand-text">
+                      Apellidos * <span className="text-gray-400 font-normal">(Solo letras)</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-brand-primary">{apellidos.length}/50</span>
+                  </div>
                   <input
                     type="text"
                     required
                     value={apellidos}
                     onChange={handleApellidosChange}
                     placeholder="Ej. Gómez Pérez"
+                    maxLength={50}
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
                       errores.apellidos ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                     }`}
@@ -412,6 +412,7 @@ export default function UsuariosSistemaPage() {
                   value={doc}
                   onChange={handleDocChange}
                   placeholder="Ej. 1020304050"
+                  maxLength={12}
                   className={`w-full px-3.5 py-2 rounded-xl border text-xs font-mono font-bold focus:outline-none focus:ring-2 ${
                     errores.doc ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                   }`}
@@ -422,13 +423,17 @@ export default function UsuariosSistemaPage() {
               {/* Correo y Celular */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Correo Institucional *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-brand-text">Correo Institucional *</label>
+                    <span className="text-[10px] font-mono text-brand-primary">{correo.length}/100</span>
+                  </div>
                   <input
                     type="email"
                     required
                     value={correo}
                     onChange={handleCorreoChange}
                     placeholder="nombre@laboratorioxyz.com"
+                    maxLength={100}
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
                       errores.correo ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                     }`}
@@ -448,6 +453,7 @@ export default function UsuariosSistemaPage() {
                     value={telefono}
                     onChange={handleTelefonoChange}
                     placeholder="3001234567"
+                    maxLength={10}
                     className={`w-full px-3 py-2 rounded-xl border text-xs font-mono focus:outline-none focus:ring-2 ${
                       errores.telefono ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                     }`}
@@ -479,13 +485,17 @@ export default function UsuariosSistemaPage() {
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-[10px] font-bold text-brand-text mb-1">Contraseña (Mín 6 car.) *</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[10px] font-bold text-brand-text">Contraseña (Mín 6 car.) *</label>
+                      <span className="text-[9px] font-mono text-brand-primary">{password.length}/50</span>
+                    </div>
                     <input
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
+                      maxLength={50}
                       className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
                         errores.password ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                       }`}
@@ -493,13 +503,17 @@ export default function UsuariosSistemaPage() {
                     {errores.password && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.password}</p>}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-brand-text mb-1">Confirmar Contraseña *</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[10px] font-bold text-brand-text">Confirmar Contraseña *</label>
+                      <span className="text-[9px] font-mono text-brand-primary">{confirmPassword.length}/50</span>
+                    </div>
                     <input
                       type="password"
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
+                      maxLength={50}
                       className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
                         errores.confirmPassword ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                       }`}

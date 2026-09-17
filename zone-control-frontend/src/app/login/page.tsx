@@ -179,7 +179,10 @@ function LoginFormContent() {
         {/* Formulario */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-brand-text mb-1.5">Correo Institucional</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-brand-text">Correo Institucional</label>
+              <span className="text-[10px] font-medium text-brand-text/50">{correo.length}/100</span>
+            </div>
             <input
               type="email"
               required
@@ -187,12 +190,16 @@ function LoginFormContent() {
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               placeholder="admin@laboratorioxyz.com"
+              maxLength={100}
               className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/40 text-sm transition-all disabled:bg-gray-100"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-brand-text mb-1.5">Contraseña de Acceso</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-brand-text">Contraseña de Acceso</label>
+              <span className="text-[10px] font-medium text-brand-text/50">{password.length}/50</span>
+            </div>
             <input
               type="password"
               required
@@ -200,6 +207,7 @@ function LoginFormContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              maxLength={50}
               className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/40 text-sm transition-all disabled:bg-gray-100"
             />
           </div>
@@ -252,13 +260,17 @@ function LoginFormContent() {
             ) : (
               <form onSubmit={handleRecuperarClave} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-brand-text mb-1.5">Correo Institucional</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-brand-text">Correo Institucional</label>
+                    <span className="text-[10px] font-medium text-brand-text/50">{recuperarCorreo.length}/100</span>
+                  </div>
                   <input
                     type="email"
                     required
                     value={recuperarCorreo}
                     onChange={(e) => setRecuperarCorreo(e.target.value)}
                     placeholder="usuario@laboratorioxyz.com"
+                    maxLength={100}
                     className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
                   />
                 </div>

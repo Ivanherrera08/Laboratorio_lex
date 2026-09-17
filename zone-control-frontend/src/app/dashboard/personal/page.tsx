@@ -570,14 +570,6 @@ export default function GestionPersonalPage() {
                   <p className="text-xs text-brand-text/70">Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowRegistrarModal(false)}
-                className="p-1.5 rounded-xl hover:bg-brand-secondary text-brand-text/60 hover:text-brand-dark transition-colors"
-                title="Cerrar ventana"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
             <form onSubmit={handleRegistrarEmpleado} className="space-y-3.5 overflow-y-auto pr-1">

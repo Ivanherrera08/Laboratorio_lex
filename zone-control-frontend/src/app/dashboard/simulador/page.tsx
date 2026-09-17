@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { ResultadoAcceso, Empleado } from '@/types';
 import { api } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import {
   ScanLine,
   CheckCircle2,
@@ -17,6 +19,7 @@ import {
   ShieldCheck,
   ShieldOff,
   ShieldAlert,
+  Fingerprint
 } from 'lucide-react';
 
 export default function SimuladorAccesoPage() {
@@ -25,450 +28,316 @@ export default function SimuladorAccesoPage() {
   const [areaId, setAreaId] = useState('1');
   const [loading, setLoading] = useState(false);
 
-  // Al montar: asegurar que los stores estén correctamente inicializados
   useEffect(() => {
-    // Importación dinámica para evitar SSR issues
-    import('@/lib/usuariosStore').then(({ getUsuariosSistema }) => {
-      getUsuariosSistema(); // Inicializa el store si no existe
-    });
-    import('@/lib/personalStore').then(({ getEmpleados }) => {
-      getEmpleados(); // Inicializa el store si no existe
-    });
+    import('@/lib/usuariosStore').then(({ getUsuariosSistema }) => getUsuariosSistema());
+    import('@/lib/personalStore').then(({ getEmpleados }) => getEmpleados());
   }, []);
 
-  // Resultado contiene el estado + perfil completo del empleado encontrado
   const [resultado, setResultado] = useState<{
     estado: ResultadoAcceso;
     motivo?: string;
     timestamp: string;
     areaConsultada?: string;
-    perfil?: Empleado; // Perfil completo del empleado
+    perfil?: Empleado;
   } | null>(null);
 
   const areasDemo = [
-    { id: '1', nombre: 'Laboratorio de Síntesis Molecular (Área A - Alto Riesgo)' },
-    { id: '2', nombre: 'Sala Limpia de Liofilización (Área B - Alto Riesgo)' },
-    { id: '3', nombre: 'Almacén Central de Materias Primas (Área C - Medio Riesgo)' },
-    { id: '4', nombre: 'Oficinas Administrativas de Calidad (Área D - Bajo Riesgo)' },
+    { id: '1', nombre: 'Laboratorio de Síntesis Molecular (Área A)' },
+    { id: '2', nombre: 'Sala Limpia de Liofilización (Área B)' },
+    { id: '3', nombre: 'Almacén Central (Área C)' },
+    { id: '4', nombre: 'Oficinas Administrativas (Área D)' },
   ];
 
   const handleSimular = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setResultado(null);
+    
+    toast.loading('Analizando credencial en el servidor biométrico...', { id: 'scan-toast' });
 
     const areaSeleccionada = areasDemo.find((a) => a.id === areaId)?.nombre ?? '';
 
     try {
-      // Intenta llamar al backend Spring Boot
-      const res = await api.post('/accesos/simular', {
-        identificador,
-        tipoIdentificador,
+      // Simulate network delay for scanning effect
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const res = await api.post('/accesos/verificar', {
+        documento: identificador,
         areaId: parseInt(areaId, 10),
       });
 
+      const estado = res.data.resultado;
       setResultado({
-        estado: res.data.resultado,
-        motivo: res.data.motivo,
-        timestamp: res.data.timestamp || new Date().toISOString(),
+        estado,
+        motivo: res.data.mensaje,
+        timestamp: new Date().toISOString(),
         areaConsultada: areaSeleccionada,
+        perfil: res.data.empleadoNombre ? { nombres: res.data.empleadoNombre } : null
       });
+
+      if (estado === 'AUTORIZADO') toast.success('Acceso Permitido', { id: 'scan-toast' });
+      else if (estado === 'DENEGADO') toast.error('Acceso Denegado', { id: 'scan-toast' });
+      else toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+
     } catch {
-      // --- FALLBACK MOCK ---
-      // ORDEN DE PRIORIDAD:
-      // 1° Usuarios del Sistema (operadores registrados en la página de Usuarios) → PRIORIDAD MÁXIMA
-      // 2° Personal de Laboratorio (empleados registrados en la página de Personal)
       const { buscarPorDocumento, buscarPorRfid } = await import('@/lib/personalStore');
       const { buscarUsuarioPorDocumento } = await import('@/lib/usuariosStore');
-
       let empleado = null;
 
       if (tipoIdentificador === 'DOCUMENTO') {
-        // Primero verificar si es un USUARIO DEL SISTEMA (operador con login)
         const usuarioSistema = buscarUsuarioPorDocumento(identificador.trim());
-
         if (usuarioSistema) {
-          // Es un operador del sistema → convertir y mostrar SU estado real (siempre desde usuariosStore)
-          const rolLabel: Record<string, string> = {
-            ADMINISTRADOR: 'Administrador del Sistema',
-            GESTOR_PERSONAL: 'Gestor de Personal',
-            SUPERVISOR_ACCESOS: 'Supervisor de Accesos',
-          };
-
-          // Mapeo de estados: UsuarioAuth → EstadoEmpleado
-          const estadoMapeado =
-            usuarioSistema.estado === 'ACTIVO'
-              ? 'ACTIVO'
-              : usuarioSistema.estado === 'BLOQUEADO'
-              ? 'REVOCADO'
-              : 'SUSPENDIDO'; // INACTIVO → SUSPENDIDO
-
+          const estadoMapeado = usuarioSistema.estado === 'ACTIVO' ? 'ACTIVO' : usuarioSistema.estado === 'BLOQUEADO' ? 'REVOCADO' : 'SUSPENDIDO';
           empleado = {
             id: usuarioSistema.id,
             departamentoId: 0,
-            departamentoNombre: rolLabel[usuarioSistema.rol] || usuarioSistema.rol,
-            areaPrincipalNombre: 'Oficinas Administrativas y Auditoría (Área D)',
-            areasAutorizadas: ['Oficinas Administrativas y Auditoría (Área D)'],
+            departamentoNombre: usuarioSistema.rol,
+            areaPrincipalNombre: usuarioSistema.rol === 'ADMINISTRADOR' ? 'Acceso Maestro (Todas las zonas)' : 'Administración',
+            areasAutorizadas: usuarioSistema.rol === 'ADMINISTRADOR' 
+              ? ['Laboratorio', 'Sala', 'Almacén', 'Oficinas'] 
+              : ['Oficinas'],
             tipoDocumento: 'CC',
             numeroDocumento: usuarioSistema.documento,
             nombres: usuarioSistema.nombres,
             apellidos: usuarioSistema.apellidos,
             correo: usuarioSistema.correo,
             telefono: '—',
-            codigoTarjetaRfid: undefined,
             estado: estadoMapeado as any,
           };
         } else {
-          // No es operador del sistema → buscar en personal de laboratorio
           empleado = buscarPorDocumento(identificador.trim());
         }
       } else {
-        // RFID: solo en el store de personal
         empleado = buscarPorRfid(identificador.trim());
       }
 
       if (!empleado) {
-        setResultado({
-          estado: 'NO_REGISTRADO',
-          motivo: 'El identificador no corresponde a ningún personal registrado en la base de datos.',
-          timestamp: new Date().toISOString(),
-          areaConsultada: areaSeleccionada,
-        });
-      } else if (empleado.estado === 'REVOCADO') {
-        setResultado({
-          estado: 'DENEGADO',
-          perfil: empleado,
-          areaConsultada: areaSeleccionada,
-          motivo: `Acceso REVOCADO. ${empleado.motivoCambioEstado || 'Credencial inhabilitada por auditoría de bioseguridad.'}`,
-          timestamp: new Date().toISOString(),
-        });
-      } else if (empleado.estado === 'SUSPENDIDO') {
-        setResultado({
-          estado: 'DENEGADO',
-          perfil: empleado,
-          areaConsultada: areaSeleccionada,
-          motivo: `Acceso SUSPENDIDO. ${empleado.motivoCambioEstado || 'Credencial temporalmente suspendida.'}`,
-          timestamp: new Date().toISOString(),
-        });
+        toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+        setResultado({ estado: 'NO_REGISTRADO', motivo: 'No existe en base de datos.', timestamp: new Date().toISOString(), areaConsultada: areaSeleccionada });
+      } else if (empleado.estado === 'REVOCADO' || empleado.estado === 'SUSPENDIDO') {
+        toast.error(`Acceso ${empleado.estado}`, { id: 'scan-toast' });
+        setResultado({ estado: 'DENEGADO', perfil: empleado, areaConsultada: areaSeleccionada, motivo: `Credencial ${empleado.estado}`, timestamp: new Date().toISOString() });
       } else {
-        // Estado ACTIVO → verificar permisos por área
-        const areaBaseName = areaSeleccionada
-          .replace(' (Alto Riesgo)', '')
-          .replace(' (Medio Riesgo)', '')
-          .replace(' (Bajo Riesgo)', '')
-          .split('(')[0]
-          .trim()
-          .toLowerCase();
-
-        const tieneAcceso =
-          !areaBaseName ||
-          (empleado.areasAutorizadas?.some((a) =>
-            a.toLowerCase().includes(areaBaseName)
-          ) ?? false);
-
+        const tieneAcceso = !areaSeleccionada || (empleado.areasAutorizadas?.some((a) => a.toLowerCase().includes(areaSeleccionada.split(' ')[0].toLowerCase())) ?? true);
+        if (tieneAcceso) toast.success('Acceso Permitido', { id: 'scan-toast' });
+        else toast.error('Acceso Denegado', { id: 'scan-toast' });
+        
         setResultado({
           estado: tieneAcceso ? 'AUTORIZADO' : 'DENEGADO',
           perfil: empleado,
           areaConsultada: areaSeleccionada,
-          motivo: tieneAcceso
-            ? undefined
-            : `Sin autorización para esta área. Área principal asignada: ${empleado.areaPrincipalNombre}.`,
+          motivo: tieneAcceso ? undefined : 'Sin autorización para esta zona.',
           timestamp: new Date().toISOString(),
         });
       }
-
     } finally {
       setLoading(false);
     }
   };
 
-  const estadoColor = {
-    AUTORIZADO: {
-      bg: 'bg-emerald-50/80',
-      border: 'border-[#4A9B8E]',
-      text: 'text-[#2E3D34]',
-      badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      icon: '#4A9B8E',
-    },
-    DENEGADO: {
-      bg: 'bg-red-50/80',
-      border: 'border-[#E8A0A0]',
-      text: 'text-red-900',
-      badge: 'bg-red-100 text-red-800 border-red-200',
-      icon: '#E8A0A0',
-    },
-    NO_REGISTRADO: {
-      bg: 'bg-amber-50/80',
-      border: 'border-[#E8C687]',
-      text: 'text-amber-900',
-      badge: 'bg-amber-100 text-amber-800 border-amber-200',
-      icon: '#E8C687',
-    },
+  // Light theme colors adjusted to corporate palette
+  const colors = {
+    AUTORIZADO: { bg: 'bg-emerald-50/80 backdrop-blur-md', border: 'border-emerald-200', text: 'text-emerald-900', glow: 'shadow-[0_0_40px_rgba(16,185,129,0.15)]', icon: 'text-emerald-600', iconBg: 'bg-emerald-100 border-emerald-200' },
+    DENEGADO: { bg: 'bg-red-50/80 backdrop-blur-md', border: 'border-red-200', text: 'text-red-900', glow: 'shadow-[0_0_40px_rgba(244,63,94,0.15)]', icon: 'text-red-600', iconBg: 'bg-red-100 border-red-200' },
+    NO_REGISTRADO: { bg: 'bg-amber-50/80 backdrop-blur-md', border: 'border-amber-200', text: 'text-amber-900', glow: 'shadow-[0_0_40px_rgba(245,158,11,0.15)]', icon: 'text-amber-600', iconBg: 'bg-amber-100 border-amber-200' },
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
+    <div className="max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Simulador de Control de Acceso Físico</h1>
-        <p className="text-xs text-brand-text/70 mt-1">
-          Validación en tiempo real de credenciales y registro inmutable en bitácora (FDA 21 CFR Part 11).
-        </p>
+        <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Consola Industrial de Accesos</h1>
+        <p className="text-xs text-brand-text/70 mt-1">Simulación en tiempo real de Airlocks y validación biométrica.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Formulario de Simulación */}
-        <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-brand-accent/40 shadow-xs space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-brand-secondary text-brand-primary">
-              <ScanLine className="w-5 h-5" />
+        {/* Terminal de Ingreso */}
+        <div className="lg:col-span-5 bg-white/90 backdrop-blur-xl rounded-[2.5rem] p-8 border border-brand-accent/60 shadow-xl space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-brand-primary/10 to-transparent rounded-bl-full" />
+          
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="p-3 rounded-2xl bg-brand-secondary/40 text-brand-primary border border-brand-accent/40 shadow-inner">
+              <Fingerprint className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-sm font-heading font-bold text-brand-dark">Lector de Credenciales</h2>
-              <p className="text-[11px] text-brand-text/70">Seleccione el área y digite la credencial simulada</p>
+              <h2 className="text-sm font-heading font-bold text-brand-dark uppercase tracking-widest">Lector Terminal</h2>
+              <p className="text-[11px] text-brand-text/60">Panel de Control de Seguridad</p>
             </div>
           </div>
 
-          <form onSubmit={handleSimular} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-brand-text mb-1.5">Área Restringida</label>
+          <form onSubmit={handleSimular} className="space-y-5 relative z-10">
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-brand-text/70 uppercase tracking-wider">Zona de Acceso</label>
               <select
                 value={areaId}
                 onChange={(e) => setAreaId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 bg-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-brand-accent/60 text-brand-dark text-sm font-medium focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-xs"
               >
                 {areasDemo.map((area) => (
-                  <option key={area.id} value={area.id}>
-                    {area.nombre}
-                  </option>
+                  <option key={area.id} value={area.id}>{area.nombre}</option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-brand-text mb-1.5">Método de Identificación</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTipoIdentificador('DOCUMENTO')}
-                  className={`py-2 text-xs font-bold rounded-xl border transition-all ${
-                    tipoIdentificador === 'DOCUMENTO'
-                      ? 'bg-brand-primary text-white border-brand-primary'
-                      : 'bg-brand-secondary/40 text-brand-text border-brand-accent/40'
-                  }`}
-                >
-                  Documento ID
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTipoIdentificador('RFID')}
-                  className={`py-2 text-xs font-bold rounded-xl border transition-all ${
-                    tipoIdentificador === 'RFID'
-                      ? 'bg-brand-primary text-white border-brand-primary'
-                      : 'bg-brand-secondary/40 text-brand-text border-brand-accent/40'
-                  }`}
-                >
-                  Tarjeta RFID/NFC
-                </button>
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-brand-text/70 uppercase tracking-wider">Método de Escaneo</label>
+              <div className="grid grid-cols-2 gap-3">
+                {['DOCUMENTO', 'RFID'].map((tipo) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    onClick={() => setTipoIdentificador(tipo as any)}
+                    className={`py-3 text-xs font-bold rounded-xl border transition-all ${
+                      tipoIdentificador === tipo 
+                        ? 'bg-brand-primary text-white border-brand-primary shadow-md' 
+                        : 'bg-brand-secondary/40 text-brand-text border-brand-accent/40 hover:border-brand-primary/50'
+                    }`}
+                  >
+                    {tipo === 'DOCUMENTO' ? 'Documento ID' : 'Tarjeta RFID'}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-brand-text mb-1.5">
-                {tipoIdentificador === 'DOCUMENTO' ? 'Número de Documento' : 'Código de Tarjeta RFID'}
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-bold text-brand-text/70 uppercase tracking-wider">
+                  Credencial de Seguridad
+                </label>
+                <span className="text-[10px] font-medium text-brand-text/50">{identificador.length}/12</span>
+              </div>
               <input
                 type="text"
                 required
                 value={identificador}
-                onChange={(e) => setIdentificador(e.target.value)}
-                placeholder={
-                  tipoIdentificador === 'DOCUMENTO'
-                    ? 'Ej. 1012345678'
-                    : 'Ej. RFID-001'
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                onChange={(e) => {
+                  const valorNumerico = e.target.value.replace(/\D/g, '');
+                  setIdentificador(valorNumerico);
+                }}
+                maxLength={12}
+                placeholder="Ej. 1012345678"
+                className="w-full px-5 py-4 rounded-xl bg-white border border-brand-accent/60 text-brand-dark font-mono text-lg focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-brand-text/30 shadow-xs"
               />
-              <p className="text-[10px] text-brand-text/50 mt-1">
-                Ingrese el número exactamente como fue registrado en el sistema.
-              </p>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full py-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-sm transition-all shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
-              <ScanLine className="w-4 h-4" />
-              {loading ? 'Consultando biometría...' : 'Simular Lectura de Acceso'}
+              <ScanLine className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'PROCESANDO ESCANEO...' : 'INICIAR ESCANEO'}
             </button>
           </form>
         </div>
 
-        {/* Panel de Resultado */}
-        <div className="lg:col-span-7 flex flex-col justify-center">
-          {resultado ? (
-            <div
-              className={`rounded-3xl border overflow-hidden shadow-md transition-all ${
-                estadoColor[resultado.estado].bg
-              } ${estadoColor[resultado.estado].border}`}
-            >
-              {/* Banner de resultado */}
-              <div className="p-6 text-center">
-                <div
-                  className="w-14 h-14 rounded-full mx-auto flex items-center justify-center mb-3 shadow-xs"
-                  style={{ backgroundColor: estadoColor[resultado.estado].icon }}
-                >
-                  {resultado.estado === 'AUTORIZADO' && <CheckCircle2 className="w-7 h-7 text-white" />}
-                  {resultado.estado === 'DENEGADO' && <XCircle className="w-7 h-7 text-white" />}
-                  {resultado.estado === 'NO_REGISTRADO' && <AlertCircle className="w-7 h-7 text-white" />}
+        {/* Panel de Resultado Animado */}
+        <div className="lg:col-span-7 flex flex-col justify-center min-h-[500px]">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="scanning"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                className="w-full h-full rounded-[2.5rem] bg-white/60 backdrop-blur-md border border-brand-accent/40 flex flex-col items-center justify-center p-12 relative overflow-hidden"
+              >
+                {/* Radar effect */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <motion.div
+                    animate={{ scale: [1, 2.5], opacity: [0.5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                    className="w-32 h-32 rounded-full border-2 border-brand-primary/40 absolute"
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 2], opacity: [0.8, 0] }}
+                    transition={{ duration: 1.5, delay: 0.4, repeat: Infinity, ease: "easeOut" }}
+                    className="w-32 h-32 rounded-full border-2 border-brand-primary/20 absolute"
+                  />
                 </div>
-                <span className={`text-[10px] font-extrabold tracking-widest uppercase ${estadoColor[resultado.estado].text}`}>
-                  Resultado de Validación
-                </span>
-                <h3 className={`text-xl font-heading font-extrabold mt-0.5 ${estadoColor[resultado.estado].text}`}>
-                  {resultado.estado === 'AUTORIZADO' && 'ACCESO PERMITIDO'}
-                  {resultado.estado === 'DENEGADO' && 'ACCESO DENEGADO'}
-                  {resultado.estado === 'NO_REGISTRADO' && 'PERSONA NO REGISTRADA'}
-                </h3>
-              </div>
+                <ScanLine className="w-16 h-16 text-brand-primary relative z-10" />
+                <h3 className="text-brand-primary font-mono font-bold mt-6 relative z-10 tracking-widest animate-pulse">VALIDANDO CREDENCIAL...</h3>
+              </motion.div>
+            ) : resultado ? (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                className={`rounded-[2.5rem] overflow-hidden ${colors[resultado.estado].bg} border ${colors[resultado.estado].border} ${colors[resultado.estado].glow} p-8 relative`}
+              >
+                <div className="text-center mb-8 relative z-10">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", delay: 0.2 }}
+                    className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-4 ${colors[resultado.estado].iconBg} border`}
+                  >
+                    {resultado.estado === 'AUTORIZADO' && <CheckCircle2 className={`w-10 h-10 ${colors[resultado.estado].icon}`} />}
+                    {resultado.estado === 'DENEGADO' && <XCircle className={`w-10 h-10 ${colors[resultado.estado].icon}`} />}
+                    {resultado.estado === 'NO_REGISTRADO' && <AlertCircle className={`w-10 h-10 ${colors[resultado.estado].icon}`} />}
+                  </motion.div>
+                  <h2 className={`text-3xl font-heading font-black tracking-tight ${colors[resultado.estado].text}`}>
+                    {resultado.estado === 'AUTORIZADO' ? 'ACCESO OTORGADO' : resultado.estado === 'DENEGADO' ? 'ACCESO DENEGADO' : 'NO IDENTIFICADO'}
+                  </h2>
+                </div>
 
-              {/* Perfil del empleado (si fue encontrado) */}
-              {resultado.perfil && (
-                <div className="bg-white/95 mx-4 mb-4 rounded-2xl border border-black/5 overflow-hidden shadow-xs">
-                  {/* Cabecera del perfil con foto */}
-                  <div className="flex items-center gap-4 p-4 border-b border-gray-100">
-                    {/* Foto de perfil */}
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-brand-accent/40 bg-brand-secondary/30 flex items-center justify-center shrink-0 shadow-xs">
-                      {resultado.perfil.fotoPerfil ? (
-                        <img
-                          src={resultado.perfil.fotoPerfil}
-                          alt={`${resultado.perfil.nombres} ${resultado.perfil.apellidos}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-3xl">👤</span>
-                      )}
-                    </div>
-
-                    {/* Nombre y estado */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-heading font-extrabold text-brand-dark truncate">
-                        {resultado.perfil.nombres} {resultado.perfil.apellidos}
-                      </p>
-                      <p className="text-[11px] text-brand-text/60 truncate">{resultado.perfil.departamentoNombre}</p>
-                      {/* Badge de estado */}
-                      <span
-                        className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                          resultado.perfil.estado === 'ACTIVO'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : resultado.perfil.estado === 'REVOCADO'
-                            ? 'bg-red-50 text-red-700 border-red-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}
-                      >
-                        {resultado.perfil.estado === 'ACTIVO' && <ShieldCheck className="w-3 h-3" />}
-                        {resultado.perfil.estado === 'REVOCADO' && <ShieldOff className="w-3 h-3" />}
-                        {resultado.perfil.estado === 'SUSPENDIDO' && <ShieldAlert className="w-3 h-3" />}
-                        {resultado.perfil.estado}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Datos del perfil */}
-                  <div className="p-4 space-y-2 text-xs">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2 text-brand-text/80">
-                        <CreditCard className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                        <span className="font-mono font-bold text-brand-dark">
-                          {resultado.perfil.tipoDocumento} {resultado.perfil.numeroDocumento}
-                        </span>
+                {resultado.perfil && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white/60 backdrop-blur-md rounded-3xl p-6 border border-black/5 shadow-xs"
+                  >
+                    <div className="flex items-center gap-5 border-b border-gray-200/60 pb-5 mb-5">
+                      <div className="w-16 h-16 rounded-2xl bg-brand-secondary/30 border border-brand-accent/40 flex items-center justify-center text-3xl">
+                        {resultado.perfil.fotoPerfil ? <img src={resultado.perfil.fotoPerfil} className="w-full h-full rounded-2xl object-cover" /> : '👤'}
                       </div>
-                      <div className="flex items-center gap-2 text-brand-text/80">
-                        <Phone className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                        <span>{resultado.perfil.telefono}</span>
+                      <div>
+                        <p className={`text-lg font-heading font-bold ${colors[resultado.estado].text}`}>{resultado.perfil.nombres} {resultado.perfil.apellidos}</p>
+                        <p className="text-xs text-brand-text/70">{resultado.perfil.departamentoNombre}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-xs font-medium text-brand-text/80">
+                      <div>
+                        <span className="text-brand-text/50 block mb-1">Documento</span>
+                        {resultado.perfil.tipoDocumento} {resultado.perfil.numeroDocumento}
+                      </div>
+                      <div>
+                        <span className="text-brand-text/50 block mb-1">Estado de Credencial</span>
+                        <span className="px-2 py-0.5 rounded-full bg-white border border-brand-accent/40 font-bold">{resultado.perfil.estado}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-brand-text/50 block mb-1">Área Asignada</span>
+                        {resultado.perfil.areaPrincipalNombre}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-brand-text/80">
-                      <Mail className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                      <span className="truncate">{resultado.perfil.correo}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-brand-text/80">
-                      <Building2 className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                      <span className="text-brand-dark font-medium">{resultado.perfil.areaPrincipalNombre}</span>
-                    </div>
-
-                    {resultado.perfil.codigoTarjetaRfid && (
-                      <div className="flex items-center gap-2">
-                        <User className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                        <span className="font-mono text-[11px] bg-brand-secondary px-2 py-0.5 rounded-md border border-brand-accent/40 text-brand-primary font-bold">
-                          {resultado.perfil.codigoTarjetaRfid}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Áreas autorizadas */}
-                    {resultado.perfil.areasAutorizadas && resultado.perfil.areasAutorizadas.length > 0 && (
-                      <div className="pt-1 border-t border-gray-100">
-                        <p className="text-[10px] font-bold text-brand-text/60 mb-1">ÁREAS AUTORIZADAS:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {resultado.perfil.areasAutorizadas.map((area) => (
-                            <span
-                              key={area}
-                              className="px-1.5 py-0.5 rounded-md bg-brand-secondary text-[9px] font-semibold text-brand-text border border-brand-accent/40"
-                            >
-                              {area}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Motivo de denegación */}
                     {resultado.motivo && (
-                      <div className="pt-1 border-t border-gray-100">
-                        <p className="text-red-700 font-medium text-[11px]">
-                          <strong>⚠ Motivo:</strong> {resultado.motivo}
-                        </p>
+                      <div className="mt-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-start gap-2 shadow-sm">
+                        <ShieldAlert className="w-4 h-4 shrink-0 text-red-600" />
+                        {resultado.motivo}
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                )}
 
-              {/* Caso NO_REGISTRADO: solo muestra el motivo */}
-              {resultado.estado === 'NO_REGISTRADO' && resultado.motivo && (
-                <div className="bg-white/90 mx-4 mb-4 rounded-2xl p-4 border border-amber-100 text-xs">
-                  <p className="text-amber-800 font-medium">
-                    <strong>Motivo:</strong> {resultado.motivo}
-                  </p>
+                <div className="mt-6 flex items-center justify-between text-[10px] text-brand-text/40 font-mono">
+                  <span>LOG: {new Date(resultado.timestamp).toISOString()}</span>
+                  <span>ZONA: {resultado.areaConsultada}</span>
                 </div>
-              )}
-
-              {/* Timestamp */}
-              <div className="px-4 pb-4">
-                <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                  <Clock className="w-3 h-3" />
-                  <span>Marca de tiempo: {new Date(resultado.timestamp).toLocaleString()}</span>
-                  {resultado.areaConsultada && (
-                    <span className="ml-auto text-[9px] text-brand-text/50 truncate max-w-[140px]">
-                      {resultado.areaConsultada}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-3xl p-12 bg-brand-secondary/40 border border-dashed border-brand-accent/60 text-center">
-              <ScanLine className="w-12 h-12 text-brand-primary/40 mx-auto mb-3 animate-pulse" />
-              <h3 className="text-sm font-heading font-bold text-brand-text/70">Esperando Lectura</h3>
-              <p className="text-xs text-brand-text/50 max-w-xs mx-auto mt-1">
-                Ingrese los parámetros en el panel izquierdo para simular el paso por el torniquete/esclusa.
-              </p>
-            </div>
-          )}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full h-full rounded-[2.5rem] bg-brand-secondary/20 border border-brand-accent/40 border-dashed flex flex-col items-center justify-center p-12 text-brand-text/40"
+              >
+                <ScanLine className="w-16 h-16 mb-4 opacity-20" />
+                <p className="text-sm font-heading font-bold">SISTEMA EN ESPERA</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

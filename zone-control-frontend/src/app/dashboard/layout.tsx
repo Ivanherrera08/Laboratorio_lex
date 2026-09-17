@@ -112,8 +112,8 @@ export default function DashboardLayout({
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isSidebarOpen={isSidebarOpen}
           />
-          <main className="p-8 flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
-            <div className="max-w-md bg-white p-8 rounded-3xl border border-red-200 shadow-lg space-y-4">
+          <main className="p-8 flex-1 flex flex-col items-center justify-center text-center">
+            <div className="max-w-md bg-white p-8 rounded-3xl border border-red-200 shadow-lg space-y-4 animate-fade-in">
               <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-200">
                 <ShieldAlert className="w-7 h-7" />
               </div>
@@ -146,7 +146,7 @@ export default function DashboardLayout({
           isSidebarOpen={isSidebarOpen}
         />
         {/* Contenido protegido */}
-        <main className="p-4 sm:p-8 flex-1 animate-fade-in">{children}</main>
+        <main className="p-4 sm:p-8 flex-1">{children}</main>
       </div>
     </div>
   );
