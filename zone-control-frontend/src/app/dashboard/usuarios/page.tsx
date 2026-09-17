@@ -183,8 +183,8 @@ export default function UsuariosSistemaPage() {
     if (!emailRegex.test(correo.trim())) {
       nuevosErrores.correo = 'Ingrese un correo electrónico válido (ejemplo: usuario@laboratorioxyz.com).';
     }
-    if (password.length < 6) {
-      nuevosErrores.password = 'La contraseña debe tener mínimo 6 caracteres.';
+    if (password.length < 6 || password.length > 18) {
+      nuevosErrores.password = 'La contraseña debe tener entre 6 y 18 caracteres.';
     }
     if (password !== confirmPassword) {
       nuevosErrores.confirmPassword = 'Las contraseñas no coinciden.';
@@ -486,8 +486,8 @@ export default function UsuariosSistemaPage() {
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[10px] font-bold text-brand-text">Contraseña (Mín 6 car.) *</label>
-                      <span className="text-[9px] font-mono text-brand-primary">{password.length}/50</span>
+                      <label className="block text-[10px] font-bold text-brand-text">Contraseña (Mín 6 car., Máx 18) *</label>
+                      <span className="text-[9px] font-mono text-brand-primary">{password.length}/18</span>
                     </div>
                     <input
                       type="password"
@@ -495,7 +495,7 @@ export default function UsuariosSistemaPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      maxLength={50}
+                      maxLength={18}
                       className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
                         errores.password ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                       }`}
@@ -505,7 +505,7 @@ export default function UsuariosSistemaPage() {
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-[10px] font-bold text-brand-text">Confirmar Contraseña *</label>
-                      <span className="text-[9px] font-mono text-brand-primary">{confirmPassword.length}/50</span>
+                      <span className="text-[9px] font-mono text-brand-primary">{confirmPassword.length}/18</span>
                     </div>
                     <input
                       type="password"
@@ -513,7 +513,7 @@ export default function UsuariosSistemaPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      maxLength={50}
+                      maxLength={18}
                       className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
                         errores.confirmPassword ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
                       }`}

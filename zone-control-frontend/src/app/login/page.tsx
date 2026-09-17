@@ -198,7 +198,7 @@ function LoginFormContent() {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-bold text-brand-text">Contraseña de Acceso</label>
-              <span className="text-[10px] font-medium text-brand-text/50">{password.length}/50</span>
+              <span className="text-[10px] font-medium text-brand-text/50">{password.length}/18</span>
             </div>
             <input
               type="password"
@@ -207,7 +207,7 @@ function LoginFormContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              maxLength={50}
+              maxLength={18}
               className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/40 text-sm transition-all disabled:bg-gray-100"
             />
           </div>
