@@ -144,8 +144,18 @@ export default function SocioSyncPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              const textoReporte = mockLoteActual.map(r => `Fecha: ${new Date(r.timestamp).toLocaleString()} | Persona: ${r.empleadoNombreCompleto} | Área: ${r.areaNombre} | Resultado: ${r.resultadoAcceso}`).join('%0D%0A');
-              window.location.href = `mailto:auditor@partner.com?subject=Reporte de Trazabilidad B2B - Zone Control&body=A continuación el registro de accesos (Lote actual):%0D%0A%0D%0A${textoReporte}`;
+              const textoReporte = mockLoteActual.map((r, i) => 
+                `📌 Registro #${i + 1}%0D%0A` +
+                `👤 Persona: ${r.empleadoNombreCompleto}%0D%0A` +
+                `🏢 Área: ${r.areaNombre}%0D%0A` +
+                `⏱️ Fecha: ${new Date(r.timestamp).toLocaleString()}%0D%0A` +
+                `📝 Resultado: ${r.resultadoAcceso}%0D%0A` +
+                `----------------------------------------`
+              ).join('%0D%0A%0D%0A');
+              
+              const body = `Estimado Auditor,%0D%0A%0D%0AA continuación enviamos el registro de accesos correspondiente al lote actual generado por el sistema Zone Control:%0D%0A%0D%0A${textoReporte}%0D%0A%0D%0AAtentamente,%0D%0ASistema Automatizado Zone Control`;
+              
+              window.location.href = `mailto:auditor@partner.com?subject=Reporte de Trazabilidad B2B - Zone Control&body=${body}`;
             }}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-brand-accent/60 text-brand-dark font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
