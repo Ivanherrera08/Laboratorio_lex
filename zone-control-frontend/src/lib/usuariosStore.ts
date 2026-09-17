@@ -8,7 +8,7 @@
 
 import { UsuarioAuth } from '@/types';
 
-const STORE_KEY = 'zone_control_usuarios_sistema';
+const STORE_KEY = 'zone_control_usuarios_sistema_v2';
 
 // Usuarios demo iniciales
 const usuariosIniciales: UsuarioAuth[] = [
