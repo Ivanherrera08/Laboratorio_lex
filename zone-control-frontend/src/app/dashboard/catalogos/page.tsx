@@ -30,10 +30,10 @@ const mockDeptos: Departamento[] = [
 ];
 
 const mockAreas: AreaRestringida[] = [
-  { id: 1, codigo: 'ZONA-A', nombre: 'Laboratorio de Síntesis Molecular', nivelRiesgo: 'ALTO', descripcion: 'Presión negativa y esclusa hermética', activa: true },
-  { id: 2, codigo: 'ZONA-B', nombre: 'Sala Limpia de Liofilización', nivelRiesgo: 'ALTO', descripcion: 'Grado A / ISO 5 para inyectables', activa: true },
-  { id: 3, codigo: 'ZONA-C', nombre: 'Almacén Central de Materias Primas', nivelRiesgo: 'MEDIO', descripcion: 'Cuarentena de reactivos', activa: true },
-  { id: 4, codigo: 'ZONA-D', nombre: 'Oficinas Administrativas', nivelRiesgo: 'BAJO', descripcion: 'Zonas comunes y despachos', activa: true },
+  { id: 1, codigo: 'AREA-A', nombre: 'Laboratorio de Síntesis Molecular (Área A)', nivelRiesgo: 'ALTO', descripcion: 'Zona crítica BSL-3', activa: true },
+  { id: 2, codigo: 'AREA-B', nombre: 'Sala Limpia de Liofilización (Área B)', nivelRiesgo: 'MEDIO', descripcion: 'Zona estéril ISO 5', activa: true },
+  { id: 3, codigo: 'AREA-C', nombre: 'Almacén Central (Área C)', nivelRiesgo: 'BAJO', descripcion: 'Almacenamiento general', activa: true },
+  { id: 4, codigo: 'AREA-D', nombre: 'Oficinas Administrativas (Área D)', nivelRiesgo: 'BAJO', descripcion: 'Zona de trabajo común', activa: true },
 ];
 
 export default function CatalogosPage() {

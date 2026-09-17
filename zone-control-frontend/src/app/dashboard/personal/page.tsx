@@ -36,13 +36,10 @@ export interface CatalogoAreaLab {
 }
 
 const catalogoLaboratoriosAreas: CatalogoAreaLab[] = [
-  { id: 1, codigo: 'LAB-01', nombre: 'Laboratorio de Síntesis Molecular (Área A)', deptoAsociado: 'Producción y Síntesis', nivelRiesgo: 'ALTO' },
-  { id: 2, codigo: 'LAB-02', nombre: 'Sala Limpia de Liofilización e Inyectables (Área B)', deptoAsociado: 'Producción y Síntesis', nivelRiesgo: 'ALTO' },
-  { id: 3, codigo: 'LAB-03', nombre: 'Laboratorio de Cromatografía y Espectrometría', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'ALTO' },
-  { id: 4, codigo: 'LAB-04', nombre: 'Laboratorio de Microbiología y Cultivos Celulares', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'ALTO' },
-  { id: 5, codigo: 'ALM-01', nombre: 'Almacén Central de Materias Primas y Reactivos (Área C)', deptoAsociado: 'Bioseguridad y Mantenimiento', nivelRiesgo: 'MEDIO' },
-  { id: 6, codigo: 'ESC-01', nombre: 'Esclusa de Desinfección y Cuarentena', deptoAsociado: 'Bioseguridad y Mantenimiento', nivelRiesgo: 'ALTO' },
-  { id: 7, codigo: 'ADM-01', nombre: 'Oficinas Administrativas y Auditoría (Área D)', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'BAJO' },
+  { id: 1, codigo: 'AREA-A', nombre: 'Laboratorio de Síntesis Molecular (Área A)', deptoAsociado: 'Producción y Síntesis', nivelRiesgo: 'ALTO' },
+  { id: 2, codigo: 'AREA-B', nombre: 'Sala Limpia de Liofilización (Área B)', deptoAsociado: 'Producción y Síntesis', nivelRiesgo: 'MEDIO' },
+  { id: 3, codigo: 'AREA-C', nombre: 'Almacén Central (Área C)', deptoAsociado: 'Control de Calidad', nivelRiesgo: 'BAJO' },
+  { id: 4, codigo: 'AREA-D', nombre: 'Oficinas Administrativas (Área D)', deptoAsociado: 'Administración y Finanzas', nivelRiesgo: 'BAJO' },
 ];
 
 const mockEmpleados: Empleado[] = [
@@ -52,7 +49,7 @@ const mockEmpleados: Empleado[] = [
     departamentoNombre: 'Producción y Síntesis',
     areaPrincipalId: 1,
     areaPrincipalNombre: 'Laboratorio de Síntesis Molecular (Área A)',
-    areasAutorizadas: ['Laboratorio de Síntesis Molecular (Área A)', 'Sala Limpia de Liofilización e Inyectables (Área B)'],
+    areasAutorizadas: ['Laboratorio de Síntesis Molecular (Área A)', 'Sala Limpia de Liofilización (Área B)'],
     tipoDocumento: 'CC',
     numeroDocumento: '1012345678',
     nombres: 'Carlos Andrés',
@@ -67,8 +64,8 @@ const mockEmpleados: Empleado[] = [
     departamentoId: 2,
     departamentoNombre: 'Control de Calidad',
     areaPrincipalId: 3,
-    areaPrincipalNombre: 'Laboratorio de Cromatografía y Espectrometría',
-    areasAutorizadas: ['Laboratorio de Cromatografía y Espectrometría'],
+    areaPrincipalNombre: 'Almacén Central (Área C)',
+    areasAutorizadas: ['Almacén Central (Área C)'],
     tipoDocumento: 'CC',
     numeroDocumento: '1087654321',
     nombres: 'Laura Sofía',

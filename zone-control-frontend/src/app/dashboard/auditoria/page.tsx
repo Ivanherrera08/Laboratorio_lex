@@ -48,7 +48,7 @@ const mockBitacoraFormal: RegistroAuditoriaHumano[] = [
     justificacionNormativa: 'Protocolo de Contención Biológica y Control de Contaminación Cruzada (FDA 21 CFR 211.113).',
     detalleDocumentado: {
       sujetoAfectado: 'Ing. Laura Sofía Restrepo Villa (Doc: 1087654321)',
-      areaInvolucrada: 'Laboratorio de Síntesis Molecular (Zona A - Nivel de Riesgo ALTO)',
+      areaInvolucrada: 'Laboratorio de Síntesis Molecular (Área A)',
       condicionPrevia: 'Estado ACTIVO con autorización plena en esclusas de presión negativa.',
       condicionNueva: 'Estado REVOCADO con bloqueo en torniquetes y credencial RFID-002 inhabilitada.',
       normaCumplida: 'ISO 14644-1 (Salas Limpias) e Informe 32 OMS sobre Buenas Prácticas de Manufactura (BPM).',

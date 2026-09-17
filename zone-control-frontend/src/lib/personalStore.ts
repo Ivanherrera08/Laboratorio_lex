@@ -8,7 +8,7 @@
 
 import { Empleado } from '@/types';
 
-const STORE_KEY = 'zone_control_personal';
+const STORE_KEY = 'zone_control_personal_v2';
 
 // Empleados demo iniciales que se cargan si el store está vacío
 const empleadosIniciales: Empleado[] = [
@@ -20,7 +20,7 @@ const empleadosIniciales: Empleado[] = [
     areaPrincipalNombre: 'Laboratorio de Síntesis Molecular (Área A)',
     areasAutorizadas: [
       'Laboratorio de Síntesis Molecular (Área A)',
-      'Sala Limpia de Liofilización e Inyectables (Área B)',
+      'Sala Limpia de Liofilización (Área B)',
     ],
     tipoDocumento: 'CC',
     numeroDocumento: '1012345678',
@@ -36,8 +36,8 @@ const empleadosIniciales: Empleado[] = [
     departamentoId: 2,
     departamentoNombre: 'Control de Calidad',
     areaPrincipalId: 3,
-    areaPrincipalNombre: 'Laboratorio de Cromatografía y Espectrometría',
-    areasAutorizadas: ['Laboratorio de Cromatografía y Espectrometría'],
+    areaPrincipalNombre: 'Almacén Central (Área C)',
+    areasAutorizadas: ['Almacén Central (Área C)'],
     tipoDocumento: 'CC',
     numeroDocumento: '1087654321',
     nombres: 'Laura Sofía',
@@ -53,8 +53,8 @@ const empleadosIniciales: Empleado[] = [
     departamentoId: 1,
     departamentoNombre: 'Producción y Síntesis',
     areaPrincipalId: 2,
-    areaPrincipalNombre: 'Sala Limpia de Liofilización e Inyectables (Área B)',
-    areasAutorizadas: ['Sala Limpia de Liofilización e Inyectables (Área B)'],
+    areaPrincipalNombre: 'Sala Limpia de Liofilización (Área B)',
+    areasAutorizadas: ['Sala Limpia de Liofilización (Área B)'],
     tipoDocumento: 'CE',
     numeroDocumento: '98765432',
     nombres: 'Guillermo',
