@@ -13,7 +13,7 @@ function LoginFormContent() {
   const redirectParam = searchParams.get('redirect');
   const logoutParam = searchParams.get('logout');
 
-  const [documento, setDocumento] = useState('');
+  const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const [isBloqueado, setIsBloqueado] = useState(false);
@@ -41,43 +41,19 @@ function LoginFormContent() {
     }
   }, [isAuthenticated, router]);
 
-  // Usuarios Demo para pruebas directas
+  // Usuarios Demo — correos y contraseña real del backend
   const usuariosDemo: Record<string, { pass: string; user: any }> = {
-    admin: {
-      pass: 'admin123',
-      user: {
-        id: 1,
-        documento: '10001',
-        nombres: 'Dr. Roberto',
-        apellidos: 'Gómez (Admin)',
-        correo: 'admin@laboratorioxyz.com',
-        rol: 'ADMINISTRADOR',
-        estado: 'ACTIVO',
-      },
+    'admin@laboratorioxyz.com': {
+      pass: 'Admin123!',
+      user: { id: 1, documento: '10001234', nombres: 'Dr. Roberto', apellidos: 'Gomez', correo: 'admin@laboratorioxyz.com', rol: 'ADMINISTRADOR', estado: 'ACTIVO' },
     },
-    gestor: {
-      pass: 'gestor123',
-      user: {
-        id: 2,
-        documento: '10002',
-        nombres: 'María',
-        apellidos: 'Fernanda (Gestor)',
-        correo: 'gestor@laboratorioxyz.com',
-        rol: 'GESTOR_PERSONAL',
-        estado: 'ACTIVO',
-      },
+    'gestor@laboratorioxyz.com': {
+      pass: 'Admin123!',
+      user: { id: 2, documento: '10002345', nombres: 'Maria Fernanda', apellidos: 'Londono', correo: 'gestor@laboratorioxyz.com', rol: 'GESTOR_PERSONAL', estado: 'ACTIVO' },
     },
-    supervisor: {
-      pass: 'auditor123',
-      user: {
-        id: 3,
-        documento: '10003',
-        nombres: 'Ing. Alejandro',
-        apellidos: 'Torres (Auditor)',
-        correo: 'supervisor@laboratorioxyz.com',
-        rol: 'SUPERVISOR_ACCESOS',
-        estado: 'ACTIVO',
-      },
+    'supervisor@laboratorioxyz.com': {
+      pass: 'Admin123!',
+      user: { id: 3, documento: '10003456', nombres: 'Ing. Alejandro', apellidos: 'Torres', correo: 'supervisor@laboratorioxyz.com', rol: 'SUPERVISOR_ACCESOS', estado: 'ACTIVO' },
     },
   };
 
@@ -89,15 +65,24 @@ function LoginFormContent() {
     setErrorMsg('');
 
     try {
-      // Intentar primero con backend real si está corriendo
-      const res = await api.post('/auth/login', { documento, password });
-      login(res.data.token, res.data.usuario);
+      // Intentar con el backend real (Spring Boot)
+      const res = await api.post('/auth/login', { correo, password });
+      const usuarioBackend = {
+        id: res.data.usuario.id,
+        documento: res.data.usuario.documento,
+        nombres: res.data.usuario.nombres,
+        apellidos: res.data.usuario.apellidos,
+        correo: res.data.usuario.correo,
+        rol: res.data.usuario.rol,
+        estado: res.data.usuario.estado,
+      };
+      login(res.data.token, usuarioBackend);
       router.replace('/dashboard/simulador');
     } catch (err: any) {
-      // Validación con cuentas demo para desarrollo frontend
-      const demoAccount = usuariosDemo[documento.toLowerCase()];
+      // Fallback demo cuando el backend no está disponible
+      const demoAccount = usuariosDemo[correo.toLowerCase()];
 
-      if (demoAccount && (password === demoAccount.pass || password === 'admin')) {
+      if (demoAccount && password === demoAccount.pass) {
         login(`mock_jwt_${demoAccount.user.rol.toLowerCase()}`, demoAccount.user);
         router.replace('/dashboard/simulador');
         return;
@@ -118,8 +103,8 @@ function LoginFormContent() {
     }
   };
 
-  const autoCompletar = (usuario: string, pass: string) => {
-    setDocumento(usuario);
+  const autoCompletar = (correoDemo: string, pass: string) => {
+    setCorreo(correoDemo);
     setPassword(pass);
     setErrorMsg('');
   };
@@ -134,8 +119,12 @@ function LoginFormContent() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-secondary flex flex-col justify-center items-center px-4 py-12">
-      <div className="w-full max-w-md bg-white rounded-3xl p-8 border border-brand-accent/40 shadow-lg">
+    <div className="min-h-screen bg-gradient-animated flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
+      {/* Elementos decorativos de fondo para resaltar el glassmorphism */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand-primary/20 rounded-full blur-3xl mix-blend-multiply animate-pulse-glow"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl mix-blend-multiply animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+
+      <div className="w-full max-w-md glass-panel rounded-3xl p-8 shadow-xl relative z-10 card-hover-dynamic">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 rounded-2xl bg-brand-primary mx-auto flex items-center justify-center text-white font-bold text-2xl shadow-sm mb-3">
@@ -154,26 +143,27 @@ function LoginFormContent() {
           <div className="grid grid-cols-3 gap-1.5 text-[11px]">
             <button
               type="button"
-              onClick={() => autoCompletar('admin', 'admin123')}
+              onClick={() => autoCompletar('admin@laboratorioxyz.com', 'Admin123!')}
               className="px-2 py-1.5 rounded-lg bg-white border border-brand-accent/60 font-medium text-brand-dark hover:bg-brand-primary hover:text-white transition-all text-center"
             >
-              👑 <strong>Admin</strong>
+              Admin
             </button>
             <button
               type="button"
-              onClick={() => autoCompletar('gestor', 'gestor123')}
+              onClick={() => autoCompletar('gestor@laboratorioxyz.com', 'Admin123!')}
               className="px-2 py-1.5 rounded-lg bg-white border border-brand-accent/60 font-medium text-brand-dark hover:bg-brand-primary hover:text-white transition-all text-center"
             >
-              👥 <strong>Gestor</strong>
+              Gestor
             </button>
             <button
               type="button"
-              onClick={() => autoCompletar('supervisor', 'auditor123')}
+              onClick={() => autoCompletar('supervisor@laboratorioxyz.com', 'Admin123!')}
               className="px-2 py-1.5 rounded-lg bg-white border border-brand-accent/60 font-medium text-brand-dark hover:bg-brand-primary hover:text-white transition-all text-center"
             >
-              🛡️ <strong>Auditor</strong>
+              Auditor
             </button>
           </div>
+
         </div>
 
         {/* Error / Bloqueo Alert */}
@@ -189,14 +179,14 @@ function LoginFormContent() {
         {/* Formulario */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-brand-text mb-1.5">Usuario / Documento</label>
+            <label className="block text-xs font-bold text-brand-text mb-1.5">Correo Institucional</label>
             <input
-              type="text"
+              type="email"
               required
               disabled={isBloqueado}
-              value={documento}
-              onChange={(e) => setDocumento(e.target.value)}
-              placeholder="Ej. admin, gestor o supervisor"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              placeholder="admin@laboratorioxyz.com"
               className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/40 text-sm transition-all disabled:bg-gray-100"
             />
           </div>
@@ -227,7 +217,7 @@ function LoginFormContent() {
           <button
             type="submit"
             disabled={isBloqueado || loading}
-            className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-sm transition-all shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-sm transition-all shadow-lg btn-glow-effect disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             {loading ? 'Validando...' : 'Ingresar al Sistema'}
           </button>

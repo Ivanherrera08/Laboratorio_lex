@@ -92,3 +92,75 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background: #6B9B7C;
 }
+
+/* =========================================
+   ESTILOS CSS AVANZADOS (PREMIUM UI)
+   ========================================= */
+
+/* Efecto Cristal (Glassmorphism) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Gradientes animadas para fondos */
+.bg-gradient-animated {
+  background: linear-gradient(-45deg, #EAF5EE, #f8fafc, #e2e8f0, #A8D5BA);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hover effects dinámicos para tarjetas */
+.card-hover-dynamic {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.card-hover-dynamic:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px -10px rgba(46, 61, 52, 0.15);
+  border-color: rgba(107, 155, 124, 0.5);
+}
+
+/* Botones con efecto Glow al pasar el mouse */
+.btn-glow-effect {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-glow-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.5s ease-out;
+  pointer-events: none;
+}
+
+.btn-glow-effect:hover::after {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
