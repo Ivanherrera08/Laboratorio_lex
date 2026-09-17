@@ -47,7 +47,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     marcarComoLeida(id);
     setShowNotifications(false);
     if (url) {
-      router.push(url);
+      router.replace(url);
     }
   };
 

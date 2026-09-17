@@ -125,7 +125,7 @@ export default function DashboardLayout({
                 atribuciones de seguridad requeridas para operar en este módulo.
               </p>
               <button
-                onClick={() => router.push('/dashboard/simulador')}
+                onClick={() => router.replace('/dashboard/simulador')}
                 className="px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary/90 shadow-md transition-all cursor-pointer"
               >
                 Volver al Simulador de Acceso

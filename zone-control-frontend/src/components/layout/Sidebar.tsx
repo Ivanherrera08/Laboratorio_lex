@@ -202,6 +202,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   key={item.name}
                   href={item.href}
+                  replace
                   onClick={() => {
                     if (window.innerWidth < 1024) onClose();
                   }}

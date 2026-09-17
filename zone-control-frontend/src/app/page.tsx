@@ -86,6 +86,7 @@ export default function PortalPublicoPage() {
             ) : (
               <Link
                 href="/login"
+                replace
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white font-semibold text-xs transition-all shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:shadow-brand-primary/40 hover:-translate-y-0.5 active:translate-y-0"
               >
                 <KeyRound className="w-4 h-4" />
