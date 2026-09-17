@@ -18,6 +18,8 @@ import {
   X,
   Sparkles,
   Check,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -67,6 +69,8 @@ export default function UsuariosSistemaPage() {
   const [rol, setRol] = useState<RolUsuario>('GESTOR_PERSONAL');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Errores de validación en tiempo real
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -489,17 +493,26 @@ export default function UsuariosSistemaPage() {
                       <label className="block text-[10px] font-bold text-brand-text">Contraseña (Mín 6 car., Máx 18) *</label>
                       <span className="text-[9px] font-mono text-brand-primary">{password.length}/18</span>
                     </div>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      maxLength={18}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
-                        errores.password ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
-                      }`}
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        maxLength={18}
+                        className={`w-full px-3 py-2 pr-9 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
+                          errores.password ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                     {errores.password && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.password}</p>}
                   </div>
                   <div>
@@ -507,17 +520,26 @@ export default function UsuariosSistemaPage() {
                       <label className="block text-[10px] font-bold text-brand-text">Confirmar Contraseña *</label>
                       <span className="text-[9px] font-mono text-brand-primary">{confirmPassword.length}/18</span>
                     </div>
-                    <input
-                      type="password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      maxLength={18}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
-                        errores.confirmPassword ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
-                      }`}
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        maxLength={18}
+                        className={`w-full px-3 py-2 pr-9 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
+                          errores.confirmPassword ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                     {errores.confirmPassword && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.confirmPassword}</p>}
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
-import { Lock, Mail, AlertTriangle, KeyRound, ArrowLeft, Info, Check, ShieldAlert } from 'lucide-react';
+import { Lock, Mail, AlertTriangle, KeyRound, ArrowLeft, Info, Check, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 function LoginFormContent() {
@@ -30,6 +30,7 @@ function LoginFormContent() {
   const [showRecuperar, setShowRecuperar] = useState(false);
   const [recuperarCorreo, setRecuperarCorreo] = useState('');
   const [recuperarMsg, setRecuperarMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -200,16 +201,25 @@ function LoginFormContent() {
               <label className="block text-xs font-bold text-brand-text">Contraseña de Acceso</label>
               <span className="text-[10px] font-medium text-brand-text/50">{password.length}/18</span>
             </div>
-            <input
-              type="password"
-              required
-              disabled={isBloqueado}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              maxLength={18}
-              className="w-full px-4 py-2.5 rounded-xl border border-brand-accent/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/40 text-sm transition-all disabled:bg-gray-100"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                disabled={isBloqueado}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                maxLength={18}
+                className="w-full px-4 py-2.5 pr-10 rounded-xl border border-brand-accent/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/40 text-sm transition-all disabled:bg-gray-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-1">
