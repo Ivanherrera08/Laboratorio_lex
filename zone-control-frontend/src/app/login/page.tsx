@@ -122,8 +122,8 @@ function LoginFormContent() {
   return (
     <div className="min-h-screen bg-gradient-animated flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
       {/* Elementos decorativos de fondo para resaltar el glassmorphism */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand-primary/20 rounded-full blur-3xl mix-blend-multiply animate-pulse-glow"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl mix-blend-multiply animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand-primary/20 rounded-full blur-3xl mix-blend-multiply"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl mix-blend-multiply"></div>
 
       <div className="w-full max-w-md glass-panel rounded-3xl p-8 shadow-xl relative z-10 card-hover-dynamic">
         {/* Header */}
