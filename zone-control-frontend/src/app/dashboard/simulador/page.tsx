@@ -57,35 +57,14 @@ export default function SimuladorAccesoPage() {
 
     const areaSeleccionada = areasDemo.find((a) => a.id === areaId)?.nombre ?? '';
 
-    try {
-      // Simulate network delay for scanning effect
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const res = await api.post('/accesos/verificar', {
-        documento: identificador,
-        areaId: parseInt(areaId, 10),
-      });
-
-      const estado = res.data.resultado;
-      setResultado({
-        estado,
-        motivo: res.data.mensaje,
-        timestamp: new Date().toISOString(),
-        areaConsultada: areaSeleccionada,
-        perfil: res.data.empleadoNombre ? { nombres: res.data.empleadoNombre } : null
-      });
-
-      if (estado === 'AUTORIZADO') toast.success('Acceso Permitido', { id: 'scan-toast' });
-      else if (estado === 'DENEGADO') toast.error('Acceso Denegado', { id: 'scan-toast' });
-      else toast.warning('Credencial Desconocida', { id: 'scan-toast' });
-
-    } catch {
+    // Helper: buscar en tienda local cuando no está en la DB del servidor
+    const buscarEnLocal = async (doc: string, rfid: string | null, area: string) => {
       const { buscarPorDocumento, buscarPorRfid } = await import('@/lib/personalStore');
       const { buscarUsuarioPorDocumento } = await import('@/lib/usuariosStore');
       let empleado = null;
 
       if (tipoIdentificador === 'DOCUMENTO') {
-        const usuarioSistema = buscarUsuarioPorDocumento(identificador.trim());
+        const usuarioSistema = buscarUsuarioPorDocumento(doc.trim());
         if (usuarioSistema) {
           const estadoMapeado = usuarioSistema.estado === 'ACTIVO' ? 'ACTIVO' : usuarioSistema.estado === 'BLOQUEADO' ? 'REVOCADO' : 'SUSPENDIDO';
           empleado = {
@@ -93,8 +72,8 @@ export default function SimuladorAccesoPage() {
             departamentoId: 0,
             departamentoNombre: usuarioSistema.rol,
             areaPrincipalNombre: usuarioSistema.rol === 'ADMINISTRADOR' ? 'Acceso Maestro (Todas las zonas)' : 'Administración',
-            areasAutorizadas: usuarioSistema.rol === 'ADMINISTRADOR' 
-              ? ['Laboratorio', 'Sala', 'Almacén', 'Oficinas'] 
+            areasAutorizadas: usuarioSistema.rol === 'ADMINISTRADOR'
+              ? ['Laboratorio', 'Sala', 'Almacén', 'Oficinas']
               : ['Oficinas'],
             tipoDocumento: 'CC',
             numeroDocumento: usuarioSistema.documento,
@@ -105,35 +84,72 @@ export default function SimuladorAccesoPage() {
             estado: estadoMapeado as any,
           };
         } else {
-          empleado = buscarPorDocumento(identificador.trim());
+          empleado = buscarPorDocumento(doc.trim());
         }
-      } else {
-        empleado = buscarPorRfid(identificador.trim());
+      } else if (rfid) {
+        empleado = buscarPorRfid(rfid.trim());
       }
 
       if (!empleado) {
         toast.warning('Credencial Desconocida', { id: 'scan-toast' });
-        setResultado({ estado: 'NO_REGISTRADO', motivo: 'No existe en base de datos.', timestamp: new Date().toISOString(), areaConsultada: areaSeleccionada });
-      } else if (empleado.estado === 'REVOCADO' || empleado.estado === 'SUSPENDIDO') {
-        toast.error(`Acceso ${empleado.estado}`, { id: 'scan-toast' });
-        setResultado({ estado: 'DENEGADO', perfil: empleado, areaConsultada: areaSeleccionada, motivo: `Credencial ${empleado.estado}`, timestamp: new Date().toISOString() });
+        setResultado({ estado: 'NO_REGISTRADO', motivo: 'No existe en base de datos.', timestamp: new Date().toISOString(), areaConsultada: area });
+      } else if (empleado.estado === 'REVOCADO' || empleado.estado === 'SUSPENDIDO' || empleado.estado === 'INACTIVO') {
+        toast.error(`Acceso Denegado — ${empleado.estado}`, { id: 'scan-toast' });
+        setResultado({ estado: 'DENEGADO', perfil: empleado, areaConsultada: area, motivo: `Credencial ${empleado.estado}. Acceso no permitido.`, timestamp: new Date().toISOString() });
       } else {
-        const tieneAcceso = !areaSeleccionada || (empleado.areasAutorizadas?.some((a) => a.toLowerCase().includes(areaSeleccionada.split(' ')[0].toLowerCase())) ?? true);
+        // Para empleados del store local, cualquier área es válida (es demo)
+        const tieneAcceso = !area || (empleado.areasAutorizadas?.some((a) => a.toLowerCase().includes(area.split(' ')[0].toLowerCase())) ?? true);
         if (tieneAcceso) toast.success('Acceso Permitido', { id: 'scan-toast' });
         else toast.error('Acceso Denegado', { id: 'scan-toast' });
-        
+
         setResultado({
           estado: tieneAcceso ? 'AUTORIZADO' : 'DENEGADO',
           perfil: empleado,
-          areaConsultada: areaSeleccionada,
-          motivo: tieneAcceso ? undefined : 'Sin autorización para esta zona.',
+          areaConsultada: area,
+          motivo: tieneAcceso ? undefined : 'Sin autorización activa para esta zona.',
           timestamp: new Date().toISOString(),
         });
       }
+    };
+
+    try {
+      // Delay de escaneo realista
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const res = await api.post('/accesos/verificar', {
+        documento: identificador,
+        areaId: parseInt(areaId, 10),
+      });
+
+      const estado = res.data.resultado;
+
+      // Si el servidor confirma que no existe, buscar en la tienda local del frontend
+      // (cubre empleados registrados desde la interfaz pero no persistidos en DB)
+      if (estado === 'NO_REGISTRADO') {
+        await buscarEnLocal(identificador, identificador, areaSeleccionada);
+        return;
+      }
+
+      setResultado({
+        estado,
+        motivo: res.data.mensaje,
+        timestamp: new Date().toISOString(),
+        areaConsultada: areaSeleccionada,
+        perfil: res.data.empleadoNombre ? { nombres: res.data.empleadoNombre } as any : null
+      });
+
+      if (estado === 'AUTORIZADO') toast.success('Acceso Permitido', { id: 'scan-toast' });
+      else if (estado === 'DENEGADO') toast.error('Acceso Denegado', { id: 'scan-toast' });
+      else toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+
+    } catch {
+      // Si la API no responde, usar el store local completo como fallback
+      await buscarEnLocal(identificador, identificador, areaSeleccionada);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Light theme colors adjusted to corporate palette
   const colors = {
