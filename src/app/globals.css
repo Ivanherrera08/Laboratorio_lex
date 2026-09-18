@@ -201,3 +201,25 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
 }
 
+/* Bell Ringing Animation */
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(16deg); }
+  20%, 40% { transform: rotate(-16deg); }
+  50% { transform: rotate(0); }
+}
+
+.animate-bell-ring {
+  animation: bellRing 2.2s infinite ease-in-out;
+  transform-origin: top center;
+}
+
+/* Card Hover Elevate Smooth */
+.card-elevate {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-elevate:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -6px rgba(46, 61, 52, 0.12);
+}
+

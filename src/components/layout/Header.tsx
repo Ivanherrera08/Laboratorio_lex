@@ -129,10 +129,16 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-10 h-10 rounded-full bg-brand-secondary hover:bg-brand-accent/30 text-brand-dark flex items-center justify-center transition-all relative cursor-pointer hover:scale-105 active:scale-95 border border-brand-accent/40"
+              className={`w-10 h-10 rounded-full bg-brand-secondary hover:bg-brand-accent/30 text-brand-dark flex items-center justify-center transition-all relative cursor-pointer hover:scale-105 active:scale-95 border border-brand-accent/40 ${
+                noLeidasCount > 0 ? 'ring-2 ring-red-400/40 shadow-xs' : ''
+              }`}
               title="Centro Interactivo de Alertas y Auditoría"
             >
-              <Bell className="w-4 h-4 text-brand-primary" />
+              <Bell
+                className={`w-4 h-4 text-brand-primary transition-transform ${
+                  noLeidasCount > 0 ? 'animate-bell-ring text-red-600' : ''
+                }`}
+              />
               {noLeidasCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center animate-bounce shadow-sm">
                   {noLeidasCount}
