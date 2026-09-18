@@ -97,8 +97,8 @@ export default function SimuladorAccesoPage() {
         toast.error(`Acceso Denegado — ${empleado.estado}`, { id: 'scan-toast' });
         setResultado({ estado: 'DENEGADO', perfil: empleado, areaConsultada: area, motivo: `Credencial ${empleado.estado}. Acceso no permitido.`, timestamp: new Date().toISOString() });
       } else {
-        // Para empleados del store local, cualquier área es válida (es demo)
-        const tieneAcceso = !area || (empleado.areasAutorizadas?.some((a) => a.toLowerCase().includes(area.split(' ')[0].toLowerCase())) ?? true);
+        // Para empleados del store local, se verifica si su arreglo de areasAutorizadas incluye el área
+        const tieneAcceso = !area || (empleado.areasAutorizadas?.some((a) => a.toLowerCase().includes(area.split(' ')[0].toLowerCase())) ?? false);
         if (tieneAcceso) toast.success('Acceso Permitido', { id: 'scan-toast' });
         else toast.error('Acceso Denegado', { id: 'scan-toast' });
 
