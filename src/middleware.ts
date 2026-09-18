@@ -30,9 +30,9 @@ function parseJwtPayload(token: string): any {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Ignorar archivos estáticos, api interna de next y favicon
+  // Ignorar archivos estáticos, api interna de next, archivos con . y rutas internas (/_...)
   if (
-    pathname.startsWith('/_next') ||
+    pathname.startsWith('/_') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.includes('.')

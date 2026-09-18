@@ -71,13 +71,9 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notificaciones, setNotificaciones] = useState<NotificacionSistema[]>(notificacionesIniciales);
-  const { user } = useAuth();
-
-  // Filtrar notificaciones según el rol del usuario conectado
-  const notificacionesFiltradas = notificaciones.filter((notif) => {
-    if (!user) return true;
-    return notif.rolesDestino.includes(user.rol);
-  });
+  
+  // Filtrar notificaciones (TEMPORAL: Sin filtro de usuario)
+  const notificacionesFiltradas = notificaciones;
 
   const noLeidasCount = notificacionesFiltradas.filter((n) => !n.leida).length;
 
