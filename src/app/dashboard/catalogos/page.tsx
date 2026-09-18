@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Departamento, AreaRestringida, Empleado } from '@/types';
 import { agregarEmpleado } from '@/lib/personalStore';
+import { useNotifications } from '@/context/NotificationContext';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import {
   Building2,
@@ -37,6 +39,7 @@ const mockAreas: AreaRestringida[] = [
 ];
 
 export default function CatalogosPage() {
+  const { agregarNotificacion } = useNotifications();
   const [deptos] = useState<Departamento[]>(mockDeptos);
   const [areas] = useState<AreaRestringida[]>(mockAreas);
 
@@ -128,6 +131,44 @@ export default function CatalogosPage() {
       // Registrar en el Storage
       agregarEmpleado(nuevoEmpleado);
       toast.success(`Personal ${nombres} registrado y carnet ${code} vinculado.`);
+
+      // Intento de persistencia en Backend
+      api.post('/personal/empleados', {
+        tipoDocumento: nuevoEmpleado.tipoDocumento,
+        numeroDocumento: nuevoEmpleado.numeroDocumento,
+        nombres: nuevoEmpleado.nombres,
+        apellidos: nuevoEmpleado.apellidos,
+        correo: nuevoEmpleado.correo,
+        departamentoId: nuevoEmpleado.departamentoId,
+        codigoTarjetaRfid: nuevoEmpleado.codigoTarjetaRfid,
+        estado: 'ACTIVO',
+      }).catch(() => {});
+
+      // Notificación persistente con desglose de auditoría
+      agregarNotificacion({
+        titulo: `🪪 Carnet RFID Vinculado: ${nuevoEmpleado.nombres} ${nuevoEmpleado.apellidos}`,
+        mensaje: `Se asignó la credencial física [${code}] para acceso a [${nuevoEmpleado.areaPrincipalNombre}].`,
+        tipo: 'PERSONAL',
+        rolesDestino: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
+        accionUrl: '/dashboard/personal',
+        detallesAuditoria: {
+          evento: 'Emisión y Vinculación de Carnet Físico',
+          modulo: 'Carnetización y Credenciales',
+          operacion: 'VINCULACION_RFID',
+          usuarioResponsable: 'Gestor de Personal',
+          entidadInvolucrada: `${nuevoEmpleado.numeroDocumento} - Credencial: ${code}`,
+          valorAnterior: null,
+          valorNuevo: JSON.stringify({
+            empleado: `${nuevoEmpleado.nombres} ${nuevoEmpleado.apellidos}`,
+            documento: nuevoEmpleado.numeroDocumento,
+            carnet: code,
+            departamento: nuevoEmpleado.departamentoNombre,
+            area: nuevoEmpleado.areaPrincipalNombre,
+          }),
+          direccionIp: '127.0.0.1',
+          resultado: 'CARNET VINCULADO',
+        },
+      });
       
       // Limpiar form
       setRfidDoc('');

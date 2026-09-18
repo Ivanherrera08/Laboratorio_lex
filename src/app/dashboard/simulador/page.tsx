@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { registrarAccesoLocal } from '@/lib/historialStore';
+import { useNotifications } from '@/context/NotificationContext';
 import {
   ScanLine,
   CheckCircle2,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function SimuladorAccesoPage() {
+  const { agregarNotificacion } = useNotifications();
   const [identificador, setIdentificador] = useState('');
   const [tipoIdentificador, setTipoIdentificador] = useState<'DOCUMENTO' | 'RFID'>('DOCUMENTO');
   const [areaId, setAreaId] = useState('3');
@@ -241,9 +243,60 @@ export default function SimuladorAccesoPage() {
         timestamp: timestampActual,
       });
 
-      if (estado === 'AUTORIZADO') toast.success('Acceso Permitido', { id: 'scan-toast' });
-      else if (estado === 'DENEGADO') toast.error('Acceso Denegado', { id: 'scan-toast' });
-      else toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+      if (estado === 'AUTORIZADO') {
+        toast.success('Acceso Permitido', { id: 'scan-toast' });
+        if (res.data.mensaje?.includes('maestro')) {
+          agregarNotificacion({
+            titulo: `🔑 Acceso Maestro Registrado: ${res.data.empleadoNombre}`,
+            mensaje: `El operador utilizó privilegios de acceso maestro en [${res.data.areaNombre || areaSeleccionada}].`,
+            tipo: 'AUDITORIA',
+            rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
+            accionUrl: '/dashboard/historial',
+            detallesAuditoria: {
+              evento: 'Acceso Maestro Concedido',
+              modulo: 'Control de Accesos Físicos',
+              operacion: 'ACCESO_MAESTRO',
+              usuarioResponsable: res.data.empleadoNombre,
+              entidadInvolucrada: `${identificador} - ${res.data.areaNombre || areaSeleccionada}`,
+              valorAnterior: null,
+              valorNuevo: JSON.stringify({
+                operador: res.data.empleadoNombre,
+                area: res.data.areaNombre || areaSeleccionada,
+                resultado: 'AUTORIZADO',
+              }),
+              direccionIp: '127.0.0.1',
+              resultado: 'AUTORIZADO (MAESTRO)',
+            },
+          });
+        }
+      } else if (estado === 'DENEGADO') {
+        toast.error('Acceso Denegado', { id: 'scan-toast' });
+        agregarNotificacion({
+          titulo: `⛔ Acceso Denegado en ${res.data.areaNombre || areaSeleccionada}`,
+          mensaje: `Identificador [${identificador}] rechazado. Motivo: ${res.data.mensaje || 'Sin autorización para esta zona'}.`,
+          tipo: 'SEGURIDAD',
+          rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
+          accionUrl: '/dashboard/simulador',
+          detallesAuditoria: {
+            evento: 'Denegación de Acceso Físico en Punto de Control',
+            modulo: 'Control Físico de Accesos',
+            operacion: 'ACCESO_DENEGADO',
+            usuarioResponsable: 'Torniquete / Lector Biométrico',
+            entidadInvolucrada: `${identificador} (${res.data.empleadoNombre || 'Personal'})`,
+            valorAnterior: null,
+            valorNuevo: JSON.stringify({
+              identificador,
+              area: res.data.areaNombre || areaSeleccionada,
+              resultado: estado,
+              motivo: res.data.mensaje,
+            }),
+            direccionIp: '127.0.0.1',
+            resultado: 'ACCESO RECHAZADO',
+          },
+        });
+      } else {
+        toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+      }
 
     } catch {
       // Si el servidor de backend está desconectado, operar localmente sin fallar

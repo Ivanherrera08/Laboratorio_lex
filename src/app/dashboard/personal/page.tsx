@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Empleado, EstadoEmpleado } from '@/types';
 import { useNotifications } from '@/context/NotificationContext';
 import { getEmpleados, saveEmpleados } from '@/lib/personalStore';
+import { api } from '@/lib/api';
 import {
   Users,
   Search,
@@ -335,13 +336,45 @@ export default function GestionPersonalPage() {
     saveEmpleados(updatedList);
     setEmpleadoCreado(nuevo);
 
-    // Notificación en el sistema global
+    // Intento de persistencia en Backend PostgreSQL
+    api.post('/personal/empleados', {
+      tipoDocumento: nuevo.tipoDocumento,
+      numeroDocumento: nuevo.numeroDocumento,
+      nombres: nuevo.nombres,
+      apellidos: nuevo.apellidos,
+      correo: nuevo.correo,
+      telefono: nuevo.telefono,
+      departamentoId: nuevo.departamentoId,
+      codigoTarjetaRfid: nuevo.codigoTarjetaRfid,
+      estado: 'ACTIVO',
+    }).catch(() => {});
+
+    // Notificación en el sistema global con auditoría completa
     agregarNotificacion({
       titulo: `👤 Alta de Personal: ${nuevo.nombres} ${nuevo.apellidos}`,
       mensaje: `Asignado a [${nuevo.areaPrincipalNombre}] (${nuevo.departamentoNombre}) con carnet [${nuevo.codigoTarjetaRfid}].`,
       tipo: 'PERSONAL',
       rolesDestino: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
       accionUrl: '/dashboard/personal',
+      detallesAuditoria: {
+        evento: 'Alta y Asignación Biométrica de Personal',
+        modulo: 'Gestión de Personal Farmacéutico',
+        operacion: 'ALTA_PERSONAL',
+        usuarioResponsable: 'Gestor de Personal',
+        entidadInvolucrada: `${nuevo.tipoDocumento} ${nuevo.numeroDocumento} - ${nuevo.nombres} ${nuevo.apellidos}`,
+        valorAnterior: null,
+        valorNuevo: JSON.stringify({
+          documento: nuevo.numeroDocumento,
+          nombres: nuevo.nombres,
+          apellidos: nuevo.apellidos,
+          departamento: nuevo.departamentoNombre,
+          area: nuevo.areaPrincipalNombre,
+          rfid: nuevo.codigoTarjetaRfid,
+          estado: nuevo.estado,
+        }),
+        direccionIp: '127.0.0.1',
+        resultado: 'REGISTRO EXITOSO',
+      },
     });
 
     // Limpiar formulario y cerrar modal de registro para abrir el modal dinámico de éxito
@@ -388,13 +421,24 @@ export default function GestionPersonalPage() {
       return updated;
     });
 
-    // Notificación en el sistema global
+    // Notificación en el sistema global con auditoría completa
     agregarNotificacion({
-      titulo: `🛡️ Auditoría: Modificación de Estado (${nuevoEstado})`,
+      titulo: `🛡️ Modificación de Estado (${nuevoEstado}): ${empleadoSeleccionado.nombres}`,
       mensaje: `Colaborador ${empleadoSeleccionado.nombres} ${empleadoSeleccionado.apellidos} cambió de [${estadoPrevio}] a [${nuevoEstado}]. Ref: ${codigoAudit}.`,
       tipo: nuevoEstado === 'ACTIVO' ? 'SISTEMA' : 'SEGURIDAD',
       rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
-      accionUrl: '/dashboard/auditoria',
+      accionUrl: '/dashboard/personal',
+      detallesAuditoria: {
+        evento: 'Cambio de Estado y Concesión de Acceso',
+        modulo: 'Gestión de Personal',
+        operacion: nuevoEstado === 'ACTIVO' ? 'REACTIVACION_PERSONAL' : 'SUSPENSION_REVOCACION',
+        usuarioResponsable: 'Gestor de Personal',
+        entidadInvolucrada: `${empleadoSeleccionado.tipoDocumento} ${empleadoSeleccionado.numeroDocumento} - ${empleadoSeleccionado.nombres} ${empleadoSeleccionado.apellidos}`,
+        valorAnterior: JSON.stringify({ estado: estadoPrevio }),
+        valorNuevo: JSON.stringify({ estado: nuevoEstado, motivo: motivoEstado.trim() }),
+        direccionIp: '127.0.0.1',
+        resultado: nuevoEstado,
+      },
     });
 
     // Configurar información para el modal de éxito animado
