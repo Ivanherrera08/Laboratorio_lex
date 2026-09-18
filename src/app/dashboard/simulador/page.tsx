@@ -102,12 +102,14 @@ export default function SimuladorAccesoPage() {
         if (tieneAcceso) toast.success('Acceso Permitido', { id: 'scan-toast' });
         else toast.error('Acceso Denegado', { id: 'scan-toast' });
 
+        const authDebug = `[DEBUG] Áreas autorizadas: ${empleado.areasAutorizadas?.join(', ') || 'NINGUNA'}. Área escaneada: ${area}. Match: ${tieneAcceso ? 'SÍ' : 'NO'}`;
+
         setResultado({
           estado: tieneAcceso ? 'AUTORIZADO' : 'DENEGADO',
           perfil: empleado,
           areaConsultada: area,
-          motivo: tieneAcceso ? undefined : 'Sin autorización activa para esta zona.',
-          timestamp: new Date().toISOString(),
+          motivo: tieneAcceso ? `Acceso válido. ${authDebug}` : `Zona restringida. ${authDebug}`,
+          timestamp: new Date().toISOString()
         });
       }
     };
