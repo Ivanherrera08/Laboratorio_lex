@@ -71,8 +71,8 @@ export default function SimuladorAccesoPage() {
             id: usuarioSistema.id,
             departamentoId: 0,
             departamentoNombre: usuarioSistema.rol,
-            areaPrincipalNombre: usuarioSistema.rol === 'ADMINISTRADOR' ? 'Acceso Maestro (Todas las zonas)' : 'Administración',
-            areasAutorizadas: usuarioSistema.rol === 'ADMINISTRADOR'
+            areaPrincipalNombre: (usuarioSistema.rol === 'ADMINISTRADOR' || usuarioSistema.rol === 'SUPERVISOR_ACCESOS') ? 'Acceso Maestro (Todas las zonas)' : 'Administración',
+            areasAutorizadas: (usuarioSistema.rol === 'ADMINISTRADOR' || usuarioSistema.rol === 'SUPERVISOR_ACCESOS')
               ? ['Laboratorio', 'Sala', 'Almacén', 'Oficinas']
               : ['Oficinas'],
             tipoDocumento: 'CC',
