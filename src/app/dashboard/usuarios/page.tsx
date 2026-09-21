@@ -33,8 +33,9 @@ export default function UsuariosSistemaPage() {
   const { user } = useAuth();
   const { agregarNotificacion } = useNotifications();
 
-  const [usuarios, setUsuarios] = useState<UsuarioAuth[]>(() => getUsuariosSistema());
-  const [cargando, setCargando] = useState(false);
+  const [usuarios, setUsuarios] = useState<UsuarioAuth[]>([]);
+  const [isClient, setIsClient] = useState(false);
+  const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [showModal, setShowModal] = useState(false);
 
@@ -60,7 +61,7 @@ export default function UsuariosSistemaPage() {
   const [showExitoModal, setShowExitoModal] = useState(false);
 
   // Cargar usuarios desde el Backend al montar el componente
-  const cargarUsuariosBackend = async () => {
+  const cargarUsuariosBackend = async (localesFallbacks: UsuarioAuth[]) => {
     setCargando(true);
     try {
       const res = await api.get<any[]>('/auth/usuarios');
@@ -79,14 +80,19 @@ export default function UsuariosSistemaPage() {
       }
     } catch {
       // Si falla o está offline, mantiene los del almacenamiento local
+      setUsuarios(localesFallbacks);
     } finally {
       setCargando(false);
     }
   };
 
   useEffect(() => {
-    cargarUsuariosBackend();
+    setIsClient(true);
+    const locales = getUsuariosSistema();
+    cargarUsuariosBackend(locales);
   }, []);
+
+  if (!isClient) return null; // Prevenir Hydration Mismatch
 
   // Validación de Nombres: Solo letras, espacios y tildes
   const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -302,6 +308,7 @@ export default function UsuariosSistemaPage() {
       correo: correo.trim().toLowerCase(),
       rol,
       estado: 'ACTIVO',
+      mockPass: password, // Almacenar contraseña para simulación local
     };
 
     const listaActualizada = [nuevoUsuario, ...usuarios.filter((u) => u.documento !== nuevoUsuario.documento)];
@@ -413,7 +420,7 @@ export default function UsuariosSistemaPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={cargarUsuariosBackend}
+            onClick={() => cargarUsuariosBackend(usuarios)}
             disabled={cargando}
             className="p-2.5 rounded-xl border border-emerald-200/40 bg-white hover:bg-emerald-50 text-slate-800 transition-all cursor-pointer shadow-xs disabled:opacity-50"
             title="Sincronizar con PostgreSQL"
@@ -458,96 +465,115 @@ export default function UsuariosSistemaPage() {
         />
       </div>
 
-      {/* Tabla de Usuarios del Sistema */}
-      <div className="bg-white rounded-3xl border border-emerald-200/40 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-emerald-50/70 border-b border-emerald-200/30 text-slate-800 font-bold">
-              <tr>
-                <th className="p-4">Cédula / Documento</th>
-                <th className="p-4">Operador / Nombre Completo</th>
-                <th className="p-4">Correo Institucional</th>
-                <th className="p-4">Rol Asignado (RBAC)</th>
-                <th className="p-4">Estado</th>
-                <th className="p-4 text-right">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-emerald-200/20">
-              {cargando && usuarios.length === 0 ? (
-                // Skeletons de Carga
-                Array.from({ length: 3 }).map((_, idx) => (
-                  <tr key={idx} className="animate-pulse">
-                    <td className="p-4"><div className="h-4 w-24 rounded bg-slate-200 skeleton-shimmer" /></td>
-                    <td className="p-4"><div className="h-4 w-36 rounded bg-slate-200 skeleton-shimmer" /></td>
-                    <td className="p-4"><div className="h-4 w-44 rounded bg-slate-200 skeleton-shimmer" /></td>
-                    <td className="p-4"><div className="h-5 w-28 rounded-full bg-slate-200 skeleton-shimmer" /></td>
-                    <td className="p-4"><div className="h-5 w-20 rounded-full bg-slate-200 skeleton-shimmer" /></td>
-                    <td className="p-4 text-right"><div className="h-7 w-20 rounded-xl bg-slate-200 skeleton-shimmer ml-auto" /></td>
-                  </tr>
-                ))
-              ) : usuariosFiltrados.length > 0 ? (
-                usuariosFiltrados.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="p-4 font-mono font-bold text-slate-800">{item.documento}</td>
-                    <td className="p-4 font-semibold text-slate-800">
-                      {item.nombres} {item.apellidos}
-                    </td>
-                    <td className="p-4 text-slate-500/80 font-mono text-[11px]">{item.correo}</td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
-                          item.rol === 'ADMINISTRADOR'
-                            ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                            : item.rol === 'GESTOR_PERSONAL'
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                            : 'bg-blue-100 text-blue-800 border border-blue-200'
-                        }`}
-                      >
-                        {item.rol}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                          item.estado === 'ACTIVO'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-red-50 text-red-700 border-red-200'
-                        }`}
-                      >
-                        {item.estado === 'ACTIVO' ? (
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        ) : (
-                          <Ban className="w-3 h-3 text-red-600" />
-                        )}
-                        {item.estado}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      {item.documento !== '0000000001' && (
-                        <button
-                          onClick={() => handleAlternarEstado(item)}
-                          className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-2xs ${
-                            item.estado === 'ACTIVO'
-                              ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
-                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
-                          }`}
-                        >
-                          {item.estado === 'ACTIVO' ? 'Bloquear' : 'Reactivar'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
-                    No se encontraron usuarios que coincidan con la búsqueda.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Grid de Usuarios (Tarjetas Premium) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {cargando && usuarios.length === 0 ? (
+          // Skeletons de Carga
+          Array.from({ length: 6 }).map((_, idx) => (
+            <div key={idx} className="glass-panel rounded-3xl p-6 h-48 relative overflow-hidden animate-pulse">
+              <div className="flex gap-4 items-start">
+                <div className="w-12 h-12 rounded-full bg-slate-200 skeleton-shimmer shrink-0" />
+                <div className="space-y-3 w-full">
+                  <div className="h-5 w-3/4 rounded bg-slate-200 skeleton-shimmer" />
+                  <div className="h-4 w-1/2 rounded bg-slate-200 skeleton-shimmer" />
+                </div>
+              </div>
+              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center pt-4 border-t border-slate-100">
+                 <div className="h-6 w-24 rounded-full bg-slate-200 skeleton-shimmer" />
+                 <div className="h-8 w-24 rounded-xl bg-slate-200 skeleton-shimmer" />
+              </div>
+            </div>
+          ))
+        ) : usuariosFiltrados.length > 0 ? (
+          usuariosFiltrados.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              className="glass-panel card-hover-dynamic rounded-3xl p-6 relative flex flex-col justify-between group overflow-hidden"
+            >
+              {/* Decoración de fondo en la tarjeta */}
+              <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-gradient-to-br from-emerald-200/40 to-transparent blur-2xl opacity-50 group-hover:opacity-100 transition-opacity" />
+              
+              <div>
+                <div className="flex items-start justify-between mb-4 relative z-10">
+                  <div className="flex items-center gap-4">
+                    {/* Avatar generado */}
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-100 to-teal-50 flex items-center justify-center border border-emerald-200/50 shadow-sm text-emerald-700 font-heading font-bold text-lg">
+                      {item.nombres.charAt(0)}{item.apellidos.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-bold text-slate-800 text-[15px] leading-tight group-hover:text-emerald-700 transition-colors">
+                        {item.nombres} {item.apellidos}
+                      </h3>
+                      <p className="text-slate-500 font-mono text-[11px] mt-0.5 flex items-center gap-1.5">
+                         <span className="text-slate-400">CC</span> {item.documento}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Estado Badge */}
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border shadow-sm ${
+                      item.estado === 'ACTIVO'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 badge-glow-authorized'
+                        : 'bg-red-50 text-red-700 border-red-200 badge-glow-denied'
+                    }`}
+                  >
+                    {item.estado === 'ACTIVO' ? (
+                      <CheckCircle2 className="w-3 h-3" />
+                    ) : (
+                      <Ban className="w-3 h-3" />
+                    )}
+                    {item.estado}
+                  </span>
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="truncate" title={item.correo}>{item.correo}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-md font-bold ${
+                        item.rol === 'ADMINISTRADOR'
+                          ? 'text-purple-700 bg-purple-100/50'
+                          : item.rol === 'GESTOR_PERSONAL'
+                          ? 'text-emerald-700 bg-emerald-100/50'
+                          : 'text-blue-700 bg-blue-100/50'
+                      }`}
+                    >
+                      {item.rol.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-5 mt-5 border-t border-slate-100/60 flex items-center justify-end relative z-10">
+                {item.documento !== '0000000001' && (
+                  <button
+                    onClick={() => handleAlternarEstado(item)}
+                    className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm btn-glow-effect flex items-center gap-1.5 ${
+                      item.estado === 'ACTIVO'
+                        ? 'bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-800 border border-amber-200'
+                        : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-emerald-500/30'
+                    }`}
+                  >
+                    {item.estado === 'ACTIVO' ? 'Suspender Acceso' : 'Reactivar Cuenta'}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ))
+        ) : (
+          <div className="col-span-full p-12 text-center flex flex-col items-center justify-center bg-white/50 backdrop-blur-md rounded-3xl border border-dashed border-slate-300">
+             <UserCog className="w-12 h-12 text-slate-300 mb-3" />
+             <h3 className="text-sm font-bold text-slate-700 mb-1">Sin resultados</h3>
+             <p className="text-xs text-slate-500">No se encontraron usuarios que coincidan con la búsqueda.</p>
+          </div>
+        )}
       </div>
 
       {/* MODAL: REGISTRO DE USUARIO CON CREDENCIALES */}

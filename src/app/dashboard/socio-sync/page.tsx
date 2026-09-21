@@ -369,7 +369,7 @@ export default function SocioSyncPage() {
                 : 'bg-white text-slate-600 border-emerald-200 hover:bg-emerald-100'
             } print:hidden`}
           >
-            Filtros Avanzados
+            Filtros
           </button>
         </div>
 

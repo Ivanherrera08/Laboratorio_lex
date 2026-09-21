@@ -237,7 +237,12 @@ export default function SimuladorAccesoPage() {
       }
 
     } catch (error) {
-      toast.error('Error de conexión con el servidor biométrico', { id: 'scan-toast' });
+      // Fallback a lógica local si no hay backend (o si la API falla)
+      await buscarEnLocal(
+        tipoIdentificador === 'DOCUMENTO' ? identificador : '',
+        tipoIdentificador === 'RFID' ? identificador : null,
+        areaSeleccionada
+      );
     } finally {
       setLoading(false);
     }

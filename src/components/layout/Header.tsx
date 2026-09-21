@@ -20,6 +20,7 @@ import {
   Info,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import DetalleNotificacionModal from '@/components/ui/DetalleNotificacionModal';
 
 interface HeaderProps {
@@ -28,6 +29,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
+  const router = useRouter();
   const { user, solicitarConfirmacionSalir } = useAuth();
   const {
     notificaciones,
@@ -70,6 +72,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     marcarComoLeida(item.id);
     setNotificacionSeleccionada(item);
     setShowNotifications(false);
+    if (item.accionUrl) {
+      router.push(item.accionUrl);
+    }
   };
 
   const getIconoTipo = (tipo: NotificacionSistema['tipo']) => {

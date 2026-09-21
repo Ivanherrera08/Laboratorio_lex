@@ -98,22 +98,25 @@ h1, h2, h3, h4, h5, h6 {
    ========================================= */
 
 body {
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
   background-image: 
-    radial-gradient(at 40% 20%, hsla(158, 80%, 94%, 1) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, hsla(189, 70%, 94%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, hsla(210, 50%, 94%, 1) 0px, transparent 50%);
+    radial-gradient(at 10% 10%, hsla(158, 90%, 92%, 0.8) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, hsla(190, 80%, 92%, 0.8) 0px, transparent 50%),
+    radial-gradient(at 50% 90%, hsla(210, 70%, 94%, 0.8) 0px, transparent 50%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
   background-attachment: fixed;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 /* Efecto Cristal (Neo Glassmorphism) */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px); /* reduced blur for performance */
-  -webkit-backdrop-filter: blur(8px); /* reduced blur for performance */
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 12px 40px -12px rgba(107, 155, 124, 0.15), 0 4px 6px -2px rgba(0,0,0,0.02);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 32px -8px rgba(15, 23, 42, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
 .glass-panel-dark {

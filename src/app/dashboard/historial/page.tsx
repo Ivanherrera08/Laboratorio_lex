@@ -242,7 +242,7 @@ export default function HistorialAccesosPage() {
                 : 'bg-slate-50 text-slate-600 border-emerald-100 hover:bg-emerald-50'
             }`}
           >
-            Filtros Avanzados
+            Filtros
           </button>
         </div>
 

@@ -147,7 +147,7 @@ export default function BitacoraAuditoriaPage() {
       }
 
       return {
-        id: `AUD-${n.id.substring(0, 8).toUpperCase()}`,
+        id: `AUD-${n.id.replace('NOTIF-', '').toUpperCase()}`,
         evento: n.detallesAuditoria?.evento || n.titulo,
         modulo: n.detallesAuditoria?.modulo || n.entidadAuditoria || 'Gestión General',
         responsable: n.detallesAuditoria?.usuarioResponsable || 'Operador Actual',
@@ -191,10 +191,13 @@ export default function BitacoraAuditoriaPage() {
 
   const logsFiltrados = todosLosLogs.filter((l) => {
     const cumpleBusqueda =
+      !busqueda ||
       l.evento.toLowerCase().includes(busqueda.toLowerCase()) ||
       l.modulo.toLowerCase().includes(busqueda.toLowerCase()) ||
       l.responsable.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.id.toLowerCase().includes(busqueda.toLowerCase());
+      l.id.toLowerCase().includes(busqueda.toLowerCase()) ||
+      l.detalleDocumentado.sujetoAfectado?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      l.detalleDocumentado.observacionesTecnicas?.toLowerCase().includes(busqueda.toLowerCase());
     
     const cumpleModulo = filtroModulo === 'TODOS' || l.modulo === filtroModulo;
     
@@ -265,7 +268,7 @@ export default function BitacoraAuditoriaPage() {
                     : 'bg-slate-50 text-slate-600 border-emerald-100 hover:bg-emerald-50'
                 }`}
               >
-                Filtros Avanzados
+                Filtros
               </button>
             </div>
 

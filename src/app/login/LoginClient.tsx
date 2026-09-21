@@ -4,7 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
-import { Lock, Mail, AlertTriangle, KeyRound, ArrowLeft, ShieldAlert, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { getUsuariosSistema } from '@/lib/usuariosStore';
+import { Lock, Mail, AlertTriangle, KeyRound, ArrowLeft, ShieldAlert, Eye, EyeOff, Loader2, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -97,6 +98,17 @@ function LoginFormContent() {
         return;
       }
 
+      // 2. Fallback a usuarios registrados localmente en simulador
+      const usuariosLocales = getUsuariosSistema();
+      const localUser = usuariosLocales.find(u => u.correo.toLowerCase() === correo.toLowerCase());
+      
+      if (localUser && localUser.mockPass === password) {
+        const { mockPass, ...userSinPass } = localUser;
+        login(`mock_jwt_${localUser.rol.toLowerCase()}`, userSinPass);
+        router.replace('/dashboard/simulador');
+        return;
+      }
+
       // Conteo de intentos fallidos
       const nuevosIntentos = intentosFallidos + 1;
       setIntentosFallidos(nuevosIntentos);
@@ -113,24 +125,23 @@ function LoginFormContent() {
     }
   };
 
-  // Efecto de máquina de escribir para autocompletar
-  const autoCompletar = async (correoDemo: string, pass: string) => {
-    if (loading) return;
+  // Login directo para simulación sin rellenar campos por privacidad
+  const handleDemoLoginDirecto = async (correoDemo: string) => {
+    if (loading || !correoDemo) return;
+    setLoading(true);
     setErrorMsg('');
     setIsBloqueado(false);
 
-    setCorreo('');
-    setPassword('');
-    
-    // Animación de tecleo simulada
-    for (let i = 0; i < correoDemo.length; i++) {
-      await new Promise(r => setTimeout(r, 20));
-      setCorreo(prev => prev + correoDemo[i]);
-    }
-    
-    for (let i = 0; i < pass.length; i++) {
-      await new Promise(r => setTimeout(r, 20));
-      setPassword(prev => prev + pass[i]);
+    try {
+      const demoAccount = usuariosDemo[correoDemo.toLowerCase()];
+      if (demoAccount) {
+        // Pequeño delay visual
+        await new Promise(r => setTimeout(r, 600));
+        login(`mock_jwt_${demoAccount.user.rol.toLowerCase()}`, demoAccount.user);
+        router.replace('/dashboard/simulador');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,29 +218,23 @@ function LoginFormContent() {
             <p className="text-xs font-bold text-emerald-600 mt-2 uppercase tracking-widest">Autenticación Biométrica</p>
           </div>
 
-          {/* Chips de Demo - Más dinámicos */}
-          <div className="mb-8">
-            <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mb-3">Credenciales de Simulación</p>
-            <div className="flex justify-center gap-2">
-              {[
-                { label: 'Admin', email: 'admin@laboratorioxyz.com' },
-                { label: 'Gestor', email: 'gestor@laboratorioxyz.com' },
-                { label: 'Auditor', email: 'supervisor@laboratorioxyz.com' }
-              ].map((btn, i) => (
-                <motion.button
-                  key={btn.label}
-                  type="button"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * i }}
-                  onClick={() => autoCompletar(btn.email, 'Admin123!')}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100 hover:bg-emerald-100 hover:shadow-md hover:shadow-emerald-100 transition-all"
-                >
-                  {btn.label}
-                </motion.button>
-              ))}
+          {/* Selector visual de Roles */}
+          <div className="mb-8 relative z-20">
+            <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mb-3">Rol de Usuario</p>
+            <div className="flex justify-center relative">
+              <select 
+                defaultValue=""
+                className="w-full max-w-[280px] px-5 py-3 rounded-xl bg-emerald-50 text-emerald-800 text-sm font-bold border border-emerald-200 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer shadow-sm hover:border-emerald-400 transition-all text-center appearance-none"
+              >
+                <option value="" disabled>Seleccionar un Rol...</option>
+                <option value="ADMINISTRADOR">👤 Administrador General</option>
+                <option value="GESTOR_PERSONAL">👥 Gestor de Personal</option>
+                <option value="SUPERVISOR_ACCESOS">🛡️ Auditor / Supervisor</option>
+              </select>
+              {/* Icono de flecha simulado para el select */}
+              <div className="absolute right-[calc(50%-120px)] top-1/2 -translate-y-1/2 pointer-events-none text-emerald-600">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
             </div>
           </div>
 
@@ -259,24 +264,29 @@ function LoginFormContent() {
           </AnimatePresence>
 
           {/* Formulario */}
-          <form onSubmit={handleLogin} className={`space-y-5 ${isShaking ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
+          <form onSubmit={handleLogin} autoComplete="off" className={`space-y-5 ${isShaking ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
             
             <div className="relative group">
               <input
-                id="correo"
-                type="email"
+                id="auth_identifier"
+                name="auth_identifier"
+                type="text"
                 required
                 disabled={isBloqueado || loading}
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
                 placeholder=" "
+                autoComplete="off"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-bwignore="true"
                 className="peer w-full px-4 pt-6 pb-2 pr-12 bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all disabled:opacity-50 font-medium placeholder-shown:tracking-normal"
               />
               <label
-                htmlFor="correo"
+                htmlFor="auth_identifier"
                 className="absolute left-4 top-2 text-[10px] uppercase tracking-wider text-slate-400 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:text-slate-500 peer-focus:top-2 peer-focus:text-[10px] peer-focus:text-emerald-600 font-bold pointer-events-none"
               >
-                Correo Institucional
+                Correo
               </label>
               <div className="absolute right-4 top-4 text-slate-300 peer-focus:text-emerald-500 transition-colors">
                 <Mail className="w-5 h-5" />
@@ -285,21 +295,27 @@ function LoginFormContent() {
 
             <div className="relative group">
               <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
+                id="auth_secret"
+                name="auth_secret"
+                type="text"
+                style={!showPassword ? { WebkitTextSecurity: 'disc' } as React.CSSProperties : undefined}
                 required
                 disabled={isBloqueado || loading}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder=" "
                 maxLength={18}
+                autoComplete="new-password"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-bwignore="true"
                 className="peer w-full px-4 pt-6 pb-2 pr-12 bg-white border border-slate-200 rounded-xl text-slate-800 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all disabled:opacity-50 font-mono text-lg tracking-widest placeholder-shown:tracking-normal"
               />
               <label
-                htmlFor="password"
+                htmlFor="auth_secret"
                 className="absolute left-4 top-2 text-[10px] uppercase tracking-wider text-slate-400 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-4 peer-placeholder-shown:text-slate-500 peer-focus:top-2 peer-focus:text-[10px] peer-focus:text-emerald-600 font-bold pointer-events-none"
               >
-                Código de Acceso
+                Contraseña
               </label>
               <button
                 type="button"
@@ -309,6 +325,23 @@ function LoginFormContent() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+
+            {/* Helper Dinámico de Longitud */}
+            <AnimatePresence>
+              {password.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -5, height: 0 }}
+                  className="px-1 -mt-2"
+                >
+                  <span className={`text-[10px] flex items-center gap-1 font-bold ${password.length >= 8 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {password.length >= 8 ? <CheckCheck className="w-3 h-3 shrink-0" /> : <AlertTriangle className="w-3 h-3 shrink-0" />}
+                    {password.length >= 8 ? 'Longitud segura' : 'Mínimo 8 caracteres'}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="flex items-center justify-end pt-1">
               <button

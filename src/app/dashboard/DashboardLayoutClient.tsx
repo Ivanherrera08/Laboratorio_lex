@@ -149,13 +149,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Global Animated Background para toda la aplicación */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-slate-50">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-100/30 mix-blend-multiply filter blur-[40px] opacity-70" />
-        
-        {/* Patrón de puntos sutil */}
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#10b981 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+    <div className="flex min-h-screen relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
+      {/* Global Animated Background para toda la aplicación se maneja en globals.css */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-300/10 mix-blend-multiply filter blur-[80px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-teal-300/10 mix-blend-multiply filter blur-[80px]" />
       </div>
 
       {/* Z-10 Context for Interactive Elements */}

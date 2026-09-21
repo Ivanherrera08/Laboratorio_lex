@@ -14,6 +14,7 @@ export interface UsuarioAuth {
   correo: string;
   rol: RolUsuario;
   estado: EstadoUsuario;
+  mockPass?: string; // Para fallback local cuando backend no está disponible
 }
 
 export interface Empleado {

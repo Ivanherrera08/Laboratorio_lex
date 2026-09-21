@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Empleado, EstadoEmpleado } from '@/types';
 import { useNotifications } from '@/context/NotificationContext';
@@ -100,7 +100,11 @@ const mockEmpleados: Empleado[] = [
 ];
 
 export default function GestionPersonalPage() {
-  const [empleados, setEmpleados] = useState<Empleado[]>(() => getEmpleados());
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+
+  useEffect(() => {
+    setEmpleados(getEmpleados());
+  }, []);
   const [busqueda, setBusqueda] = useState('');
   const [deptoFiltro, setDeptoFiltro] = useState('TODOS');
   const [areaFiltro, setAreaFiltro] = useState('TODAS');
@@ -542,10 +546,7 @@ export default function GestionPersonalPage() {
             empleadosFiltrados.map((emp, index) => (
               <motion.div
                 key={emp.id}
-                layout
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className="group relative bg-white/70 backdrop-blur-2xl rounded-3xl border border-white p-5 shadow-lg shadow-emerald-500/5 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.2)] transition-all flex flex-col"
               >
