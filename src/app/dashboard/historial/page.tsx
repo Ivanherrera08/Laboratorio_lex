@@ -17,6 +17,8 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   obtenerHistorialCombinado,
   limpiarHistorialLocal,
@@ -27,6 +29,7 @@ export default function HistorialAccesosPage() {
   const [historial, setHistorial] = useState<HistorialAcceso[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
+  const [showFiltrosAvanzados, setShowFiltrosAvanzados] = useState(false);
   const [filtroResultado, setFiltroResultado] = useState('TODOS');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
@@ -107,12 +110,45 @@ export default function HistorialAccesosPage() {
     toast.success('Archivo CSV exportado exitosamente.');
   };
 
-  const exportarPDF = () => {
+    const exportarPDF = () => {
     if (filtrados.length === 0) {
       toast.error('No hay registros para generar el reporte.');
       return;
     }
-    window.print();
+    const doc = new jsPDF();
+    
+    doc.setFontSize(16);
+    doc.text('Zone Control - Reporte de Auditoría y Accesos', 14, 22);
+    
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Total de registros: ${filtrados.length}`, 14, 35);
+    
+    const tableColumn = ["Fecha/Hora", "Identificador", "Persona", "Área", "Resultado", "Motivo"];
+    const tableRows: any[] = [];
+    
+    filtrados.forEach(item => {
+      const rowData = [
+        new Date(item.timestamp).toLocaleString(),
+        item.numeroDocumentoIngresado || item.codigoTarjetaIngresado || '-',
+        item.empleadoNombreCompleto || 'NO REGISTRADO',
+        item.areaNombre || '-',
+        item.resultadoAcceso,
+        item.motivoDenegacion || 'OK'
+      ];
+      tableRows.push(rowData);
+    });
+    
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [5, 150, 105] }, // emerald-600
+    });
+    
+    doc.save(`bitacora_accesos_zone_control_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success('Reporte PDF descargado exitosamente.');
   };
 
   const handleLimpiar = () => {
@@ -186,50 +222,74 @@ export default function HistorialAccesosPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white p-4 rounded-2xl border border-emerald-200/40 shadow-xs grid grid-cols-1 sm:grid-cols-12 gap-3 items-center print:hidden">
-        <div className="sm:col-span-4 relative">
-          <Search className="w-4 h-4 text-slate-500/50 absolute left-3.5 top-3" />
-          <input
-            type="text"
-            placeholder="Buscar por documento, carnet, nombre o área..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
-          />
-        </div>
-
-        <div className="sm:col-span-3">
-          <select
-            value={filtroResultado}
-            onChange={(e) => setFiltroResultado(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/40 font-semibold"
-          >
-            <option value="TODOS">Todos los Resultados</option>
-            <option value="AUTORIZADO">Solo AUTORIZADOS</option>
-            <option value="DENEGADO">Solo DENEGADOS</option>
-            <option value="NO_REGISTRADO">Solo NO REGISTRADOS</option>
-          </select>
-        </div>
-
-        <div className="sm:col-span-5 flex items-center gap-2">
-          <div className="flex items-center gap-1 text-xs text-slate-500/70">
-            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Rango:</span>
+      <div className="bg-white p-4 rounded-2xl border border-emerald-200/40 shadow-xs flex flex-col gap-3 print:hidden">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="w-4 h-4 text-slate-500/50 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              placeholder="Buscar por documento, carnet, nombre o área..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40 font-medium"
+            />
           </div>
-          <input
-            type="date"
-            value={fechaInicio}
-            onChange={(e) => setFechaInicio(e.target.value)}
-            className="w-full px-2 py-1.5 rounded-xl border border-emerald-200/60 text-xs"
-          />
-          <span className="text-xs text-gray-400">-</span>
-          <input
-            type="date"
-            value={fechaFin}
-            onChange={(e) => setFechaFin(e.target.value)}
-            className="w-full px-2 py-1.5 rounded-xl border border-emerald-200/60 text-xs"
-          />
+          <button 
+            onClick={() => setShowFiltrosAvanzados(!showFiltrosAvanzados)}
+            className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
+              showFiltrosAvanzados 
+                ? 'bg-emerald-600 text-white border-emerald-600' 
+                : 'bg-slate-50 text-slate-600 border-emerald-100 hover:bg-emerald-50'
+            }`}
+          >
+            Filtros Avanzados
+          </button>
         </div>
+
+        <AnimatePresence>
+          {showFiltrosAvanzados && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-emerald-100 mt-1">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Estado de Acceso</label>
+                  <select
+                    value={filtroResultado}
+                    onChange={(e) => setFiltroResultado(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/40 font-semibold"
+                  >
+                    <option value="TODOS">Todos los Resultados</option>
+                    <option value="AUTORIZADO">Solo AUTORIZADOS</option>
+                    <option value="DENEGADO">Solo DENEGADOS</option>
+                    <option value="NO_REGISTRADO">Solo NO REGISTRADOS</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Desde Fecha</label>
+                  <input
+                    type="date"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hasta Fecha</label>
+                  <input
+                    type="date"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Tabla de Historial */}
@@ -258,46 +318,55 @@ export default function HistorialAccesosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-emerald-200/20">
-                {filtrados.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="p-4 font-mono text-[11px] text-slate-500/80 whitespace-nowrap">
-                      {new Date(item.timestamp).toLocaleString()}
-                    </td>
-                    <td className="p-4 whitespace-nowrap">
-                      <p className="font-mono font-bold text-slate-800">{item.numeroDocumentoIngresado || '—'}</p>
-                      {item.codigoTarjetaIngresado && (
-                        <span className="text-[10px] text-emerald-600 font-mono block">
-                          {item.codigoTarjetaIngresado}
+                <AnimatePresence>
+                  {filtrados.map((item, idx) => (
+                    <motion.tr 
+                      key={item.id} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2, delay: idx * 0.05 }}
+                      className="hover:bg-slate-50/80 transition-colors group relative"
+                    >
+                      <td className="p-4 font-mono text-[11px] text-slate-500/80 whitespace-nowrap">
+                        {new Date(item.timestamp).toLocaleString()}
+                      </td>
+                      <td className="p-4 whitespace-nowrap">
+                        <p className="font-mono font-bold text-slate-800">{item.numeroDocumentoIngresado || '—'}</p>
+                        {item.codigoTarjetaIngresado && (
+                          <span className="text-[10px] text-emerald-600 font-mono block">
+                            {item.codigoTarjetaIngresado}
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 font-semibold text-slate-800">
+                        {item.empleadoNombreCompleto || (
+                          <span className="text-gray-400 italic">No empadronado</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-slate-500 font-medium">{item.areaNombre}</td>
+                      <td className="p-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-sm ${
+                            item.resultadoAcceso === 'AUTORIZADO'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                              : item.resultadoAcceso === 'DENEGADO'
+                              ? 'bg-red-100 text-red-800 border border-red-200'
+                              : 'bg-amber-100 text-amber-800 border border-amber-200'
+                          }`}
+                        >
+                          {item.resultadoAcceso === 'AUTORIZADO' && <CheckCircle className="w-3 h-3" />}
+                          {item.resultadoAcceso === 'DENEGADO' && <XCircle className="w-3 h-3" />}
+                          {item.resultadoAcceso === 'NO_REGISTRADO' && <AlertCircle className="w-3 h-3" />}
+                          {item.resultadoAcceso}
                         </span>
-                      )}
-                    </td>
-                    <td className="p-4 font-semibold text-slate-800">
-                      {item.empleadoNombreCompleto || (
-                        <span className="text-gray-400 italic">No empadronado</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-slate-500 font-medium">{item.areaNombre}</td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
-                          item.resultadoAcceso === 'AUTORIZADO'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : item.resultadoAcceso === 'DENEGADO'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {item.resultadoAcceso === 'AUTORIZADO' && <CheckCircle className="w-3 h-3" />}
-                        {item.resultadoAcceso === 'DENEGADO' && <XCircle className="w-3 h-3" />}
-                        {item.resultadoAcceso === 'NO_REGISTRADO' && <AlertCircle className="w-3 h-3" />}
-                        {item.resultadoAcceso}
-                      </span>
-                    </td>
-                    <td className="p-4 text-slate-500/70 text-[11px] max-w-xs break-words">
-                      {item.motivoDenegacion || 'Acceso concedido exitosamente'}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-4 text-slate-500/70 text-[11px] max-w-xs break-words">
+                        {item.motivoDenegacion || 'Acceso concedido exitosamente'}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
               </tbody>
             </table>
           </div>

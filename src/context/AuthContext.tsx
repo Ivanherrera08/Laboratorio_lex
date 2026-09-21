@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 className="px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer hover:opacity-95 hover:scale-105 active:scale-95 flex items-center gap-1.5"
               >
                 <LogOut className="w-3.5 h-3.5 text-white" />
-                <span>Sí, Cerrar Sesión</span>
+                <span>Cerrar Sesión</span>
               </button>
             </div>
           </div>

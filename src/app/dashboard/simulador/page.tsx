@@ -200,107 +200,44 @@ export default function SimuladorAccesoPage() {
       // Simulación de delay de lectura biométrica de torniquete
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const res = await api.post('/accesos/verificar', {
-        documento: identificador.trim(),
+      const res = await api.post('/accesos/molinete', {
+        numeroDocumento: tipoIdentificador === 'DOCUMENTO' ? identificador.trim() : undefined,
+        codigoTarjetaRfid: tipoIdentificador === 'RFID' ? identificador.trim() : undefined,
         areaId: parseInt(areaId, 10),
       });
 
       const estado = res.data.resultado as ResultadoAcceso;
       const timestampActual = new Date().toISOString();
 
-      // Si en la base de datos backend no existe, recurrir a la tienda local
-      if (estado === 'NO_REGISTRADO') {
-        await buscarEnLocal(identificador, identificador, areaSeleccionada);
-        return;
-      }
-
       setResultado({
         estado,
-        motivo: res.data.mensaje,
+        motivo: res.data.motivo || res.data.mensaje,
         timestamp: timestampActual,
-        areaConsultada: res.data.areaNombre || areaSeleccionada,
-        perfil: res.data.empleadoNombre ? {
+        areaConsultada: res.data.nombreArea || areaSeleccionada,
+        perfil: res.data.nombreEmpleado ? {
           id: 0,
           departamentoId: 0,
           tipoDocumento: 'CC',
           numeroDocumento: identificador,
-          nombres: res.data.empleadoNombre.split(' ')[0] || res.data.empleadoNombre,
-          apellidos: res.data.empleadoNombre.split(' ').slice(1).join(' ') || '',
+          nombres: res.data.nombreEmpleado.split(' ')[0] || res.data.nombreEmpleado,
+          apellidos: res.data.nombreEmpleado.split(' ').slice(1).join(' ') || '',
           correo: 'personal@laboratorioxyz.com',
           telefono: 'Registrado en Servidor',
-          estado: 'ACTIVO',
-          areaPrincipalNombre: res.data.areaNombre || areaSeleccionada,
+          estado: res.data.estadoEmpleado || (estado === 'AUTORIZADO' ? 'ACTIVO' : 'REVOCADO'),
+          areaPrincipalNombre: res.data.nombreArea || areaSeleccionada,
         } : undefined,
-      });
-
-      registrarAccesoLocal({
-        areaId: parseInt(areaId, 10),
-        areaNombre: res.data.areaNombre || areaSeleccionada,
-        numeroDocumentoIngresado: identificador,
-        resultadoAcceso: estado,
-        motivoDenegacion: estado !== 'AUTORIZADO' ? res.data.mensaje : undefined,
-        empleadoNombreCompleto: res.data.empleadoNombre || undefined,
-        timestamp: timestampActual,
       });
 
       if (estado === 'AUTORIZADO') {
         toast.success('Acceso Permitido', { id: 'scan-toast' });
-        if (res.data.mensaje?.includes('maestro')) {
-          agregarNotificacion({
-            titulo: `🔑 Acceso Maestro Registrado: ${res.data.empleadoNombre}`,
-            mensaje: `El operador utilizó privilegios de acceso maestro en [${res.data.areaNombre || areaSeleccionada}].`,
-            tipo: 'AUDITORIA',
-            rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
-            accionUrl: '/dashboard/historial',
-            detallesAuditoria: {
-              evento: 'Acceso Maestro Concedido',
-              modulo: 'Control de Accesos Físicos',
-              operacion: 'ACCESO_MAESTRO',
-              usuarioResponsable: res.data.empleadoNombre,
-              entidadInvolucrada: `${identificador} - ${res.data.areaNombre || areaSeleccionada}`,
-              valorAnterior: null,
-              valorNuevo: JSON.stringify({
-                operador: res.data.empleadoNombre,
-                area: res.data.areaNombre || areaSeleccionada,
-                resultado: 'AUTORIZADO',
-              }),
-              direccionIp: '127.0.0.1',
-              resultado: 'AUTORIZADO (MAESTRO)',
-            },
-          });
-        }
       } else if (estado === 'DENEGADO') {
         toast.error('Acceso Denegado', { id: 'scan-toast' });
-        agregarNotificacion({
-          titulo: `⛔ Acceso Denegado en ${res.data.areaNombre || areaSeleccionada}`,
-          mensaje: `Identificador [${identificador}] rechazado. Motivo: ${res.data.mensaje || 'Sin autorización para esta zona'}.`,
-          tipo: 'SEGURIDAD',
-          rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
-          accionUrl: '/dashboard/simulador',
-          detallesAuditoria: {
-            evento: 'Denegación de Acceso Físico en Punto de Control',
-            modulo: 'Control Físico de Accesos',
-            operacion: 'ACCESO_DENEGADO',
-            usuarioResponsable: 'Torniquete / Lector Biométrico',
-            entidadInvolucrada: `${identificador} (${res.data.empleadoNombre || 'Personal'})`,
-            valorAnterior: null,
-            valorNuevo: JSON.stringify({
-              identificador,
-              area: res.data.areaNombre || areaSeleccionada,
-              resultado: estado,
-              motivo: res.data.mensaje,
-            }),
-            direccionIp: '127.0.0.1',
-            resultado: 'ACCESO RECHAZADO',
-          },
-        });
       } else {
         toast.warning('Credencial Desconocida', { id: 'scan-toast' });
       }
 
-    } catch {
-      // Si el servidor de backend está desconectado, operar localmente sin fallar
-      await buscarEnLocal(identificador, identificador, areaSeleccionada);
+    } catch (error) {
+      toast.error('Error de conexión con el servidor biométrico', { id: 'scan-toast' });
     } finally {
       setLoading(false);
     }

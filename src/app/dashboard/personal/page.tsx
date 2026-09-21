@@ -6,6 +6,7 @@ import { Empleado, EstadoEmpleado } from '@/types';
 import { useNotifications } from '@/context/NotificationContext';
 import { getEmpleados, saveEmpleados } from '@/lib/personalStore';
 import { api } from '@/lib/api';
+import { registrarAccesoLocal } from '@/lib/historialStore';
 import {
   Users,
   Search,
@@ -451,6 +452,17 @@ export default function GestionPersonalPage() {
       nuevoEstado: nuevoEstado,
       motivo: motivoEstado.trim() || 'Modificación administrativa autorizada',
       codigoAuditoria: codigoAudit,
+    });
+
+    registrarAccesoLocal({
+      areaId: 0,
+      areaNombre: 'Gestión de Personal',
+      numeroDocumentoIngresado: empleadoSeleccionado.numeroDocumento,
+      resultadoAcceso: 'DENEGADO', // Reflejamos como un evento crítico
+      motivoDenegacion: `CAMBIO DE ESTADO: De [${estadoPrevio}] a [${nuevoEstado}]. Motivo: ${motivoEstado.trim()}`,
+      empleadoNombreCompleto: `${empleadoSeleccionado.nombres} ${empleadoSeleccionado.apellidos}`,
+      empleadoId: empleadoSeleccionado.id,
+      timestamp: new Date().toISOString(),
     });
 
     setShowEstadoModal(false);

@@ -219,29 +219,38 @@ export default function CatalogosPage() {
           </div>
 
           <div className="space-y-3">
-            {areas.map((area) => (
-              <div key={area.id} className="p-4 rounded-2xl bg-slate-50/70 border border-emerald-200/30 space-y-1.5 transition-all hover:bg-emerald-50/40">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-slate-800">{area.nombre}</span>
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      area.nivelRiesgo === 'ALTO'
-                        ? 'bg-red-100 text-red-800 border border-red-200'
-                        : area.nivelRiesgo === 'MEDIO'
-                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                    }`}
-                  >
-                    Riesgo {area.nivelRiesgo}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500/70 leading-relaxed">{area.descripcion}</p>
-                <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono pt-1">
-                  <span>Código Zona: {area.codigo}</span>
-                  <span className="text-emerald-700 font-semibold font-sans">● Esclusa Operativa</span>
-                </div>
-              </div>
-            ))}
+            <AnimatePresence>
+              {areas.map((area, idx) => (
+                <motion.div 
+                  key={area.id} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: idx * 0.05 }}
+                  className="p-4 rounded-2xl bg-slate-50/70 border border-emerald-200/30 space-y-1.5 transition-all hover:bg-emerald-50/80 cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-slate-800">{area.nombre}</span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold shadow-sm ${
+                        area.nivelRiesgo === 'ALTO'
+                          ? 'bg-red-100 text-red-800 border border-red-200'
+                          : area.nivelRiesgo === 'MEDIO'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      }`}
+                    >
+                      Riesgo {area.nivelRiesgo}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500/70 leading-relaxed">{area.descripcion}</p>
+                  <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono pt-1">
+                    <span>Código Zona: {area.codigo}</span>
+                    <span className="text-emerald-700 font-semibold font-sans">● Esclusa Operativa</span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
 

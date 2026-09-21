@@ -14,6 +14,7 @@ import {
   Building2,
   CheckCircle2,
   Lock,
+  Download,
   ArrowRight,
 } from 'lucide-react';
 
@@ -121,15 +122,25 @@ export default function BitacoraAuditoriaPage() {
   
   // Transformar las notificaciones globales en registros de bitácora
   const logsDinamicos: RegistroAuditoriaHumano[] = notificaciones
-    .filter((n) => n.tipo === 'AUDITORIA')
+    .filter((n) => n.tipo === 'AUDITORIA' || n.detallesAuditoria)
     .map((n) => {
       let motivoExtraido = n.mensaje;
-      let estadoNuevo = n.valorNuevo || 'N/A';
+      
+      const vAnterior = n.detallesAuditoria?.valorAnterior || n.valorAnterior || 'N/A';
+      const vNuevoRaw = n.detallesAuditoria?.valorNuevo || n.valorNuevo || 'N/A';
+      
+      let estadoAnterior = vAnterior;
+      let estadoNuevo = vNuevoRaw;
+
       try {
-        if (n.valorNuevo && n.valorNuevo.includes('{')) {
-          const parsed = JSON.parse(n.valorNuevo);
-          if (parsed.motivo) motivoExtraido = parsed.motivo;
-          if (parsed.estado) estadoNuevo = parsed.estado;
+        if (vNuevoRaw.includes('{')) {
+          const parsedNuevo = JSON.parse(vNuevoRaw);
+          if (parsedNuevo.motivo) motivoExtraido = parsedNuevo.motivo;
+          if (parsedNuevo.estado) estadoNuevo = parsedNuevo.estado;
+        }
+        if (vAnterior.includes('{')) {
+          const parsedAnterior = JSON.parse(vAnterior);
+          if (parsedAnterior.estado) estadoAnterior = parsedAnterior.estado;
         }
       } catch (e) {
         // Ignorar error de parseo
@@ -137,17 +148,17 @@ export default function BitacoraAuditoriaPage() {
 
       return {
         id: `AUD-${n.id.substring(0, 8).toUpperCase()}`,
-        evento: n.titulo,
-        modulo: n.entidadAuditoria || 'Gestión General',
-        responsable: 'Operador Actual',
+        evento: n.detallesAuditoria?.evento || n.titulo,
+        modulo: n.detallesAuditoria?.modulo || n.entidadAuditoria || 'Gestión General',
+        responsable: n.detallesAuditoria?.usuarioResponsable || 'Operador Actual',
         rolResponsable: 'SISTEMA',
-        ip: '127.0.0.1 (Local)',
-        tipoAccion: n.accionAuditoria === 'CAMBIO_ESTADO' ? 'MODIFICACION_ESTADO' : 'SEGURIDAD_ACCESO',
-        timestamp: n.timestamp,
+        ip: n.detallesAuditoria?.direccionIp || '127.0.0.1 (Local)',
+        tipoAccion: (n.detallesAuditoria?.operacion || n.accionAuditoria || 'SEGURIDAD_ACCESO') as "MODIFICACION_ESTADO" | "AUTORIZACION_ZONA" | "SEGURIDAD_ACCESO" | "CREACION_EMPLEADO" | "CARGA_MASIVA",
+        timestamp: n.fechaHoraIso || new Date().toISOString(),
         justificacionNormativa: 'Registro Automático del Sistema de Trazabilidad',
         detalleDocumentado: {
-          sujetoAfectado: `Referencia: ${n.codigoRef || 'N/A'}`,
-          condicionPrevia: `Estado Anterior: ${n.valorAnterior || 'N/A'}`,
+          sujetoAfectado: n.detallesAuditoria?.entidadInvolucrada || `Referencia: ${n.codigoRef || 'N/A'}`,
+          condicionPrevia: `Estado Anterior: ${estadoAnterior}`,
           condicionNueva: `Nuevo Estado: ${estadoNuevo}`,
           normaCumplida: 'Registro en Cumplimiento (ALCOA+)',
           observacionesTecnicas: motivoExtraido,
@@ -158,6 +169,15 @@ export default function BitacoraAuditoriaPage() {
   const todosLosLogs = [...logsDinamicos, ...mockBitacoraFormal];
 
   const [busqueda, setBusqueda] = useState('');
+  const [filtroModulo, setFiltroModulo] = useState('TODOS');
+  
+  // Filtros Avanzados
+  const [showFiltrosAvanzados, setShowFiltrosAvanzados] = useState(false);
+  const [busquedaNombre, setBusquedaNombre] = useState('');
+  const [busquedaLugar, setBusquedaLugar] = useState('');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
+
   const [logSeleccionado, setLogSeleccionado] = useState<RegistroAuditoriaHumano>(todosLosLogs[0] || mockBitacoraFormal[0]);
 
   // Actualizar el log seleccionado si los logs dinámicos cambian
@@ -167,13 +187,38 @@ export default function BitacoraAuditoriaPage() {
     }
   }, [notificaciones]);
 
-  const logsFiltrados = todosLosLogs.filter(
-    (l) =>
+  const modulosUnicos = Array.from(new Set(todosLosLogs.map(l => l.modulo)));
+
+  const logsFiltrados = todosLosLogs.filter((l) => {
+    const cumpleBusqueda =
       l.evento.toLowerCase().includes(busqueda.toLowerCase()) ||
       l.modulo.toLowerCase().includes(busqueda.toLowerCase()) ||
       l.responsable.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.id.toLowerCase().includes(busqueda.toLowerCase())
-  );
+      l.id.toLowerCase().includes(busqueda.toLowerCase());
+    
+    const cumpleModulo = filtroModulo === 'TODOS' || l.modulo === filtroModulo;
+    
+    const cumpleNombre = !busquedaNombre || 
+      l.responsable.toLowerCase().includes(busquedaNombre.toLowerCase()) || 
+      l.detalleDocumentado.sujetoAfectado.toLowerCase().includes(busquedaNombre.toLowerCase());
+      
+    const cumpleLugar = !busquedaLugar || 
+      l.modulo.toLowerCase().includes(busquedaLugar.toLowerCase()) ||
+      l.detalleDocumentado.observacionesTecnicas.toLowerCase().includes(busquedaLugar.toLowerCase());
+      
+    let cumpleFecha = true;
+    if (fechaInicio || fechaFin) {
+      const logDate = new Date(l.timestamp);
+      if (fechaInicio && logDate < new Date(fechaInicio + 'T00:00:00')) cumpleFecha = false;
+      if (fechaFin && logDate > new Date(fechaFin + 'T23:59:59')) cumpleFecha = false;
+    }
+    
+    return cumpleBusqueda && cumpleModulo && cumpleNombre && cumpleLugar && cumpleFecha;
+  });
+
+  const handleImprimirActa = () => {
+    window.print();
+  };
 
   return (
     <motion.div 
@@ -200,57 +245,133 @@ export default function BitacoraAuditoriaPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Lista de Eventos Documentados */}
         <div className="lg:col-span-6 space-y-3">
-          <div className="bg-white p-3.5 rounded-2xl border border-emerald-200/40 shadow-xs flex items-center gap-2.5">
-            <Search className="w-4 h-4 text-slate-500/50" />
-            <input
-              type="text"
-              placeholder="Buscar por ID, evento, módulo o responsable..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full text-xs outline-none bg-transparent font-medium"
-            />
+          <div className="bg-white p-3.5 rounded-2xl border border-emerald-200/40 shadow-xs flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 flex items-center gap-2.5 bg-slate-50 px-3 py-2 rounded-xl border border-emerald-100">
+                <Search className="w-4 h-4 text-slate-500/50" />
+                <input
+                  type="text"
+                  placeholder="Buscar por ID, evento, módulo o responsable..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full text-xs outline-none bg-transparent font-medium"
+                />
+              </div>
+              <button 
+                onClick={() => setShowFiltrosAvanzados(!showFiltrosAvanzados)}
+                className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
+                  showFiltrosAvanzados 
+                    ? 'bg-emerald-600 text-white border-emerald-600' 
+                    : 'bg-slate-50 text-slate-600 border-emerald-100 hover:bg-emerald-50'
+                }`}
+              >
+                Filtros Avanzados
+              </button>
+            </div>
+
+            {/* Filtros Avanzados Expandibles */}
+            <AnimatePresence>
+              {showFiltrosAvanzados && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-emerald-100 mt-1">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Nombre o Responsable</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Juan Pérez..."
+                        value={busquedaNombre}
+                        onChange={(e) => setBusquedaNombre(e.target.value)}
+                        className="w-full text-xs bg-slate-50 border border-emerald-100 rounded-xl px-3 py-2 outline-none font-medium focus:border-emerald-400"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Laboratorio o Lugar</label>
+                      <select
+                        value={filtroModulo}
+                        onChange={(e) => setFiltroModulo(e.target.value)}
+                        className="w-full text-xs bg-slate-50 border border-emerald-100 rounded-xl px-3 py-2 outline-none font-medium text-slate-600"
+                      >
+                        <option value="TODOS">Todas las áreas</option>
+                        {modulosUnicos.map(mod => (
+                          <option key={mod} value={mod}>{mod}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Desde Fecha</label>
+                      <input
+                        type="date"
+                        value={fechaInicio}
+                        onChange={(e) => setFechaInicio(e.target.value)}
+                        className="w-full text-xs bg-slate-50 border border-emerald-100 rounded-xl px-3 py-2 outline-none font-medium text-slate-600"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hasta Fecha</label>
+                      <input
+                        type="date"
+                        value={fechaFin}
+                        onChange={(e) => setFechaFin(e.target.value)}
+                        className="w-full text-xs bg-slate-50 border border-emerald-100 rounded-xl px-3 py-2 outline-none font-medium text-slate-600"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="space-y-2.5 max-h-[750px] overflow-y-auto pr-1">
-            {logsFiltrados.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => setLogSeleccionado(item)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                  logSeleccionado?.id === item.id
-                    ? 'bg-emerald-50/90 border-emerald-600 shadow-sm ring-1 ring-emerald-600/30'
-                    : 'bg-white border-emerald-200/40 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono font-bold text-xs text-emerald-600 bg-white px-2 py-0.5 rounded-md border border-emerald-200/40">
-                    {item.id}
-                  </span>
-                  <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-emerald-600" />
-                    {new Date(item.timestamp).toLocaleString()}
-                  </span>
-                </div>
+            <AnimatePresence>
+              {logsFiltrados.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: idx * 0.05 }}
+                  onClick={() => setLogSeleccionado(item)}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    logSeleccionado?.id === item.id
+                      ? 'bg-emerald-50/90 border-emerald-600 shadow-sm ring-1 ring-emerald-600/30'
+                      : 'bg-white border-emerald-200/40 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono font-bold text-xs text-emerald-600 bg-white px-2 py-0.5 rounded-md border border-emerald-200/40 shadow-sm">
+                      {item.id}
+                    </span>
+                    <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-emerald-600" />
+                      {new Date(item.timestamp).toLocaleString()}
+                    </span>
+                  </div>
 
-                <h4 className="font-heading font-bold text-sm text-slate-800 mb-1 leading-snug">
-                  {item.evento}
-                </h4>
+                  <h4 className="font-heading font-bold text-sm text-slate-800 mb-1 leading-snug">
+                    {item.evento}
+                  </h4>
 
-                <p className="text-[11px] text-slate-500/70 mb-2">
-                  <strong>Módulo:</strong> {item.modulo}
-                </p>
+                  <p className="text-[11px] text-slate-500/70 mb-2">
+                    <strong>Módulo:</strong> {item.modulo}
+                  </p>
 
-                <div className="flex items-center justify-between text-[11px] border-t border-emerald-200/20 pt-2 text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <User className="w-3 h-3 text-emerald-600" />
-                    {item.responsable}
-                  </span>
-                  <span className="font-bold text-[10px] text-emerald-600 uppercase">
-                    {item.rolResponsable}
-                  </span>
-                </div>
-              </div>
-            ))}
+                  <div className="flex items-center justify-between text-[11px] border-t border-emerald-200/20 pt-2 text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3 text-emerald-600" />
+                      {item.responsable}
+                    </span>
+                    <span className="font-bold text-[10px] text-emerald-600 uppercase">
+                      {item.rolResponsable}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -258,12 +379,21 @@ export default function BitacoraAuditoriaPage() {
         <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-emerald-200/40 shadow-xs flex flex-col space-y-5">
           <div className="border-b border-emerald-200/30 pb-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-mono text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">
-                Acta de Auditoría #{logSeleccionado.id}
-              </span>
-              <span className="text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
-                ✓ Registro Validado
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/40">
+                  Acta de Auditoría #{logSeleccionado.id}
+                </span>
+                <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full font-bold border border-emerald-200 shadow-sm print:hidden">
+                  ✓ Registro Validado
+                </span>
+              </div>
+              <button
+                onClick={handleImprimirActa}
+                className="print:hidden flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 rounded-lg text-xs font-bold transition-all shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Descargar Acta (PDF)
+              </button>
             </div>
             <h3 className="font-heading font-extrabold text-lg text-slate-800 mt-2">
               {logSeleccionado.evento}

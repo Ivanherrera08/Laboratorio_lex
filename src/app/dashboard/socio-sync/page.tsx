@@ -13,11 +13,14 @@ import {
   ArrowUpRight,
   ShieldAlert,
   Send,
+  XCircle,
   Sparkles,
   Server,
   Zap,
   Mail,
-  List
+  List,
+  Search,
+  FileText
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { HistorialAcceso } from '@/types';
@@ -78,6 +81,33 @@ export default function SocioSyncPage() {
   const [progreso, setProgreso] = useState(0);
   const [pasoTexto, setPasoTexto] = useState('');
   const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'EXITO' | 'ERROR'; texto: string } | null>(null);
+
+  // Filtros Avanzados
+  const [showFiltrosAvanzados, setShowFiltrosAvanzados] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState('TODOS');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
+  const [codigoHttp, setCodigoHttp] = useState('');
+
+  const sincronizacionesFiltradas = sincronizaciones.filter((sync) => {
+    const cumpleEstado = filtroEstado === 'TODOS' || sync.estado === filtroEstado;
+    const cumpleHttp = !codigoHttp || (sync.codigoRespuestaHttp && sync.codigoRespuestaHttp.toString().includes(codigoHttp));
+    let cumpleFecha = true;
+    if (fechaInicio || fechaFin) {
+      if (!sync.fechaEnvio) {
+        cumpleFecha = false;
+      } else {
+        const logDate = new Date(sync.fechaEnvio);
+        if (fechaInicio && logDate < new Date(fechaInicio + 'T00:00:00')) cumpleFecha = false;
+        if (fechaFin && logDate > new Date(fechaFin + 'T23:59:59')) cumpleFecha = false;
+      }
+    }
+    return cumpleEstado && cumpleHttp && cumpleFecha;
+  });
+
+  const exportarPDF = () => {
+    window.print();
+  };
 
   const { agregarNotificacion } = useNotifications();
 
@@ -148,7 +178,15 @@ export default function SocioSyncPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 print:hidden">
+          <button
+            onClick={exportarPDF}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-emerald-200/60 text-slate-800 font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <FileText className="w-4 h-4 text-emerald-600" />
+            <span>Descargar PDF</span>
+          </button>
+          
           <button
             onClick={() => {
               const textoReporte = mockLoteActual.map((r, i) => 
@@ -278,26 +316,35 @@ export default function SocioSyncPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-200/20">
-              {mockLoteActual.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="p-3 font-semibold text-slate-800">{item.empleadoNombreCompleto}</td>
-                  <td className="p-3 text-slate-500 font-medium">{item.areaNombre}</td>
-                  <td className="p-3">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
-                        item.resultadoAcceso === 'AUTORIZADO'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {item.resultadoAcceso}
-                    </span>
-                  </td>
-                  <td className="p-3 font-mono text-[11px] text-slate-500/80">
-                    {new Date(item.timestamp).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
+              <AnimatePresence>
+                {mockLoteActual.map((item, idx) => (
+                  <motion.tr 
+                    key={item.id} 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: idx * 0.05 }}
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
+                    <td className="p-3 font-semibold text-slate-800">{item.empleadoNombreCompleto}</td>
+                    <td className="p-3 text-slate-500 font-medium">{item.areaNombre}</td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold shadow-sm ${
+                          item.resultadoAcceso === 'AUTORIZADO'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}
+                      >
+                        {item.resultadoAcceso}
+                      </span>
+                    </td>
+                    <td className="p-3 font-mono text-[11px] text-slate-500/80">
+                      {new Date(item.timestamp).toLocaleString()}
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
@@ -305,13 +352,81 @@ export default function SocioSyncPage() {
 
       {/* Tabla de Lotes Sincronizados */}
       <div className="bg-white rounded-3xl border border-emerald-200/40 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-emerald-200/30 bg-emerald-50/40 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe2 className="w-4 h-4 text-emerald-600" />
-            <h3 className="font-heading font-bold text-sm text-slate-800">Historial de Transmisiones de Lotes</h3>
+        <div className="p-4 border-b border-emerald-200/30 bg-emerald-50/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center justify-between w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <Globe2 className="w-4 h-4 text-emerald-600" />
+              <h3 className="font-heading font-bold text-sm text-slate-800">Historial de Transmisiones de Lotes</h3>
+            </div>
+            <span className="text-xs text-slate-500/60 font-semibold sm:hidden">Trazabilidad Internacional</span>
           </div>
-          <span className="text-xs text-slate-500/60 font-semibold">Trazabilidad Internacional</span>
+
+          <button 
+            onClick={() => setShowFiltrosAvanzados(!showFiltrosAvanzados)}
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all ${
+              showFiltrosAvanzados 
+                ? 'bg-emerald-600 text-white border-emerald-600' 
+                : 'bg-white text-slate-600 border-emerald-200 hover:bg-emerald-100'
+            } print:hidden`}
+          >
+            Filtros Avanzados
+          </button>
         </div>
+
+        <AnimatePresence>
+          {showFiltrosAvanzados && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden bg-emerald-50/20 border-b border-emerald-100"
+            >
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Estado Transmisión</label>
+                  <select
+                    value={filtroEstado}
+                    onChange={(e) => setFiltroEstado(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/40 font-semibold"
+                  >
+                    <option value="TODOS">Todos los Estados</option>
+                    <option value="EXITOSO">Solo Exitosos</option>
+                    <option value="REINTENTANDO">Solo Reintentando</option>
+                    <option value="FALLIDO">Solo Fallidos</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Código HTTP</label>
+                  <input
+                    type="number"
+                    placeholder="Ej. 200, 504..."
+                    value={codigoHttp}
+                    onChange={(e) => setCodigoHttp(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Desde Fecha</label>
+                  <input
+                    type="date"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hasta Fecha</label>
+                  <input
+                    type="date"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -326,45 +441,61 @@ export default function SocioSyncPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-200/20">
-              {sincronizaciones.map((sync) => (
-                <tr key={sync.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="p-4 font-mono font-bold text-slate-800">#SYNC-{sync.id}</td>
-                  <td className="p-4 text-slate-500 font-medium">
-                    {new Date(sync.periodoInicio).toLocaleDateString()} —{' '}
-                    {new Date(sync.periodoFin).toLocaleDateString()}
-                  </td>
-                  <td className="p-4 text-slate-500/70">
-                    {sync.fechaEnvio ? new Date(sync.fechaEnvio).toLocaleString() : 'Pendiente'}
-                  </td>
-                  <td className="p-4 font-semibold text-slate-800">{sync.intentosRealizados} / 3</td>
-                  <td className="p-4 font-mono font-bold">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                        sync.codigoRespuestaHttp === 200
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {sync.codigoRespuestaHttp || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
-                        sync.estado === 'EXITOSO'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : sync.estado === 'REINTENTANDO'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {sync.estado === 'EXITOSO' && <CheckCircle2 className="w-3 h-3" />}
-                      {sync.estado === 'REINTENTANDO' && <Clock className="w-3 h-3" />}
-                      {sync.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              <AnimatePresence>
+                {sincronizacionesFiltradas.length > 0 ? sincronizacionesFiltradas.map((sync, idx) => (
+                  <motion.tr 
+                    key={sync.id} 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: idx * 0.05 }}
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
+                    <td className="p-4 font-mono font-bold text-slate-800">#SYNC-{sync.id}</td>
+                    <td className="p-4 text-slate-500 font-medium">
+                      {new Date(sync.periodoInicio).toLocaleDateString()} —{' '}
+                      {new Date(sync.periodoFin).toLocaleDateString()}
+                    </td>
+                    <td className="p-4 text-slate-500/70">
+                      {sync.fechaEnvio ? new Date(sync.fechaEnvio).toLocaleString() : 'Pendiente'}
+                    </td>
+                    <td className="p-4 font-semibold text-slate-800">{sync.intentosRealizados} / 3</td>
+                    <td className="p-4 font-mono font-bold">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[11px] font-bold shadow-sm ${
+                          sync.codigoRespuestaHttp === 200
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}
+                      >
+                        {sync.codigoRespuestaHttp || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase shadow-sm border ${
+                          sync.estado === 'EXITOSO'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        {sync.estado === 'EXITOSO' ? (
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        ) : (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
+                        )}
+                        {sync.estado}
+                      </span>
+                    </td>
+                  </motion.tr>
+                )) : (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-slate-500 font-medium text-xs">
+                      No se encontraron transmisiones que coincidan con los filtros.
+                    </td>
+                  </tr>
+                )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
