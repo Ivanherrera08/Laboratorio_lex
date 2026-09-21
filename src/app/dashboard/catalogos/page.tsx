@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { Departamento, AreaRestringida, Empleado } from '@/types';
 import { agregarEmpleado } from '@/lib/personalStore';
 import { useNotifications } from '@/context/NotificationContext';
@@ -195,32 +197,32 @@ export default function CatalogosPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-heading font-extrabold text-brand-dark">
+        <h1 className="text-2xl font-heading font-extrabold text-slate-800">
           Registro de Personal y Asignación de Carnets
         </h1>
-        <p className="text-xs text-brand-text/70 mt-1">
+        <p className="text-xs text-slate-500/70 mt-1">
           Alta de colaboradores, asignación a zonas restringidas y troquelado de chips de seguridad (RFID/NFC).
         </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* Áreas Restringidas */}
-        <div className="xl:col-span-5 bg-white rounded-3xl p-6 border border-brand-accent/40 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-brand-accent/20 pb-3">
+        <div className="xl:col-span-5 bg-white rounded-3xl p-6 border border-emerald-200/40 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-emerald-200/20 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-brand-primary" />
-              <h3 className="font-heading font-bold text-sm text-brand-dark">Zonas de Riesgo Biológico</h3>
+              <Layers className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-heading font-bold text-sm text-slate-800">Zonas de Riesgo Biológico</h3>
             </div>
-            <span className="text-[11px] font-bold text-brand-primary bg-brand-secondary px-2.5 py-1 rounded-full">
+            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
               {areas.length} Activas
             </span>
           </div>
 
           <div className="space-y-3">
             {areas.map((area) => (
-              <div key={area.id} className="p-4 rounded-2xl bg-brand-light/70 border border-brand-accent/30 space-y-1.5 transition-all hover:bg-brand-secondary/40">
+              <div key={area.id} className="p-4 rounded-2xl bg-slate-50/70 border border-emerald-200/30 space-y-1.5 transition-all hover:bg-emerald-50/40">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-brand-dark">{area.nombre}</span>
+                  <span className="font-bold text-xs text-slate-800">{area.nombre}</span>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                       area.nivelRiesgo === 'ALTO'
@@ -233,7 +235,7 @@ export default function CatalogosPage() {
                     Riesgo {area.nivelRiesgo}
                   </span>
                 </div>
-                <p className="text-[11px] text-brand-text/70 leading-relaxed">{area.descripcion}</p>
+                <p className="text-[11px] text-slate-500/70 leading-relaxed">{area.descripcion}</p>
                 <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono pt-1">
                   <span>Código Zona: {area.codigo}</span>
                   <span className="text-emerald-700 font-semibold font-sans">● Esclusa Operativa</span>
@@ -246,25 +248,25 @@ export default function CatalogosPage() {
         {/* Formulario y Vista Previa del Carnet Físico */}
         <div className="xl:col-span-7 space-y-6">
           {/* Card Mockup Visual del Carnet */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-brand-secondary to-[#d5edd9] border border-brand-primary/30 shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50 to-[#d5edd9] border border-emerald-600/30 shadow-md relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
             
-            <div className="flex items-center justify-between border-b border-brand-primary/20 pb-3 mb-4 relative z-10">
+            <div className="flex items-center justify-between border-b border-emerald-600/20 pb-3 mb-4 relative z-10">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-brand-primary flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                <div className="w-6 h-6 rounded-md bg-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
                   Z
                 </div>
-                <span className="font-heading font-extrabold text-xs text-brand-dark tracking-tight">
+                <span className="font-heading font-extrabold text-xs text-slate-800 tracking-tight">
                   CREDENCIAL DE ACCESO • LAB XYZ
                 </span>
               </div>
-              <QrCode className="w-5 h-5 text-brand-primary opacity-80" />
+              <QrCode className="w-5 h-5 text-emerald-600 opacity-80" />
             </div>
 
             <div className="grid grid-cols-3 gap-4 items-center relative z-10">
               {/* Recuadro de Fotografía Interactivo directamente en el Carnet */}
               <div className="relative">
-                <label className="block w-28 h-32 bg-white rounded-2xl border-2 border-dashed border-brand-primary/60 hover:border-brand-primary shadow-sm flex flex-col items-center justify-center overflow-hidden cursor-pointer group transition-all transform hover:scale-102 active:scale-98 bg-gradient-to-b from-white to-brand-secondary/40">
+                <label className="block w-28 h-32 bg-white rounded-2xl border-2 border-dashed border-emerald-600/60 hover:border-emerald-600 shadow-sm flex flex-col items-center justify-center overflow-hidden cursor-pointer group transition-all transform hover:scale-102 active:scale-98 bg-gradient-to-b from-white to-emerald-50/40">
                   {fotoUrl ? (
                     <div className="relative w-full h-full flex items-center justify-center bg-slate-100 p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -273,17 +275,17 @@ export default function CatalogosPage() {
                         alt="Foto del colaborador"
                         className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xs"
                       />
-                      <div className="absolute inset-0 bg-brand-dark/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center rounded-xl">
+                      <div className="absolute inset-0 bg-slate-800/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center rounded-xl">
                         <Camera className="w-5 h-5 mb-0.5 animate-bounce" />
                         <span className="text-[9px] font-bold">Cambiar Foto</span>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-brand-primary p-2 text-center">
-                      <div className="p-2.5 rounded-full bg-brand-secondary group-hover:bg-brand-primary group-hover:text-white transition-all mb-1 shadow-xs">
+                    <div className="flex flex-col items-center justify-center text-emerald-600 p-2 text-center">
+                      <div className="p-2.5 rounded-full bg-emerald-50 group-hover:bg-emerald-600 group-hover:text-white transition-all mb-1 shadow-xs">
                         <User className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-extrabold text-brand-dark group-hover:text-brand-primary transition-colors">
+                      <span className="text-[10px] font-extrabold text-slate-800 group-hover:text-emerald-600 transition-colors">
                         Subir Foto
                       </span>
                     </div>
@@ -313,7 +315,7 @@ export default function CatalogosPage() {
 
               <div className="col-span-2 space-y-2 text-xs pl-2">
                 <div>
-                  <p className="font-heading font-black text-brand-dark text-base leading-tight">
+                  <p className="font-heading font-black text-slate-800 text-base leading-tight">
                     {nombreCompletoDisplay}
                   </p>
                   {areas.find(a => a.id === parseInt(areaId)) && (
@@ -323,11 +325,11 @@ export default function CatalogosPage() {
                   )}
                 </div>
                 
-                <p className="text-[11px] text-brand-text/80 font-mono">
+                <p className="text-[11px] text-slate-500/80 font-mono">
                   {tipoDocumento}: {rfidDoc || '••••••••••'}
                 </p>
                 <div className="flex items-center gap-1.5 pt-0.5">
-                  <span className="px-2 py-0.5 rounded bg-white text-[10px] font-mono font-bold text-brand-primary border border-brand-accent/50 shadow-2xs">
+                  <span className="px-2 py-0.5 rounded bg-white text-[10px] font-mono font-bold text-emerald-600 border border-emerald-200/50 shadow-2xs">
                     {rfidCodigo || 'CHIP-RFID-NO-ASIGNADO'}
                   </span>
                 </div>
@@ -337,22 +339,22 @@ export default function CatalogosPage() {
           </div>
 
           {/* Formulario Completo de Alta y Asignación */}
-          <div className="bg-white rounded-3xl p-6 border border-brand-accent/40 shadow-xs space-y-5">
-            <div className="flex items-center justify-between border-b border-brand-accent/20 pb-3">
+          <div className="bg-white rounded-3xl p-6 border border-emerald-200/40 shadow-xs space-y-5">
+            <div className="flex items-center justify-between border-b border-emerald-200/20 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-brand-secondary text-brand-primary">
+                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-sm text-brand-dark">Ficha de Alta y Vinculación</h3>
-                  <p className="text-[11px] text-brand-text/70">Registra al personal y asígnale su credencial física</p>
+                  <h3 className="font-heading font-bold text-sm text-slate-800">Ficha de Alta y Vinculación</h3>
+                  <p className="text-[11px] text-slate-500/70">Registra al personal y asígnale su credencial física</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={generarCodigoCarnet}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-primary bg-brand-secondary border border-brand-accent/40 px-3 py-1.5 rounded-xl hover:bg-brand-accent/60 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/40 px-3 py-1.5 rounded-xl hover:bg-emerald-200/60 transition-all cursor-pointer shadow-sm hover:shadow-md"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 Autogenerar RFID
@@ -364,8 +366,8 @@ export default function CatalogosPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text/70 uppercase">Nombres</label>
-                    <span className="text-[10px] font-medium text-brand-text/50">{nombres.length}/50</span>
+                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">Nombres</label>
+                    <span className="text-[10px] font-medium text-slate-500/50">{nombres.length}/50</span>
                   </div>
                   <input
                     type="text"
@@ -374,13 +376,13 @@ export default function CatalogosPage() {
                     onChange={(e) => setNombres(e.target.value)}
                     placeholder="Ej. Carlos Andrés"
                     maxLength={50}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
                   />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text/70 uppercase">Apellidos</label>
-                    <span className="text-[10px] font-medium text-brand-text/50">{apellidos.length}/50</span>
+                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">Apellidos</label>
+                    <span className="text-[10px] font-medium text-slate-500/50">{apellidos.length}/50</span>
                   </div>
                   <input
                     type="text"
@@ -389,7 +391,7 @@ export default function CatalogosPage() {
                     onChange={(e) => setApellidos(e.target.value)}
                     placeholder="Ej. Mendoza Pérez"
                     maxLength={50}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
                   />
                 </div>
               </div>
@@ -397,11 +399,11 @@ export default function CatalogosPage() {
               {/* Identidad */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-1">
-                  <label className="block text-[11px] font-bold text-brand-text/70 uppercase mb-1">Tipo</label>
+                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Tipo</label>
                   <select
                     value={tipoDocumento}
                     onChange={(e) => setTipoDocumento(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 bg-white"
                   >
                     <option value="CC">Cédula</option>
                     <option value="CE">Cédula Ext.</option>
@@ -410,8 +412,8 @@ export default function CatalogosPage() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text/70 uppercase">Núm. Documento</label>
-                    <span className="text-[10px] font-medium text-brand-text/50">{rfidDoc.length}/12</span>
+                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">Núm. Documento</label>
+                    <span className="text-[10px] font-medium text-slate-500/50">{rfidDoc.length}/12</span>
                   </div>
                   <input
                     type="text"
@@ -420,7 +422,7 @@ export default function CatalogosPage() {
                     onChange={(e) => setRfidDoc(e.target.value)}
                     placeholder="Ej. 1012345678"
                     maxLength={12}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-sm font-mono font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm font-mono font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
                   />
                 </div>
               </div>
@@ -428,11 +430,11 @@ export default function CatalogosPage() {
               {/* Asignación Operativa */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text/70 uppercase mb-1">Departamento</label>
+                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Departamento</label>
                   <select
                     value={deptoId}
                     onChange={(e) => setDeptoId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 bg-white"
                   >
                     {deptos.map((d) => (
                       <option key={d.id} value={d.id}>{d.nombre}</option>
@@ -440,11 +442,11 @@ export default function CatalogosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text/70 uppercase mb-1">Zona Principal Asignada</label>
+                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Zona Principal Asignada</label>
                   <select
                     value={areaId}
                     onChange={(e) => setAreaId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 bg-white"
                   >
                     {areas.map((a) => (
                       <option key={a.id} value={a.id}>{a.nombre}</option>
@@ -456,8 +458,8 @@ export default function CatalogosPage() {
               {/* Chip RFID */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-bold text-brand-text/70 uppercase">Código del Carnet RFID *</label>
-                  <span className="text-[10px] font-medium text-brand-text/50">{rfidCodigo.length}/14 máx.</span>
+                  <label className="text-[11px] font-bold text-slate-500/70 uppercase">Código del Carnet RFID *</label>
+                  <span className="text-[10px] font-medium text-slate-500/50">{rfidCodigo.length}/14 máx.</span>
                 </div>
                 <input
                   type="text"
@@ -466,7 +468,7 @@ export default function CatalogosPage() {
                   value={rfidCodigo}
                   onChange={handleCarnetCodigoChange}
                   placeholder="Ej. CRN-XYZ-123456"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-brand-primary/40 bg-brand-secondary/20 text-brand-primary text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-600/40 bg-emerald-50/20 text-emerald-600 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                 />
                 {errorCarnet && (
                   <p className="text-[10px] text-red-600 font-semibold mt-1">{errorCarnet}</p>
@@ -476,7 +478,7 @@ export default function CatalogosPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-95"
+                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-95"
                 >
                   <CreditCard className="w-5 h-5" />
                   Registrar Personal y Activar Carnet

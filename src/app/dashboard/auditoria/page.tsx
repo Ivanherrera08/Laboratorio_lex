@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNotifications } from '@/context/NotificationContext';
 import {
   ShieldCheck,
   Search,
@@ -115,11 +117,57 @@ const mockBitacoraFormal: RegistroAuditoriaHumano[] = [
 ];
 
 export default function BitacoraAuditoriaPage() {
-  const [logs] = useState<RegistroAuditoriaHumano[]>(mockBitacoraFormal);
-  const [busqueda, setBusqueda] = useState('');
-  const [logSeleccionado, setLogSeleccionado] = useState<RegistroAuditoriaHumano>(mockBitacoraFormal[0]);
+  const { notificaciones } = useNotifications();
+  
+  // Transformar las notificaciones globales en registros de bitácora
+  const logsDinamicos: RegistroAuditoriaHumano[] = notificaciones
+    .filter((n) => n.tipo === 'AUDITORIA')
+    .map((n) => {
+      let motivoExtraido = n.mensaje;
+      let estadoNuevo = n.valorNuevo || 'N/A';
+      try {
+        if (n.valorNuevo && n.valorNuevo.includes('{')) {
+          const parsed = JSON.parse(n.valorNuevo);
+          if (parsed.motivo) motivoExtraido = parsed.motivo;
+          if (parsed.estado) estadoNuevo = parsed.estado;
+        }
+      } catch (e) {
+        // Ignorar error de parseo
+      }
 
-  const logsFiltrados = logs.filter(
+      return {
+        id: `AUD-${n.id.substring(0, 8).toUpperCase()}`,
+        evento: n.titulo,
+        modulo: n.entidadAuditoria || 'Gestión General',
+        responsable: 'Operador Actual',
+        rolResponsable: 'SISTEMA',
+        ip: '127.0.0.1 (Local)',
+        tipoAccion: n.accionAuditoria === 'CAMBIO_ESTADO' ? 'MODIFICACION_ESTADO' : 'SEGURIDAD_ACCESO',
+        timestamp: n.timestamp,
+        justificacionNormativa: 'Registro Automático del Sistema de Trazabilidad',
+        detalleDocumentado: {
+          sujetoAfectado: `Referencia: ${n.codigoRef || 'N/A'}`,
+          condicionPrevia: `Estado Anterior: ${n.valorAnterior || 'N/A'}`,
+          condicionNueva: `Nuevo Estado: ${estadoNuevo}`,
+          normaCumplida: 'Registro en Cumplimiento (ALCOA+)',
+          observacionesTecnicas: motivoExtraido,
+        },
+      };
+    });
+
+  const todosLosLogs = [...logsDinamicos, ...mockBitacoraFormal];
+
+  const [busqueda, setBusqueda] = useState('');
+  const [logSeleccionado, setLogSeleccionado] = useState<RegistroAuditoriaHumano>(todosLosLogs[0] || mockBitacoraFormal[0]);
+
+  // Actualizar el log seleccionado si los logs dinámicos cambian
+  useEffect(() => {
+    if (logsDinamicos.length > 0 && !logsDinamicos.find(l => l.id === logSeleccionado?.id) && !mockBitacoraFormal.find(l => l.id === logSeleccionado?.id)) {
+      setLogSeleccionado(todosLosLogs[0]);
+    }
+  }, [notificaciones]);
+
+  const logsFiltrados = todosLosLogs.filter(
     (l) =>
       l.evento.toLowerCase().includes(busqueda.toLowerCase()) ||
       l.modulo.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -128,17 +176,22 @@ export default function BitacoraAuditoriaPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Bitácora Oficial de Auditoría Farmacéutica</h1>
-          <p className="text-xs text-brand-text/70 mt-1">
+          <h1 className="text-2xl font-heading font-extrabold text-slate-800">Bitácora Oficial de Auditoría Farmacéutica</h1>
+          <p className="text-xs text-slate-500/70 mt-1">
             Registro documental y trazabilidad de eventos críticos bajo estándares FDA 21 CFR Part 11 e ISO/IEC 27001.
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-secondary border border-brand-accent/60 text-brand-primary text-xs font-bold">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-600 text-xs font-bold">
           <ShieldCheck className="w-4 h-4" />
           Registros Inmutables Auditados
         </div>
@@ -147,8 +200,8 @@ export default function BitacoraAuditoriaPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Lista de Eventos Documentados */}
         <div className="lg:col-span-6 space-y-3">
-          <div className="bg-white p-3.5 rounded-2xl border border-brand-accent/40 shadow-xs flex items-center gap-2.5">
-            <Search className="w-4 h-4 text-brand-text/50" />
+          <div className="bg-white p-3.5 rounded-2xl border border-emerald-200/40 shadow-xs flex items-center gap-2.5">
+            <Search className="w-4 h-4 text-slate-500/50" />
             <input
               type="text"
               placeholder="Buscar por ID, evento, módulo o responsable..."
@@ -165,34 +218,34 @@ export default function BitacoraAuditoriaPage() {
                 onClick={() => setLogSeleccionado(item)}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                   logSeleccionado?.id === item.id
-                    ? 'bg-brand-secondary/90 border-brand-primary shadow-sm ring-1 ring-brand-primary/30'
-                    : 'bg-white border-brand-accent/40 hover:bg-brand-light'
+                    ? 'bg-emerald-50/90 border-emerald-600 shadow-sm ring-1 ring-emerald-600/30'
+                    : 'bg-white border-emerald-200/40 hover:bg-slate-50'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono font-bold text-xs text-brand-primary bg-white px-2 py-0.5 rounded-md border border-brand-accent/40">
+                  <span className="font-mono font-bold text-xs text-emerald-600 bg-white px-2 py-0.5 rounded-md border border-emerald-200/40">
                     {item.id}
                   </span>
                   <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-brand-primary" />
+                    <Clock className="w-3 h-3 text-emerald-600" />
                     {new Date(item.timestamp).toLocaleString()}
                   </span>
                 </div>
 
-                <h4 className="font-heading font-bold text-sm text-brand-dark mb-1 leading-snug">
+                <h4 className="font-heading font-bold text-sm text-slate-800 mb-1 leading-snug">
                   {item.evento}
                 </h4>
 
-                <p className="text-[11px] text-brand-text/70 mb-2">
+                <p className="text-[11px] text-slate-500/70 mb-2">
                   <strong>Módulo:</strong> {item.modulo}
                 </p>
 
-                <div className="flex items-center justify-between text-[11px] border-t border-brand-accent/20 pt-2 text-gray-600">
+                <div className="flex items-center justify-between text-[11px] border-t border-emerald-200/20 pt-2 text-gray-600">
                   <span className="flex items-center gap-1">
-                    <User className="w-3 h-3 text-brand-primary" />
+                    <User className="w-3 h-3 text-emerald-600" />
                     {item.responsable}
                   </span>
-                  <span className="font-bold text-[10px] text-brand-primary uppercase">
+                  <span className="font-bold text-[10px] text-emerald-600 uppercase">
                     {item.rolResponsable}
                   </span>
                 </div>
@@ -202,34 +255,34 @@ export default function BitacoraAuditoriaPage() {
         </div>
 
         {/* Panel de Documentación Detallada del Evento */}
-        <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-brand-accent/40 shadow-xs flex flex-col space-y-5">
-          <div className="border-b border-brand-accent/30 pb-4">
+        <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-emerald-200/40 shadow-xs flex flex-col space-y-5">
+          <div className="border-b border-emerald-200/30 pb-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-mono text-xs font-bold text-brand-primary bg-brand-secondary px-2.5 py-1 rounded-md">
+              <span className="font-mono text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">
                 Acta de Auditoría #{logSeleccionado.id}
               </span>
               <span className="text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
                 ✓ Registro Validado
               </span>
             </div>
-            <h3 className="font-heading font-extrabold text-lg text-brand-dark mt-2">
+            <h3 className="font-heading font-extrabold text-lg text-slate-800 mt-2">
               {logSeleccionado.evento}
             </h3>
-            <p className="text-xs text-brand-text/70 mt-1">
+            <p className="text-xs text-slate-500/70 mt-1">
               <strong>Fecha y Hora Oficial:</strong> {new Date(logSeleccionado.timestamp).toUTCString()} ({logSeleccionado.ip})
             </p>
           </div>
 
           {/* Justificación y Norma */}
-          <div className="p-4 bg-brand-light rounded-2xl border border-brand-accent/40 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-brand-dark">
-              <ShieldCheck className="w-4 h-4 text-brand-primary" />
+          <div className="p-4 bg-slate-50 rounded-2xl border border-emerald-200/40 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Marco Legal y Normativo de la Acción</span>
             </div>
-            <p className="text-xs text-brand-text/80 leading-relaxed">
+            <p className="text-xs text-slate-500/80 leading-relaxed">
               {logSeleccionado.justificacionNormativa}
             </p>
-            <span className="inline-block text-[11px] font-bold text-brand-primary bg-white px-2 py-0.5 rounded border border-brand-accent/40">
+            <span className="inline-block text-[11px] font-bold text-emerald-600 bg-white px-2 py-0.5 rounded border border-emerald-200/40">
               Cumplimiento: {logSeleccionado.detalleDocumentado.normaCumplida}
             </span>
           </div>
@@ -237,17 +290,17 @@ export default function BitacoraAuditoriaPage() {
           {/* Detalle Técnico de la Modificación */}
           <div className="space-y-3.5 text-xs">
             <div>
-              <span className="font-bold text-brand-dark block mb-1">Sujeto / Personal Afectado:</span>
-              <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 font-medium text-brand-text">
+              <span className="font-bold text-slate-800 block mb-1">Sujeto / Personal Afectado:</span>
+              <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 font-medium text-slate-500">
                 {logSeleccionado.detalleDocumentado.sujetoAfectado}
               </div>
             </div>
 
             {logSeleccionado.detalleDocumentado.areaInvolucrada && (
               <div>
-                <span className="font-bold text-brand-dark block mb-1">Área o Zona Biosegura:</span>
-                <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 font-medium text-brand-text flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5 text-brand-primary" />
+                <span className="font-bold text-slate-800 block mb-1">Área o Zona Biosegura:</span>
+                <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 font-medium text-slate-500 flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-emerald-600" />
                   {logSeleccionado.detalleDocumentado.areaInvolucrada}
                 </div>
               </div>
@@ -274,14 +327,14 @@ export default function BitacoraAuditoriaPage() {
             </div>
 
             <div>
-              <span className="font-bold text-brand-dark block mb-1">Dictamen Técnico y Observaciones:</span>
-              <div className="p-3 bg-white rounded-xl border border-brand-accent/50 text-brand-text leading-relaxed">
+              <span className="font-bold text-slate-800 block mb-1">Dictamen Técnico y Observaciones:</span>
+              <div className="p-3 bg-white rounded-xl border border-emerald-200/50 text-slate-500 leading-relaxed">
                 {logSeleccionado.detalleDocumentado.observacionesTecnicas}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

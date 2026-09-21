@@ -340,36 +340,41 @@ export default function SimuladorAccesoPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
       <div>
-        <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Simulador de Esclusa y Control de Acceso</h1>
-        <p className="text-xs text-brand-text/70 mt-1">
+        <h1 className="text-2xl font-heading font-extrabold text-slate-800">Simulador de Esclusa y Control de Acceso</h1>
+        <p className="text-xs text-slate-500/70 mt-1">
           Validación biométrica e inspección de credenciales RFID en tiempo real con registro inmutable en bitácora.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Panel de Configuración del Escaneo */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-brand-accent/40 shadow-xs space-y-6">
-          <div className="flex items-center gap-3 border-b border-brand-accent/30 pb-4">
-            <div className="p-2.5 rounded-2xl bg-brand-primary/10 text-brand-primary">
+        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-emerald-200/40 shadow-xs space-y-6">
+          <div className="flex items-center gap-3 border-b border-emerald-200/30 pb-4">
+            <div className="p-2.5 rounded-2xl bg-emerald-600/10 text-emerald-600">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-heading font-bold text-brand-dark text-sm">Punto de Verificación</h2>
-              <p className="text-[11px] text-brand-text/70">Selecciona el área donde se ubica el lector</p>
+              <h2 className="font-heading font-bold text-slate-800 text-sm">Punto de Verificación</h2>
+              <p className="text-[11px] text-slate-500/70">Selecciona el área donde se ubica el lector</p>
             </div>
           </div>
 
           <form onSubmit={handleSimular} className="space-y-5">
             <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-brand-text/70 uppercase tracking-wider">
+              <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
                 Zona de Bioseguridad Destino
               </label>
               <select
                 value={areaId}
                 onChange={(e) => setAreaId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-brand-secondary/30 border border-brand-accent/60 text-brand-dark text-xs font-semibold focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-xs"
+                className="w-full px-4 py-3 rounded-xl bg-emerald-50/30 border border-emerald-200/60 text-slate-800 text-xs font-semibold focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all shadow-xs"
               >
                 {areasDemo.map((area) => (
                   <option key={area.id} value={area.id}>
@@ -380,7 +385,7 @@ export default function SimuladorAccesoPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-brand-text/70 uppercase tracking-wider">
+              <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
                 Método de Identificación
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -391,8 +396,8 @@ export default function SimuladorAccesoPage() {
                     onClick={() => setTipoIdentificador(tipo as any)}
                     className={`py-3 text-xs font-bold rounded-xl border transition-all ${
                       tipoIdentificador === tipo 
-                        ? 'bg-brand-primary text-white border-brand-primary shadow-md' 
-                        : 'bg-brand-secondary/40 text-brand-text border-brand-accent/40 hover:border-brand-primary/50'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' 
+                        : 'bg-emerald-50/40 text-slate-500 border-emerald-200/40 hover:border-emerald-600/50'
                     }`}
                   >
                     {tipo === 'DOCUMENTO' ? 'Documento ID' : 'Tarjeta RFID'}
@@ -403,10 +408,10 @@ export default function SimuladorAccesoPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="block text-[11px] font-bold text-brand-text/70 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
                   Credencial / Identificador
                 </label>
-                <span className="text-[10px] font-medium text-brand-text/50">{identificador.length}/20</span>
+                <span className="text-[10px] font-medium text-slate-500/50">{identificador.length}/20</span>
               </div>
               <input
                 type="text"
@@ -414,9 +419,9 @@ export default function SimuladorAccesoPage() {
                 value={identificador}
                 onChange={(e) => setIdentificador(e.target.value)}
                 placeholder={tipoIdentificador === 'DOCUMENTO' ? 'Ej. 10001234 o 1012345678' : 'Ej. RFID-001'}
-                className="w-full px-5 py-4 rounded-xl bg-white border border-brand-accent/60 text-brand-dark font-mono text-base focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-brand-text/30 shadow-xs"
+                className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200/60 text-slate-800 font-mono text-base focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all placeholder:text-slate-500/30 shadow-xs"
               />
-              <p className="text-[10px] text-brand-text/60">
+              <p className="text-[10px] text-slate-500/60">
                 💡 Prueba con: <strong>10001234</strong> (Admin), <strong>1012345678</strong> (Carlos Mendoza), o <strong>1087654321</strong> (Revocado).
               </p>
             </div>
@@ -424,7 +429,7 @@ export default function SimuladorAccesoPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-sm transition-all shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               <ScanLine className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'ANALIZANDO CREDENCIAL...' : 'ESCANEAR EN TORNIQUETE'}
@@ -441,22 +446,22 @@ export default function SimuladorAccesoPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
-                className="w-full h-full min-h-[450px] rounded-[2.5rem] bg-white/60 backdrop-blur-md border border-brand-accent/40 flex flex-col items-center justify-center p-12 relative overflow-hidden"
+                className="w-full h-full min-h-[450px] rounded-[2.5rem] bg-white/60 backdrop-blur-md border border-emerald-200/40 flex flex-col items-center justify-center p-12 relative overflow-hidden"
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
                     animate={{ scale: [1, 2.5], opacity: [0.5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
-                    className="w-32 h-32 rounded-full border-2 border-brand-primary/40 absolute"
+                    className="w-32 h-32 rounded-full border-2 border-emerald-600/40 absolute"
                   />
                   <motion.div
                     animate={{ scale: [1, 2], opacity: [0.8, 0] }}
                     transition={{ duration: 1.5, delay: 0.4, repeat: Infinity, ease: 'easeOut' }}
-                    className="w-32 h-32 rounded-full border-2 border-brand-primary/20 absolute"
+                    className="w-32 h-32 rounded-full border-2 border-emerald-600/20 absolute"
                   />
                 </div>
-                <ScanLine className="w-16 h-16 text-brand-primary relative z-10 animate-bounce" />
-                <h3 className="text-brand-primary font-mono font-bold mt-6 relative z-10 tracking-widest animate-pulse text-sm">
+                <ScanLine className="w-16 h-16 text-emerald-600 relative z-10 animate-bounce" />
+                <h3 className="text-emerald-600 font-mono font-bold mt-6 relative z-10 tracking-widest animate-pulse text-sm">
                   VALIDANDO PERMISOS Y BIOMETRÍA...
                 </h3>
               </motion.div>
@@ -492,7 +497,7 @@ export default function SimuladorAccesoPage() {
                     className="bg-white/80 backdrop-blur-md rounded-3xl p-6 border border-black/5 shadow-xs"
                   >
                     <div className="flex items-center gap-5 border-b border-gray-200/60 pb-5 mb-5">
-                      <div className="w-16 h-16 rounded-2xl bg-brand-secondary/40 border border-brand-accent/40 flex items-center justify-center text-3xl">
+                      <div className="w-16 h-16 rounded-2xl bg-emerald-50/40 border border-emerald-200/40 flex items-center justify-center text-3xl">
                         {resultado.perfil.fotoPerfil ? (
                           <img src={resultado.perfil.fotoPerfil} alt="Perfil" className="w-full h-full rounded-2xl object-cover" />
                         ) : '👤'}
@@ -501,24 +506,24 @@ export default function SimuladorAccesoPage() {
                         <p className={`text-lg font-heading font-bold ${colors[resultado.estado].text}`}>
                           {resultado.perfil.nombres} {resultado.perfil.apellidos}
                         </p>
-                        <p className="text-xs text-brand-text/70">{resultado.perfil.departamentoNombre || 'Personal Autorizado'}</p>
+                        <p className="text-xs text-slate-500/70">{resultado.perfil.departamentoNombre || 'Personal Autorizado'}</p>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4 text-xs font-medium text-brand-text/80">
+                    <div className="grid grid-cols-2 gap-4 text-xs font-medium text-slate-500/80">
                       <div>
-                        <span className="text-brand-text/50 block mb-1">Documento Identidad</span>
-                        <span className="font-mono font-bold text-brand-dark">{resultado.perfil.tipoDocumento} {resultado.perfil.numeroDocumento}</span>
+                        <span className="text-slate-500/50 block mb-1">Documento Identidad</span>
+                        <span className="font-mono font-bold text-slate-800">{resultado.perfil.tipoDocumento} {resultado.perfil.numeroDocumento}</span>
                       </div>
                       <div>
-                        <span className="text-brand-text/50 block mb-1">Estado de Credencial</span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-white border border-brand-accent/40 font-bold">
+                        <span className="text-slate-500/50 block mb-1">Estado de Credencial</span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200/40 font-bold">
                           {resultado.perfil.estado}
                         </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-brand-text/50 block mb-1">Área Principal</span>
-                        <span className="font-semibold text-brand-dark">{resultado.perfil.areaPrincipalNombre || 'Laboratorio Central'}</span>
+                        <span className="text-slate-500/50 block mb-1">Área Principal</span>
+                        <span className="font-semibold text-slate-800">{resultado.perfil.areaPrincipalNombre || 'Laboratorio Central'}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -536,7 +541,7 @@ export default function SimuladorAccesoPage() {
                   </div>
                 )}
 
-                <div className="mt-6 flex items-center justify-between text-[11px] text-brand-text/50 font-mono">
+                <div className="mt-6 flex items-center justify-between text-[11px] text-slate-500/50 font-mono">
                   <span>LOG: {new Date(resultado.timestamp).toLocaleTimeString()}</span>
                   <span>ZONA: {resultado.areaConsultada}</span>
                 </div>
@@ -545,16 +550,16 @@ export default function SimuladorAccesoPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="w-full h-full min-h-[450px] rounded-[2.5rem] bg-brand-secondary/20 border border-brand-accent/40 border-dashed flex flex-col items-center justify-center p-12 text-brand-text/40"
+                className="w-full h-full min-h-[450px] rounded-[2.5rem] bg-emerald-50/20 border border-emerald-200/40 border-dashed flex flex-col items-center justify-center p-12 text-slate-500/40"
               >
                 <ScanLine className="w-16 h-16 mb-4 opacity-20" />
                 <p className="text-sm font-heading font-bold">ESCLUSAS EN ESPERA DE LECTURA</p>
-                <p className="text-xs text-brand-text/50 mt-1">Ingresa una credencial a la izquierda para simular el paso</p>
+                <p className="text-xs text-slate-500/50 mt-1">Ingresa una credencial a la izquierda para simular el paso</p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

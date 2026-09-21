@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Empleado, EstadoEmpleado } from '@/types';
 import { useNotifications } from '@/context/NotificationContext';
 import { getEmpleados, saveEmpleados } from '@/lib/personalStore';
@@ -460,15 +461,15 @@ export default function GestionPersonalPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Gestión del Personal Autorizado</h1>
-          <p className="text-xs text-brand-text/70 mt-1">
+          <h1 className="text-2xl font-heading font-extrabold text-slate-800">Gestión del Personal Autorizado</h1>
+          <p className="text-xs text-slate-500/70 mt-1">
             Administración de empleados, asignación de biometría y control de estados (RF F-11 a F-17).
           </p>
         </div>
 
         <button
           onClick={() => setShowRegistrarModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-lg shadow-emerald-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95 border border-emerald-400/50"
         >
           <Plus className="w-4 h-4" />
           Registrar Empleado
@@ -476,25 +477,25 @@ export default function GestionPersonalPage() {
       </div>
 
       {/* Barra de Búsqueda y Filtros */}
-      <div className="bg-white p-4 rounded-2xl border border-brand-accent/40 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-emerald-200/40 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-brand-text/50 absolute left-3.5 top-3" />
+          <Search className="w-4 h-4 text-slate-500/50 absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Buscar por cédula, nombre o correo..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1.5">
-            <Filter className="w-4 h-4 text-brand-primary" />
+            <Filter className="w-4 h-4 text-emerald-600" />
             <select
               value={deptoFiltro}
               onChange={(e) => setDeptoFiltro(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+              className="px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
             >
               <option value="TODOS">Todos los Deptos</option>
               <option value="Producción y Síntesis">Producción y Síntesis</option>
@@ -504,11 +505,11 @@ export default function GestionPersonalPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <FlaskConical className="w-4 h-4 text-brand-primary" />
+            <FlaskConical className="w-4 h-4 text-emerald-600" />
             <select
               value={areaFiltro}
               onChange={(e) => setAreaFiltro(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40 max-w-[210px] truncate"
+              className="px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/40 max-w-[210px] truncate"
             >
               <option value="TODAS">Todos los Laboratorios/Zonas</option>
               {catalogoLaboratoriosAreas.map((lab) => (
@@ -521,94 +522,126 @@ export default function GestionPersonalPage() {
         </div>
       </div>
 
-      {/* Tabla de Empleados */}
-      <div className="bg-white rounded-2xl border border-brand-accent/40 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-brand-secondary/70 border-b border-brand-accent/30 text-brand-dark font-bold">
-              <tr>
-                <th className="p-4">Cédula (Máx 12)</th>
-                <th className="p-4">Nombres y Apellidos</th>
-                <th className="p-4">Departamento / Laboratorio</th>
-                <th className="p-4">Celular (10 d.)</th>
-                <th className="p-4">Credencial RFID</th>
-                <th className="p-4">Estado</th>
-                <th className="p-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-brand-accent/20">
-              {empleadosFiltrados.map((emp) => (
-                <tr key={emp.id} className="hover:bg-brand-light/60 transition-colors">
-                  <td className="p-4 font-semibold text-brand-dark">
-                    {emp.numeroDocumento}{' '}
-                    <span className="text-[10px] text-gray-500 font-normal">({emp.tipoDocumento})</span>
-                  </td>
-                  <td className="p-4">
-                    <p className="font-semibold text-brand-dark">{emp.nombres} {emp.apellidos}</p>
-                    <p className="text-[11px] text-brand-text/60">{emp.correo}</p>
-                  </td>
-                  <td className="p-4">
-                    <p className="font-semibold text-brand-dark">{emp.departamentoNombre}</p>
-                    <p className="text-[10.5px] text-brand-primary font-medium flex items-center gap-1 mt-0.5">
-                      <FlaskConical className="w-3 h-3 shrink-0" />
-                      {emp.areaPrincipalNombre || 'Laboratorio de Síntesis Molecular'}
-                    </p>
-                    {emp.areasAutorizadas && emp.areasAutorizadas.length > 1 && (
-                      <span className="inline-block text-[9px] bg-brand-secondary text-brand-text/80 px-1.5 py-0.2 rounded mt-1 font-medium">
-                        +{emp.areasAutorizadas.length - 1} áreas autorizadas
+      {/* Lista de Empleados en Tarjetas (Glassmorphism) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative z-10">
+        <AnimatePresence>
+          {empleadosFiltrados.length > 0 ? (
+            empleadosFiltrados.map((emp, index) => (
+              <motion.div
+                key={emp.id}
+                layout
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="group relative bg-white/70 backdrop-blur-2xl rounded-3xl border border-white p-5 shadow-lg shadow-emerald-500/5 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.2)] transition-all flex flex-col"
+              >
+                {/* Brillo dinámico */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+
+                {/* Cabecera Tarjeta: Avatar y Estado */}
+                <div className="flex justify-between items-start mb-4 relative z-10">
+                  <div className="flex gap-3 items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-emerald-500/30 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                      {emp.nombres.charAt(0)}{emp.apellidos.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-black text-slate-800 text-sm leading-tight group-hover:text-emerald-600 transition-colors line-clamp-1">
+                        {emp.nombres} {emp.apellidos}
+                      </h3>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200">
+                          {emp.tipoDocumento}
+                        </span>
+                        <span className="text-[11px] font-mono font-bold text-slate-500">
+                          {emp.numeroDocumento}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Badge de Estado */}
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black tracking-wider uppercase shadow-sm border ${
+                      emp.estado === 'ACTIVO'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                        : emp.estado === 'REVOCADO'
+                        ? 'bg-rose-50 text-rose-600 border-rose-200'
+                        : 'bg-amber-50 text-amber-600 border-amber-200'
+                    }`}
+                  >
+                    {emp.estado === 'ACTIVO' && <CheckCircle className="w-3.5 h-3.5" />}
+                    {emp.estado === 'REVOCADO' && <XCircle className="w-3.5 h-3.5" />}
+                    {emp.estado === 'SUSPENDIDO' && <Clock className="w-3.5 h-3.5" />}
+                    {emp.estado}
+                  </span>
+                </div>
+
+                {/* Detalles: Departamento y Laboratorio */}
+                <div className="space-y-2 mb-4 relative z-10 flex-1">
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+                    <Microscope className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-slate-700">{emp.departamentoNombre}</p>
+                      <p className="font-medium text-emerald-600 mt-0.5">{emp.areaPrincipalNombre || 'Área no asignada'}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Info de Contacto & RFID */}
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div className="flex items-center gap-1.5 p-1.5 bg-slate-50/50 rounded-lg border border-slate-100 truncate">
+                      <Mail className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                      <span className="text-slate-500 font-medium truncate" title={emp.correo}>{emp.correo}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-1.5 bg-slate-50/50 rounded-lg border border-slate-100">
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span className="font-mono font-bold text-slate-600">
+                        {emp.codigoTarjetaRfid || 'SIN_VINCULAR'}
                       </span>
-                    )}
-                  </td>
-                  <td className="p-4 font-mono text-gray-600">{emp.telefono}</td>
-                  <td className="p-4">
-                    <span className="px-2 py-0.5 rounded-md bg-brand-secondary font-mono text-[11px] text-brand-primary font-bold border border-brand-accent/40">
-                      {emp.codigoTarjetaRfid || 'SIN_VINCULAR'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all shadow-2xs ${
-                        emp.estado === 'ACTIVO'
-                          ? 'bg-[#d1f7e3] text-[#0f764a] border border-[#a6f0c7]'
-                          : emp.estado === 'REVOCADO'
-                          ? 'bg-[#fee4e2] text-[#912018] border border-[#fecdca]'
-                          : 'bg-[#fef0c7] text-[#93370d] border border-[#fedf89]'
-                      }`}
-                    >
-                      {emp.estado === 'ACTIVO' && <CheckCircle className="w-3.5 h-3.5 text-[#0f764a]" />}
-                      {emp.estado === 'REVOCADO' && <XCircle className="w-3.5 h-3.5 text-[#912018]" />}
-                      {emp.estado === 'SUSPENDIDO' && <Clock className="w-3.5 h-3.5 text-[#93370d]" />}
-                      {emp.estado}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => handleAbrirCambioEstado(emp)}
-                      className="px-3 py-1.5 rounded-lg bg-brand-secondary hover:bg-brand-accent/30 text-brand-dark font-semibold text-[11px] transition-all cursor-pointer"
-                    >
-                      Cambiar Estado / Permisos
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Tarjeta: Acciones */}
+                <div className="pt-3 mt-auto border-t border-slate-100 relative z-10 flex justify-end">
+                  <button
+                    onClick={() => handleAbrirCambioEstado(emp)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-[11px] transition-all cursor-pointer shadow-sm border border-slate-200 hover:border-emerald-200 group/btn"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-500 group-hover/btn:-rotate-12 transition-transform" />
+                    Gestionar Permisos
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="col-span-full flex flex-col items-center justify-center py-16 bg-white/50 backdrop-blur-xl rounded-[2rem] border border-white/50 shadow-sm"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-300 mb-3">
+                <Users className="w-8 h-8" />
+              </div>
+              <p className="text-sm font-bold text-slate-500">No se encontraron empleados autorizados con los filtros actuales.</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* MODAL 1: REGISTRAR NUEVO EMPLEADO CON REGLAS DE VALIDACIÓN */}
       {showRegistrarModal && (
-        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
-          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down my-auto relative max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto">
+          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-emerald-200/40 animate-slide-down my-auto relative max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between gap-3 mb-4 border-b border-brand-accent/30 pb-3 shrink-0">
+            <div className="flex items-center justify-between gap-3 mb-4 border-b border-emerald-200/30 pb-3 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-brand-secondary text-brand-primary">
+                <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-heading font-bold text-brand-dark">Registrar Nuevo Empleado Autorizado</h3>
-                  <p className="text-xs text-brand-text/70">Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)</p>
+                  <h3 className="text-base font-heading font-bold text-slate-800">Registrar Nuevo Empleado Autorizado</h3>
+                  <p className="text-xs text-slate-500/70">Nombres/Apellidos (solo letras), Cédula (máx 12), Celular (máx 10)</p>
                 </div>
               </div>
             </div>
@@ -616,11 +649,11 @@ export default function GestionPersonalPage() {
             <form onSubmit={handleRegistrarEmpleado} className="space-y-3.5 overflow-y-auto pr-1">
               <div className="grid grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Tipo Doc.</label>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Tipo Doc.</label>
                   <select
                     value={nuevoTipoDoc}
                     onChange={(e) => setNuevoTipoDoc(e.target.value)}
-                    className="w-full px-2.5 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white font-medium"
+                    className="w-full px-2.5 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white font-medium"
                   >
                     <option value="CC">CC (Cédula)</option>
                     <option value="CE">CE (Extranjería)</option>
@@ -629,8 +662,8 @@ export default function GestionPersonalPage() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text">Cédula * (Máx 12 dígitos)</label>
-                    <span className="text-[10px] font-mono text-brand-primary">{nuevoDoc.length}/12</span>
+                    <label className="block text-[11px] font-bold text-slate-500">Cédula * (Máx 12 dígitos)</label>
+                    <span className="text-[10px] font-mono text-emerald-600">{nuevoDoc.length}/12</span>
                   </div>
                   <input
                     type="text"
@@ -639,7 +672,7 @@ export default function GestionPersonalPage() {
                     onChange={handleDocChange}
                     placeholder="Ej. 1020304050"
                     className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold focus:outline-none focus:ring-2 ${
-                      erroresForm.doc ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      erroresForm.doc ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {erroresForm.doc && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.doc}</p>}
@@ -649,7 +682,7 @@ export default function GestionPersonalPage() {
               {/* Nombres y Apellidos estrictamente solo letras */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">
                     Nombres * <span className="text-gray-400 font-normal">(Solo letras)</span>
                   </label>
                   <input
@@ -659,13 +692,13 @@ export default function GestionPersonalPage() {
                     onChange={handleNombresChange}
                     placeholder="Ej. Roberto Carlos"
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
-                      erroresForm.nombres ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      erroresForm.nombres ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {erroresForm.nombres && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.nombres}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">
                     Apellidos * <span className="text-gray-400 font-normal">(Solo letras)</span>
                   </label>
                   <input
@@ -675,7 +708,7 @@ export default function GestionPersonalPage() {
                     onChange={handleApellidosChange}
                     placeholder="Ej. Gómez Pérez"
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
-                      erroresForm.apellidos ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      erroresForm.apellidos ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {erroresForm.apellidos && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.apellidos}</p>}
@@ -684,7 +717,7 @@ export default function GestionPersonalPage() {
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Correo Institucional *</label>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Correo Institucional *</label>
                   <input
                     type="email"
                     required
@@ -692,15 +725,15 @@ export default function GestionPersonalPage() {
                     onChange={handleCorreoChange}
                     placeholder="r.gomez@laboratorioxyz.com"
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
-                      erroresForm.email ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      erroresForm.email ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {erroresForm.email && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.email}</p>}
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text">Celular * (10 dígitos)</label>
-                    <span className="text-[10px] font-mono text-brand-primary">{nuevoTelefono.length}/10</span>
+                    <label className="block text-[11px] font-bold text-slate-500">Celular * (10 dígitos)</label>
+                    <span className="text-[10px] font-mono text-emerald-600">{nuevoTelefono.length}/10</span>
                   </div>
                   <input
                     type="text"
@@ -709,7 +742,7 @@ export default function GestionPersonalPage() {
                     onChange={handleTelefonoChange}
                     placeholder="3001234567"
                     className={`w-full px-3 py-2 rounded-xl border text-xs font-mono focus:outline-none focus:ring-2 ${
-                      erroresForm.tel ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      erroresForm.tel ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {erroresForm.tel && <p className="text-[10px] text-red-600 font-semibold mt-0.5">{erroresForm.tel}</p>}
@@ -718,11 +751,11 @@ export default function GestionPersonalPage() {
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-brand-text mb-1">Departamento</label>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Departamento</label>
                   <select
                     value={nuevoDepto}
                     onChange={(e) => handleDeptoChange(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
                   >
                     <option value="Producción y Síntesis">Producción y Síntesis</option>
                     <option value="Control de Calidad">Control de Calidad</option>
@@ -731,7 +764,7 @@ export default function GestionPersonalPage() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-bold text-brand-text">Código / N° Carnet</label>
+                    <label className="text-[11px] font-bold text-slate-500">Código / N° Carnet</label>
                     <span className="text-[9px] text-gray-500 font-medium">{nuevoRfid.length}/14 máx.</span>
                   </div>
                   <input
@@ -740,7 +773,7 @@ export default function GestionPersonalPage() {
                     value={nuevoRfid}
                     onChange={handleRfidChange}
                     placeholder="Ej. CRN-XYZ-901"
-                    className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs font-mono font-bold"
+                    className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs font-mono font-bold"
                   />
                   {erroresForm.rfid && (
                     <p className="text-[10px] text-red-600 font-semibold mt-1">{erroresForm.rfid}</p>
@@ -750,7 +783,7 @@ export default function GestionPersonalPage() {
 
               {/* Selector de Laboratorio / Área Principal */}
               <div>
-                <label className="block text-[11px] font-bold text-brand-text mb-1">
+                <label className="block text-[11px] font-bold text-slate-500 mb-1">
                   Laboratorio / Área Principal de Trabajo *
                 </label>
                 <div className="relative">
@@ -763,7 +796,7 @@ export default function GestionPersonalPage() {
                         setAreasPermitidas((prev) => [...prev, sel]);
                       }
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl border border-brand-accent/60 text-xs bg-white font-semibold text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                    className="w-full px-3 py-2.5 rounded-xl border border-emerald-200/60 text-xs bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
                   >
                     {catalogoLaboratoriosAreas.map((lab) => (
                       <option key={lab.id} value={lab.nombre}>
@@ -777,11 +810,11 @@ export default function GestionPersonalPage() {
               {/* Selector Dinámico Desplegable de Zonas y Laboratorios Autorizados (RF F-21) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[11px] font-bold text-brand-text flex items-center gap-1.5">
-                    <Microscope className="w-3.5 h-3.5 text-brand-primary" />
+                  <label className="block text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
+                    <Microscope className="w-3.5 h-3.5 text-emerald-600" />
                     Zonas y Laboratorios con Acceso Autorizado (RFID)
                   </label>
-                  <span className="text-[10px] font-bold text-brand-primary bg-brand-secondary px-2 py-0.5 rounded-full border border-brand-accent/40">
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/40">
                     {areasPermitidas.length} de {catalogoLaboratoriosAreas.length} seleccionada(s)
                   </span>
                 </div>
@@ -791,11 +824,11 @@ export default function GestionPersonalPage() {
                   <button
                     type="button"
                     onClick={() => setShowDropdownAreas(!showDropdownAreas)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-brand-accent/60 bg-white hover:border-brand-primary text-xs font-medium text-left flex items-center justify-between shadow-2xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 bg-white hover:border-emerald-600 text-xs font-medium text-left flex items-center justify-between shadow-2xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
                   >
                     <div className="flex items-center gap-2 overflow-hidden pr-2">
-                      <SlidersHorizontal className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                      <span className="truncate text-brand-dark font-medium">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="truncate text-slate-800 font-medium">
                         {areasPermitidas.length === 0
                           ? 'Haga clic para autorizar laboratorios...'
                           : areasPermitidas.length === 1
@@ -805,24 +838,24 @@ export default function GestionPersonalPage() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       {showDropdownAreas ? (
-                        <ChevronUp className="w-4 h-4 text-brand-primary" />
+                        <ChevronUp className="w-4 h-4 text-emerald-600" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-brand-text/60" />
+                        <ChevronDown className="w-4 h-4 text-slate-500/60" />
                       )}
                     </div>
                   </button>
 
                   {/* Panel Desplegable Dinámico Flotante */}
                   {showDropdownAreas && (
-                    <div className="mt-1.5 p-2 bg-white rounded-2xl border border-brand-accent/60 shadow-xl space-y-2 animate-slide-down">
+                    <div className="mt-1.5 p-2 bg-white rounded-2xl border border-emerald-200/60 shadow-xl space-y-2 animate-slide-down">
                       {/* Cabecera con acciones rápidas */}
-                      <div className="flex items-center justify-between px-1.5 pt-1 pb-1.5 border-b border-brand-accent/30 text-[11px]">
-                        <span className="font-bold text-brand-dark">Catálogo de Esclusas y Laboratorios</span>
+                      <div className="flex items-center justify-between px-1.5 pt-1 pb-1.5 border-b border-emerald-200/30 text-[11px]">
+                        <span className="font-bold text-slate-800">Catálogo de Esclusas y Laboratorios</span>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => setAreasPermitidas(catalogoLaboratoriosAreas.map((l) => l.nombre))}
-                            className="text-[10px] text-brand-primary hover:underline font-semibold cursor-pointer"
+                            className="text-[10px] text-emerald-600 hover:underline font-semibold cursor-pointer"
                           >
                             Marcar Todas
                           </button>
@@ -848,7 +881,7 @@ export default function GestionPersonalPage() {
                               onClick={() => handleToggleArea(area.nombre)}
                               className={`flex items-center justify-between p-2 rounded-xl border text-[11px] cursor-pointer transition-all ${
                                 isChecked
-                                  ? 'bg-brand-secondary/70 border-brand-primary/60 text-brand-dark font-semibold'
+                                  ? 'bg-emerald-50/70 border-emerald-600/60 text-slate-800 font-semibold'
                                   : 'bg-white border-transparent hover:bg-slate-50 text-slate-700'
                               }`}
                             >
@@ -857,7 +890,7 @@ export default function GestionPersonalPage() {
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => {}} // Manejado por el onClick del contenedor
-                                  className="rounded text-brand-primary focus:ring-brand-primary/40 cursor-pointer shrink-0"
+                                  className="rounded text-emerald-600 focus:ring-emerald-600/40 cursor-pointer shrink-0"
                                 />
                                 <div className="truncate">
                                   <span className="block truncate">{area.nombre}</span>
@@ -880,7 +913,7 @@ export default function GestionPersonalPage() {
                                   {area.codigo}
                                 </span>
                                 {isPrincipal && (
-                                  <span className="text-[8.5px] bg-brand-primary text-white px-1.5 py-0.5 rounded-md font-bold">
+                                  <span className="text-[8.5px] bg-emerald-600 text-white px-1.5 py-0.5 rounded-md font-bold">
                                     PRINCIPAL
                                   </span>
                                 )}
@@ -895,7 +928,7 @@ export default function GestionPersonalPage() {
                         <button
                           type="button"
                           onClick={() => setShowDropdownAreas(false)}
-                          className="px-3 py-1 bg-brand-primary text-white text-[10px] font-bold rounded-lg hover:bg-brand-primary/90 transition-all cursor-pointer"
+                          className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg hover:bg-emerald-600/90 transition-all cursor-pointer"
                         >
                           Listo ({areasPermitidas.length})
                         </button>
@@ -910,7 +943,7 @@ export default function GestionPersonalPage() {
                     {areasPermitidas.map((areaNombre) => (
                       <span
                         key={areaNombre}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-brand-accent/50 text-[10px] text-brand-dark font-medium shadow-2xs"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-emerald-200/50 text-[10px] text-slate-800 font-medium shadow-2xs"
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         <span className="truncate max-w-[200px]">{areaNombre}</span>
@@ -932,12 +965,12 @@ export default function GestionPersonalPage() {
 
               {/* Campo de Foto de Perfil */}
               <div>
-                <label className="block text-[11px] font-bold text-brand-text mb-1.5 flex items-center gap-1.5">
+                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 flex items-center gap-1.5">
                   <span>📷</span> Foto de Perfil <span className="text-gray-400 font-normal">(Opcional)</span>
                 </label>
                 <div className="flex items-center gap-3">
                   {/* Preview de la foto */}
-                  <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-brand-accent/60 bg-brand-secondary/30 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-emerald-200/60 bg-emerald-50/30 flex items-center justify-center overflow-hidden shrink-0">
                     {nuevoFotoPerfil ? (
                       <img src={nuevoFotoPerfil} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
@@ -966,7 +999,7 @@ export default function GestionPersonalPage() {
                     />
                     <label
                       htmlFor="foto-perfil-input"
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-accent/60 bg-white text-[11px] font-semibold text-brand-dark cursor-pointer hover:border-brand-primary hover:bg-brand-secondary/30 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-200/60 bg-white text-[11px] font-semibold text-slate-800 cursor-pointer hover:border-emerald-600 hover:bg-emerald-50/30 transition-all"
                     >
                       📁 Seleccionar imagen
                     </label>
@@ -979,22 +1012,22 @@ export default function GestionPersonalPage() {
                         Quitar foto
                       </button>
                     )}
-                    <p className="text-[10px] text-brand-text/50 mt-1">JPG, PNG o WEBP · Máx 2 MB</p>
+                    <p className="text-[10px] text-slate-500/50 mt-1">JPG, PNG o WEBP · Máx 2 MB</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-brand-accent/30">
+              <div className="flex justify-end gap-2 pt-3 border-t border-emerald-200/30">
                 <button
                   type="button"
                   onClick={() => setShowRegistrarModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-brand-text hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-gray-100 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-brand-primary text-white hover:bg-brand-primary/90 shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-600/90 shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                 >
                   Guardar Empleado
                 </button>
@@ -1006,23 +1039,23 @@ export default function GestionPersonalPage() {
 
       {/* MODAL 2: CAMBIO DE ESTADO OBLIGATORIO CON SELECTOR VISUAL INTERACTIVO */}
       {showEstadoModal && empleadoSeleccionado && (
-        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white max-w-md w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-slide-down">
-            <div className="flex items-center gap-3 mb-4 border-b border-brand-accent/30 pb-3">
-              <div className="p-2.5 rounded-xl bg-brand-secondary text-brand-primary">
+        <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white max-w-md w-full rounded-3xl p-6 shadow-2xl border border-emerald-200/40 animate-slide-down">
+            <div className="flex items-center gap-3 mb-4 border-b border-emerald-200/30 pb-3">
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-heading font-bold text-brand-dark">
+                <h3 className="text-base font-heading font-bold text-slate-800">
                   Modificar Estado de {empleadoSeleccionado.nombres}
                 </h3>
-                <p className="text-xs text-brand-text/70">Documento: {empleadoSeleccionado.numeroDocumento}</p>
+                <p className="text-xs text-slate-500/70">Documento: {empleadoSeleccionado.numeroDocumento}</p>
               </div>
             </div>
 
             <form onSubmit={handleGuardarEstado} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-brand-text mb-2">
+                <label className="block text-xs font-bold text-slate-500 mb-2">
                   Seleccionar Nuevo Estado de Acceso:
                 </label>
                 
@@ -1094,7 +1127,7 @@ export default function GestionPersonalPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
                   Motivo de Cambio de Estado <span className="text-red-500">* (Obligatorio para Auditoría)</span>
                 </label>
                 <textarea
@@ -1109,15 +1142,15 @@ export default function GestionPersonalPage() {
                       ? 'Ejemplo: Bloqueo definitivo por finalización de contrato o falta grave...'
                       : 'Ejemplo: Reactivación autorizada tras cumplimiento de protocolo...'
                   }
-                  className="w-full px-3.5 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40 leading-relaxed"
+                  className="w-full px-3.5 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40 leading-relaxed"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-brand-accent/30">
+              <div className="flex justify-end gap-2 pt-2 border-t border-emerald-200/30">
                 <button
                   type="button"
                   onClick={() => setShowEstadoModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-brand-text hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-gray-100 cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1142,52 +1175,52 @@ export default function GestionPersonalPage() {
 
       {/* Modal Dinámico de Registro Exitoso con Estilo y Animación */}
       {showExitoModal && empleadoCreado && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-brand-accent/40 relative overflow-hidden transform animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-800/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-200/40 relative overflow-hidden transform animate-scale-up">
             {/* Elementos visuales decorativos */}
-            <div className="absolute -top-12 -right-12 w-36 h-36 bg-brand-light rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-accent/30 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-slate-50 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-200/30 rounded-full blur-xl pointer-events-none" />
 
             <div className="relative z-10 text-center">
               {/* Icono con pulsación y halo luminoso */}
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-accent/80 flex items-center justify-center shadow-lg shadow-brand-primary/30 text-white mb-4 animate-bounce">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-200/80 flex items-center justify-center shadow-lg shadow-emerald-600/30 text-white mb-4 animate-bounce">
                 <CheckCircle className="w-8 h-8" />
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-light border border-brand-accent/60 text-brand-dark text-[11px] font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-brand-primary animate-spin" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-emerald-200/60 text-slate-800 text-[11px] font-bold mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
                 ALTA DE PERSONAL COMPLETADA
               </div>
 
-              <h2 className="text-xl font-heading font-extrabold text-brand-dark mb-1">
+              <h2 className="text-xl font-heading font-extrabold text-slate-800 mb-1">
                 ¡Registro Exitoso!
               </h2>
-              <p className="text-xs text-brand-text/75 mb-5">
-                El colaborador ha sido ingresado al padrón oficial de <strong className="text-brand-dark font-semibold">Laboratorio XYZ</strong> con autorización de acceso activa.
+              <p className="text-xs text-slate-500/75 mb-5">
+                El colaborador ha sido ingresado al padrón oficial de <strong className="text-slate-800 font-semibold">Laboratorio XYZ</strong> con autorización de acceso activa.
               </p>
 
               {/* Ficha Resumen del Colaborador */}
-              <div className="bg-brand-secondary/70 p-4 rounded-2xl border border-brand-accent/50 text-left space-y-2 mb-6">
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Nombre Completo:</span>
-                  <span className="text-xs font-bold text-brand-dark">{empleadoCreado.nombres} {empleadoCreado.apellidos}</span>
+              <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/50 text-left space-y-2 mb-6">
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Nombre Completo:</span>
+                  <span className="text-xs font-bold text-slate-800">{empleadoCreado.nombres} {empleadoCreado.apellidos}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Cédula / Documento:</span>
-                  <span className="text-xs font-mono font-bold text-brand-primary">{empleadoCreado.numeroDocumento}</span>
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Cédula / Documento:</span>
+                  <span className="text-xs font-mono font-bold text-emerald-600">{empleadoCreado.numeroDocumento}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Departamento:</span>
-                  <span className="text-xs font-medium text-brand-dark">{empleadoCreado.departamentoNombre}</span>
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Departamento:</span>
+                  <span className="text-xs font-medium text-slate-800">{empleadoCreado.departamentoNombre}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Carnet Asignado (RFID):</span>
-                  <span className="text-xs font-mono font-bold text-brand-dark bg-white px-2 py-0.5 rounded-lg border border-brand-accent/50">
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Carnet Asignado (RFID):</span>
+                  <span className="text-xs font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded-lg border border-emerald-200/50">
                     {empleadoCreado.codigoTarjetaRfid}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] font-medium text-brand-text/70">Estado Inicial:</span>
+                  <span className="text-[11px] font-medium text-slate-500/70">Estado Inicial:</span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#4A9B8E]/15 text-[#2E6F64]">
                     <ShieldCheck className="w-3 h-3" />
                     ACTIVO
@@ -1202,7 +1235,7 @@ export default function GestionPersonalPage() {
                   setShowExitoModal(false);
                   setEmpleadoCreado(null);
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/40 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 Aceptar y Continuar
@@ -1214,11 +1247,11 @@ export default function GestionPersonalPage() {
 
       {/* Modal Dinámico Interactivo de Bitácora y Auditoría 21 CFR Part 11 */}
       {showBitacoraExitoModal && bitacoraInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-brand-accent/40 relative overflow-hidden transform animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-800/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-200/40 relative overflow-hidden transform animate-scale-up">
             {/* Efectos de fondo */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-100 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-secondary rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-50 rounded-full blur-xl pointer-events-none" />
 
             <div className="relative z-10 text-center">
               {/* Icono de Seguridad Dinámico según Estado */}
@@ -1247,12 +1280,12 @@ export default function GestionPersonalPage() {
                 {bitacoraInfo.nuevoEstado === 'REVOCADO' && 'BLOQUEO PERMANENTE AUDITADO'}
               </div>
 
-              <h2 className="text-xl font-heading font-extrabold text-brand-dark mb-1">
+              <h2 className="text-xl font-heading font-extrabold text-slate-800 mb-1">
                 {bitacoraInfo.nuevoEstado === 'ACTIVO' && '¡Colaborador Activado!'}
                 {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && '¡Suspensión Temporal Registrada!'}
                 {bitacoraInfo.nuevoEstado === 'REVOCADO' && '¡Acceso Revocado y Bloqueado!'}
               </h2>
-              <p className="text-xs text-brand-text/75 mb-4">
+              <p className="text-xs text-slate-500/75 mb-4">
                 La modificación ha sido procesada e inscrita de forma inmutable en el registro de auditoría.
               </p>
 
@@ -1265,15 +1298,15 @@ export default function GestionPersonalPage() {
                   : 'bg-red-50/60 border-red-200'
               }`}>
                 <div className="flex items-center justify-between pb-2 border-b border-black/5">
-                  <span className="text-[11px] font-medium text-brand-text/70">Colaborador:</span>
-                  <span className="text-xs font-bold text-brand-dark">{bitacoraInfo.empleadoNombre}</span>
+                  <span className="text-[11px] font-medium text-slate-500/70">Colaborador:</span>
+                  <span className="text-xs font-bold text-slate-800">{bitacoraInfo.empleadoNombre}</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-black/5">
-                  <span className="text-[11px] font-medium text-brand-text/70">Documento / ID:</span>
-                  <span className="text-xs font-mono font-bold text-brand-primary">{bitacoraInfo.documento}</span>
+                  <span className="text-[11px] font-medium text-slate-500/70">Documento / ID:</span>
+                  <span className="text-xs font-mono font-bold text-emerald-600">{bitacoraInfo.documento}</span>
                 </div>
                 <div className="flex items-center justify-between pb-2 border-b border-black/5">
-                  <span className="text-[11px] font-medium text-brand-text/70">Transición de Estado:</span>
+                  <span className="text-[11px] font-medium text-slate-500/70">Transición de Estado:</span>
                   <div className="flex items-center gap-1.5 text-xs font-bold">
                     <span className="text-slate-500 line-through text-[11px]">{bitacoraInfo.estadoAnterior}</span>
                     <span>→</span>
@@ -1289,14 +1322,14 @@ export default function GestionPersonalPage() {
                   </div>
                 </div>
                 <div className="flex items-start justify-between pb-2 border-b border-black/5">
-                  <span className="text-[11px] font-medium text-brand-text/70 shrink-0 mr-2">Motivo Registrado:</span>
-                  <span className="text-[11px] text-brand-dark font-medium text-right leading-tight italic">
+                  <span className="text-[11px] font-medium text-slate-500/70 shrink-0 mr-2">Motivo Registrado:</span>
+                  <span className="text-[11px] text-slate-800 font-medium text-right leading-tight italic">
                     &quot;{bitacoraInfo.motivo}&quot;
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] font-medium text-brand-text/70">Folio de Auditoría:</span>
-                  <span className="text-[10px] font-mono font-bold text-brand-dark bg-white px-2 py-0.5 rounded border border-black/10">
+                  <span className="text-[11px] font-medium text-slate-500/70">Folio de Auditoría:</span>
+                  <span className="text-[10px] font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-black/10">
                     {bitacoraInfo.codigoAuditoria}
                   </span>
                 </div>

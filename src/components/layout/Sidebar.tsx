@@ -107,18 +107,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         onMouseLeave={() => setIsHovered(false)}
         className={`
           fixed inset-y-0 left-0 z-50
-          bg-gradient-to-b from-[#EBF5EE] via-[#F4FAF6] to-[#E5F2E9]
-          border-r border-brand-accent/40
+          bg-white/80 backdrop-blur-2xl
+          border-r border-white/50
           flex flex-col justify-between min-h-screen
           transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-          shadow-md
           ${isOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'}
-          ${isHovered ? 'lg:w-72 lg:shadow-2xl' : 'lg:w-[76px]'}
+          ${isHovered ? 'lg:w-72 lg:shadow-[20px_0_40px_-15px_rgba(16,185,129,0.15)]' : 'lg:w-[76px] lg:shadow-md'}
         `}
       >
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Header del Menú con Icono de Hamburguesa Dinámico */}
-          <div className="p-3.5 border-b border-brand-accent/40 flex items-center justify-between">
+          <div className="p-3.5 border-b border-slate-100/50 flex items-center justify-between bg-white/30">
             <div className="flex items-center gap-3 overflow-hidden">
               {/* Botón/Logo Hamburguesa con Animación de Giro y Escala al Hover */}
               <div
@@ -164,12 +163,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Tarjeta de Usuario Compacta/Desplegada */}
           {user && (
             <div
-              className={`mx-2.5 my-3 p-2.5 rounded-2xl bg-white/90 border border-brand-accent/50 shadow-xs transition-all duration-300 ${
-                isHovered ? 'shadow-md border-brand-primary/40 bg-white' : ''
+              className={`mx-2.5 my-3 p-2.5 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all duration-300 ${
+                isHovered ? 'shadow-[0_8px_30px_rgba(16,185,129,0.12)] border-emerald-100' : ''
               }`}
             >
               <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="w-9 h-9 rounded-xl bg-brand-secondary text-brand-primary flex items-center justify-center shrink-0 border border-brand-accent/30">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100/50">
                   <UserCheck className="w-4 h-4" />
                 </div>
                 
@@ -178,10 +177,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     isExpanded ? 'opacity-100 translate-x-0 max-w-[180px]' : 'opacity-0 -translate-x-4 max-w-0 pointer-events-none'
                   }`}
                 >
-                  <p className="text-xs font-bold text-brand-dark truncate leading-tight">
+                  <p className="text-xs font-bold text-slate-800 truncate leading-tight">
                     {user.nombres} {user.apellidos}
                   </p>
-                  <span className="inline-block px-2 py-0.2 mt-0.5 text-[9px] font-extrabold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 truncate">
+                  <span className="inline-block px-2 py-0.5 mt-1 text-[9px] font-extrabold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 truncate">
                     {user.rol}
                   </span>
                 </div>
@@ -209,15 +208,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   style={{
                     transitionDelay: isHovered ? `${index * 20}ms` : '0ms',
                   }}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative overflow-hidden ${
                     isActive
-                      ? 'bg-gradient-to-r from-brand-primary to-emerald-700 text-white shadow-md shadow-brand-primary/20 scale-[1.02]'
-                      : 'text-slate-700 hover:bg-white hover:text-brand-dark hover:shadow-xs hover:scale-[1.02]'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 scale-[1.02] border border-emerald-400/50'
+                      : 'text-slate-600 hover:bg-emerald-50/80 hover:text-emerald-700 hover:shadow-sm hover:scale-[1.02] hover:border-emerald-100 border border-transparent'
                   }`}
                 >
+                  {/* Animación de brillo lateral en ítems activos */}
+                  {isActive && (
+                    <div className="absolute inset-0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 z-0"></div>
+                  )}
+
                   {/* Icono con Efecto de Brillo/Glow */}
-                  <div className={`shrink-0 p-1 rounded-lg transition-transform duration-200 ${
-                    isActive ? 'text-white' : 'text-brand-primary group-hover:scale-110 group-hover:text-emerald-700'
+                  <div className={`shrink-0 p-1 rounded-lg transition-transform duration-200 relative z-10 ${
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:scale-110 group-hover:text-emerald-600'
                   }`}>
                     <Icon className="w-4 h-4" />
                   </div>
@@ -251,12 +255,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Footer / Botón de Cerrar Sesión con Animación */}
-        <div className="p-2.5 border-t border-brand-accent/40 bg-white/40">
+        <div className="p-2.5 border-t border-slate-100/50 bg-white/40">
           <button
             onClick={solicitarConfirmacionSalir}
-            className={`flex items-center gap-3 w-full p-2.5 rounded-xl text-xs font-bold text-red-600 bg-red-50/80 hover:bg-red-600 hover:text-white border border-red-200 hover:border-red-600 transition-all duration-200 cursor-pointer shadow-2xs group hover:scale-[1.02]`}
+            className={`flex items-center gap-3 w-full p-2.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50/80 hover:bg-gradient-to-r hover:from-rose-500 hover:to-red-600 hover:text-white border border-rose-100 hover:border-rose-400 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg hover:shadow-rose-500/25 group hover:scale-[1.02] relative overflow-hidden`}
           >
-            <div className="shrink-0 p-1">
+            <div className="absolute inset-0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 z-0"></div>
+            <div className="shrink-0 p-1 relative z-10">
               <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             </div>
             

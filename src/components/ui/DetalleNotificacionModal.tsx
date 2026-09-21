@@ -66,7 +66,7 @@ export default function DetalleNotificacionModal({
           bg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
           badgeBg: 'bg-emerald-100 text-emerald-800',
           iconColor: 'text-emerald-600',
-          headerBg: 'bg-brand-primary',
+          headerBg: 'bg-emerald-600',
           label: 'Bitácora Regulatoria GxP (21 CFR Part 11)',
         };
     }
@@ -122,7 +122,7 @@ export default function DetalleNotificacionModal({
                   ID: {notificacion.id}
                 </span>
               </div>
-              <h3 className="text-base font-heading font-extrabold text-brand-dark mt-0.5 line-clamp-1">
+              <h3 className="text-base font-heading font-extrabold text-slate-800 mt-0.5 line-clamp-1">
                 {notificacion.titulo}
               </h3>
             </div>
@@ -139,15 +139,15 @@ export default function DetalleNotificacionModal({
         {/* Cuerpo del Modal con Scroll */}
         <div className="p-6 overflow-y-auto space-y-5">
           {/* Mensaje principal */}
-          <div className="p-4 rounded-2xl bg-brand-secondary/40 border border-brand-accent/40 text-sm text-brand-dark leading-relaxed">
+          <div className="p-4 rounded-2xl bg-emerald-50/40 border border-emerald-200/40 text-sm text-slate-800 leading-relaxed">
             <p className="font-medium">{notificacion.mensaje}</p>
-            <div className="flex items-center gap-4 mt-3 text-[11px] text-slate-500 pt-2 border-t border-brand-accent/20">
+            <div className="flex items-center gap-4 mt-3 text-[11px] text-slate-500 pt-2 border-t border-emerald-200/20">
               <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-brand-primary" />
+                <Clock className="w-3.5 h-3.5 text-emerald-600" />
                 {notificacion.timestamp}
               </span>
               <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-brand-primary" />
+                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                 {new Date(notificacion.fechaHoraIso).toLocaleString('es-CO')}
               </span>
             </div>
@@ -158,8 +158,8 @@ export default function DetalleNotificacionModal({
             <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/50 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Fingerprint className="w-4 h-4 text-brand-primary" />
-                  <h4 className="font-heading font-bold text-xs text-brand-dark uppercase tracking-wide">
+                  <Fingerprint className="w-4 h-4 text-emerald-600" />
+                  <h4 className="font-heading font-bold text-xs text-slate-800 uppercase tracking-wide">
                     Registro Formal de Auditoría GxP
                   </h4>
                 </div>
@@ -241,7 +241,7 @@ export default function DetalleNotificacionModal({
             {notificacion.accionUrl && (
               <button
                 onClick={handleIrAlModulo}
-                className="px-4 py-2 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 cursor-pointer"
               >
                 Ir al Módulo Afectado
                 <ArrowRight className="w-3.5 h-3.5" />

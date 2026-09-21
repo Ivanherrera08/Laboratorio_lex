@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { SincronizacionSocio } from '@/types';
 import {
   Globe2,
@@ -131,12 +133,17 @@ export default function SocioSyncPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Integración y Sincronización B2B</h1>
-          <p className="text-xs text-brand-text/70 mt-1">
+          <h1 className="text-2xl font-heading font-extrabold text-slate-800">Integración y Sincronización B2B</h1>
+          <p className="text-xs text-slate-500/70 mt-1">
             Monitoreo y exportación periódica de trazabilidad hacia el socio internacional (RF F-26 a F-30).
           </p>
         </div>
@@ -157,16 +164,16 @@ export default function SocioSyncPage() {
               
               window.location.href = `mailto:auditor@partner.com?subject=Reporte de Trazabilidad B2B - Zone Control&body=${body}`;
             }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-brand-accent/60 text-brand-dark font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-emerald-200/60 text-slate-800 font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
-            <Mail className="w-4 h-4 text-brand-primary" />
+            <Mail className="w-4 h-4 text-emerald-600" />
             <span>Abrir en Gmail / Correo</span>
           </button>
           
           <button
             onClick={handleForzarEnvio}
             disabled={forzando}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-4 h-4 ${forzando ? 'animate-spin' : ''}`} />
             <span>{forzando ? 'Transmitiendo al Socio...' : 'Forzar Sincronización Manual'}</span>
@@ -201,17 +208,17 @@ export default function SocioSyncPage() {
 
       {/* Barra de Progreso en Vivo cuando se pulsa Forzar */}
       {forzando && (
-        <div className="bg-white p-6 rounded-3xl border border-brand-accent/40 shadow-xs space-y-3 animate-fade-in">
-          <div className="flex items-center justify-between text-xs font-bold text-brand-dark">
-            <span className="flex items-center gap-2 text-brand-primary">
+        <div className="bg-white p-6 rounded-3xl border border-emerald-200/40 shadow-xs space-y-3 animate-fade-in">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+            <span className="flex items-center gap-2 text-emerald-600">
               <Sparkles className="w-4 h-4 animate-spin" />
               {pasoTexto}
             </span>
-            <span className="font-mono text-brand-primary font-extrabold">{progreso}%</span>
+            <span className="font-mono text-emerald-600 font-extrabold">{progreso}%</span>
           </div>
-          <div className="w-full bg-brand-secondary/70 rounded-full h-3 overflow-hidden p-0.5 border border-brand-accent/30">
+          <div className="w-full bg-emerald-50/70 rounded-full h-3 overflow-hidden p-0.5 border border-emerald-200/30">
             <div
-              className="bg-brand-primary h-2 rounded-full transition-all duration-300"
+              className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progreso}%` }}
             ></div>
           </div>
@@ -220,9 +227,9 @@ export default function SocioSyncPage() {
 
       {/* Tarjetas de Estado del Enlace */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-3xl border border-brand-accent/40 shadow-xs hover:shadow-sm transition-all">
+        <div className="bg-white p-5 rounded-3xl border border-emerald-200/40 shadow-xs hover:shadow-sm transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-brand-text/70">Estado del Endpoint</span>
+            <span className="text-xs font-bold text-slate-500/70">Estado del Endpoint</span>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
           </div>
           <p className="text-lg font-heading font-bold text-emerald-800 mt-2 flex items-center gap-1.5">
@@ -232,18 +239,18 @@ export default function SocioSyncPage() {
           <span className="text-[11px] text-gray-500 mt-1 block font-mono">partner-api.pharma-cloud.org</span>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-brand-accent/40 shadow-xs hover:shadow-sm transition-all">
-          <span className="text-xs font-bold text-brand-text/70">Frecuencia Automática</span>
-          <p className="text-lg font-heading font-bold text-brand-dark mt-2 flex items-center gap-1.5">
-            <Clock className="w-5 h-5 text-brand-primary" />
+        <div className="bg-white p-5 rounded-3xl border border-emerald-200/40 shadow-xs hover:shadow-sm transition-all">
+          <span className="text-xs font-bold text-slate-500/70">Frecuencia Automática</span>
+          <p className="text-lg font-heading font-bold text-slate-800 mt-2 flex items-center gap-1.5">
+            <Clock className="w-5 h-5 text-emerald-600" />
             Cada 24 Horas (02:00 UTC)
           </p>
           <span className="text-[11px] text-gray-500 mt-1 block">Próxima ejecución programada hoy</span>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-brand-accent/40 shadow-xs hover:shadow-sm transition-all">
-          <span className="text-xs font-bold text-brand-text/70">Reintentos Exponenciales</span>
-          <p className="text-lg font-heading font-bold text-brand-dark mt-2 flex items-center gap-1.5">
+        <div className="bg-white p-5 rounded-3xl border border-emerald-200/40 shadow-xs hover:shadow-sm transition-all">
+          <span className="text-xs font-bold text-slate-500/70">Reintentos Exponenciales</span>
+          <p className="text-lg font-heading font-bold text-slate-800 mt-2 flex items-center gap-1.5">
             <ShieldAlert className="w-5 h-5 text-amber-500" />
             Máximo 3 Intentos
           </p>
@@ -252,17 +259,17 @@ export default function SocioSyncPage() {
       </div>
 
       {/* Previsualización del Lote Actual (La "Información Real") */}
-      <div className="bg-white rounded-3xl border border-brand-accent/40 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-brand-accent/30 bg-brand-secondary/40 flex items-center justify-between">
+      <div className="bg-white rounded-3xl border border-emerald-200/40 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-emerald-200/30 bg-emerald-50/40 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <List className="w-4 h-4 text-brand-primary" />
-            <h3 className="font-heading font-bold text-sm text-brand-dark">Registros Actuales Pendientes de Envío (Vista Previa)</h3>
+            <List className="w-4 h-4 text-emerald-600" />
+            <h3 className="font-heading font-bold text-sm text-slate-800">Registros Actuales Pendientes de Envío (Vista Previa)</h3>
           </div>
-          <span className="text-xs text-brand-text/60 font-semibold">{mockLoteActual.length} Registros Nuevos</span>
+          <span className="text-xs text-slate-500/60 font-semibold">{mockLoteActual.length} Registros Nuevos</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-brand-light border-b border-brand-accent/30 text-brand-dark font-bold">
+            <thead className="bg-slate-50 border-b border-emerald-200/30 text-slate-800 font-bold">
               <tr>
                 <th className="p-3">Persona Asociada</th>
                 <th className="p-3">Área Restringida</th>
@@ -270,11 +277,11 @@ export default function SocioSyncPage() {
                 <th className="p-3">Marca de Tiempo</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-brand-accent/20">
+            <tbody className="divide-y divide-emerald-200/20">
               {mockLoteActual.map((item) => (
-                <tr key={item.id} className="hover:bg-brand-light/60 transition-colors">
-                  <td className="p-3 font-semibold text-brand-dark">{item.empleadoNombreCompleto}</td>
-                  <td className="p-3 text-brand-text font-medium">{item.areaNombre}</td>
+                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="p-3 font-semibold text-slate-800">{item.empleadoNombreCompleto}</td>
+                  <td className="p-3 text-slate-500 font-medium">{item.areaNombre}</td>
                   <td className="p-3">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
@@ -286,7 +293,7 @@ export default function SocioSyncPage() {
                       {item.resultadoAcceso}
                     </span>
                   </td>
-                  <td className="p-3 font-mono text-[11px] text-brand-text/80">
+                  <td className="p-3 font-mono text-[11px] text-slate-500/80">
                     {new Date(item.timestamp).toLocaleString()}
                   </td>
                 </tr>
@@ -297,18 +304,18 @@ export default function SocioSyncPage() {
       </div>
 
       {/* Tabla de Lotes Sincronizados */}
-      <div className="bg-white rounded-3xl border border-brand-accent/40 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-brand-accent/30 bg-brand-secondary/40 flex items-center justify-between">
+      <div className="bg-white rounded-3xl border border-emerald-200/40 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-emerald-200/30 bg-emerald-50/40 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Globe2 className="w-4 h-4 text-brand-primary" />
-            <h3 className="font-heading font-bold text-sm text-brand-dark">Historial de Transmisiones de Lotes</h3>
+            <Globe2 className="w-4 h-4 text-emerald-600" />
+            <h3 className="font-heading font-bold text-sm text-slate-800">Historial de Transmisiones de Lotes</h3>
           </div>
-          <span className="text-xs text-brand-text/60 font-semibold">Trazabilidad Internacional</span>
+          <span className="text-xs text-slate-500/60 font-semibold">Trazabilidad Internacional</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-brand-secondary/70 border-b border-brand-accent/30 text-brand-dark font-bold">
+            <thead className="bg-emerald-50/70 border-b border-emerald-200/30 text-slate-800 font-bold">
               <tr>
                 <th className="p-4">ID Lote</th>
                 <th className="p-4">Período Auditado</th>
@@ -318,18 +325,18 @@ export default function SocioSyncPage() {
                 <th className="p-4">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-brand-accent/20">
+            <tbody className="divide-y divide-emerald-200/20">
               {sincronizaciones.map((sync) => (
-                <tr key={sync.id} className="hover:bg-brand-light/60 transition-colors">
-                  <td className="p-4 font-mono font-bold text-brand-dark">#SYNC-{sync.id}</td>
-                  <td className="p-4 text-brand-text font-medium">
+                <tr key={sync.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="p-4 font-mono font-bold text-slate-800">#SYNC-{sync.id}</td>
+                  <td className="p-4 text-slate-500 font-medium">
                     {new Date(sync.periodoInicio).toLocaleDateString()} —{' '}
                     {new Date(sync.periodoFin).toLocaleDateString()}
                   </td>
-                  <td className="p-4 text-brand-text/70">
+                  <td className="p-4 text-slate-500/70">
                     {sync.fechaEnvio ? new Date(sync.fechaEnvio).toLocaleString() : 'Pendiente'}
                   </td>
-                  <td className="p-4 font-semibold text-brand-dark">{sync.intentosRealizados} / 3</td>
+                  <td className="p-4 font-semibold text-slate-800">{sync.intentosRealizados} / 3</td>
                   <td className="p-4 font-mono font-bold">
                     <span
                       className={`px-2 py-0.5 rounded text-[11px] font-bold ${
@@ -362,6 +369,6 @@ export default function SocioSyncPage() {
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import {
   FileSpreadsheet,
   UploadCloud,
@@ -139,24 +141,29 @@ export default function CargaMasivaPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Carga Masiva de Personal</h1>
-          <p className="text-xs text-brand-text/70 mt-1">
+          <h1 className="text-2xl font-heading font-extrabold text-slate-800">Carga Masiva de Personal</h1>
+          <p className="text-xs text-slate-500/70 mt-1">
             Incorporación por archivo plano CSV con validación previa de integridad (RF F-16, CU-16).
           </p>
         </div>
 
         <button
           onClick={descargarPlantilla}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-accent/60 hover:bg-brand-secondary/50 text-brand-text font-semibold text-xs shadow-xs transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-emerald-200/60 hover:bg-emerald-50/50 text-slate-500 font-semibold text-xs shadow-xs transition-all cursor-pointer"
         >
-          <Download className="w-4 h-4 text-brand-primary" />
+          <Download className="w-4 h-4 text-emerald-600" />
           Descargar Plantilla CSV
         </button>
       </div>
 
       {/* 1. SECCIÓN DE CARGA (SOLO SE MUESTRA SI NO SE HA PROCESADO AÚN) */}
       {!resultado && (
-        <div className="space-y-6">
+        <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
           {/* Zona Drag & Drop */}
           <div
             onDragEnter={handleDrag}
@@ -165,30 +172,30 @@ export default function CargaMasivaPage() {
             onDrop={handleDrop}
             className={`p-10 rounded-3xl border-2 border-dashed transition-all text-center flex flex-col items-center justify-center ${
               dragActive
-                ? 'border-brand-primary bg-brand-secondary/60 scale-[1.01]'
+                ? 'border-emerald-600 bg-emerald-50/60 scale-[1.01]'
                 : file
-                ? 'border-brand-primary bg-emerald-50/40'
-                : 'border-brand-accent/80 bg-white'
+                ? 'border-emerald-600 bg-emerald-50/40'
+                : 'border-emerald-200/80 bg-white'
             }`}
           >
             <div
               className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm transition-all ${
-                file ? 'bg-emerald-100 text-emerald-700' : 'bg-brand-secondary text-brand-primary'
+                file ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600'
               }`}
             >
               {file ? <FileSpreadsheet className="w-8 h-8" /> : <UploadCloud className="w-8 h-8" />}
             </div>
 
-            <h3 className="font-heading font-bold text-base text-brand-dark mb-1">
+            <h3 className="font-heading font-bold text-base text-slate-800 mb-1">
               {file ? `Archivo Seleccionado: ${file.name}` : 'Arrastre su archivo CSV o haga clic para examinar'}
             </h3>
-            <p className="text-xs text-brand-text/60 mb-4 max-w-sm">
+            <p className="text-xs text-slate-500/60 mb-4 max-w-sm">
               {file
                 ? `Tamaño: ${(file.size / 1024).toFixed(1)} KB — Listo para procesar`
                 : 'Formato requerido: CSV delimitado por comas con codificación UTF-8.'}
             </p>
 
-            <label className="cursor-pointer px-4 py-2 rounded-xl bg-brand-secondary hover:bg-brand-accent/30 text-brand-dark font-semibold text-xs transition-all">
+            <label className="cursor-pointer px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-200/30 text-slate-800 font-semibold text-xs transition-all">
               {file ? 'Cambiar Archivo' : 'Seleccionar Archivo CSV'}
               <input
                 type="file"
@@ -201,17 +208,17 @@ export default function CargaMasivaPage() {
 
           {/* Barra de Progreso durante el procesamiento */}
           {procesando && (
-            <div className="bg-white p-6 rounded-2xl border border-brand-accent/40 shadow-xs space-y-3">
-              <div className="flex items-center justify-between text-xs font-bold text-brand-dark">
+            <div className="bg-white p-6 rounded-2xl border border-emerald-200/40 shadow-xs space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                 <span className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-brand-primary animate-spin" />
+                  <Sparkles className="w-4 h-4 text-emerald-600 animate-spin" />
                   {pasoTexto}
                 </span>
-                <span className="font-mono text-brand-primary">{progreso}%</span>
+                <span className="font-mono text-emerald-600">{progreso}%</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-brand-primary h-3 rounded-full transition-all duration-300"
+                  className="bg-emerald-600 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${progreso}%` }}
                 ></div>
               </div>
@@ -223,7 +230,7 @@ export default function CargaMasivaPage() {
             <div className="flex justify-end">
               <button
                 onClick={handleProcesar}
-                className="px-6 py-3 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-semibold text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 Iniciar Carga Masiva y Validación
@@ -287,7 +294,7 @@ export default function CargaMasivaPage() {
 
           {/* Tarjetas de Métricas de Ingesta */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-brand-accent/40 shadow-xs">
+            <div className="bg-white p-5 rounded-2xl border border-emerald-200/40 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500">Registros Exitosos</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -298,7 +305,7 @@ export default function CargaMasivaPage() {
               <span className="text-[11px] text-emerald-700 font-medium">Incorporados a tabla de Personal</span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-brand-accent/40 shadow-xs">
+            <div className="bg-white p-5 rounded-2xl border border-emerald-200/40 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500">Inconsistencias / Rechazados</span>
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -309,22 +316,22 @@ export default function CargaMasivaPage() {
               <span className="text-[11px] text-red-700 font-medium">Rechazados por validación previa</span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-brand-accent/40 shadow-xs">
+            <div className="bg-white p-5 rounded-2xl border border-emerald-200/40 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500">Tasa de Efectividad</span>
-                <ShieldCheck className="w-4 h-4 text-brand-primary" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
               </div>
-              <p className="text-3xl font-heading font-extrabold text-brand-primary mt-1">
+              <p className="text-3xl font-heading font-extrabold text-emerald-600 mt-1">
                 {((resultado.exitosos / resultado.total) * 100).toFixed(1)}%
               </p>
-              <span className="text-[11px] text-brand-text/70 font-medium">Lote #{resultado.loteId}</span>
+              <span className="text-[11px] text-slate-500/70 font-medium">Lote #{resultado.loteId}</span>
             </div>
           </div>
 
           {/* Detalle de Errores Encontrados */}
           {resultado.errores.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 border border-brand-accent/40 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-brand-accent/20 pb-3">
+            <div className="bg-white rounded-2xl p-6 border border-emerald-200/40 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-emerald-200/20 pb-3">
                 <div className="flex items-center gap-2 text-red-800 font-bold text-xs">
                   <AlertTriangle className="w-4 h-4 text-red-600" />
                   <span>Detalle de Filas Rechazadas (Auditoría de Ingesta)</span>
@@ -345,7 +352,7 @@ export default function CargaMasivaPage() {
                     {resultado.errores.map((err, idx) => (
                       <tr key={idx} className="hover:bg-red-50/40">
                         <td className="p-3 font-mono font-bold text-red-700">Fila #{err.linea}</td>
-                        <td className="p-3 font-mono font-semibold text-brand-dark">{err.documento}</td>
+                        <td className="p-3 font-mono font-semibold text-slate-800">{err.documento}</td>
                         <td className="p-3 text-red-700 font-medium">{err.error}</td>
                       </tr>
                     ))}
@@ -356,18 +363,18 @@ export default function CargaMasivaPage() {
           )}
 
           {/* Barra de Acciones Finales */}
-          <div className="p-4 bg-brand-secondary rounded-2xl border border-brand-accent/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/40 flex flex-col sm:flex-row items-center justify-between gap-3">
             <button
               onClick={handleReiniciar}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-accent/60 text-brand-dark text-xs font-semibold hover:bg-brand-light shadow-xs transition-all cursor-pointer w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-emerald-200/60 text-slate-800 text-xs font-semibold hover:bg-slate-50 shadow-xs transition-all cursor-pointer w-full sm:w-auto justify-center"
             >
-              <RotateCcw className="w-4 h-4 text-brand-primary" />
+              <RotateCcw className="w-4 h-4 text-emerald-600" />
               Subir Otro Archivo CSV
             </button>
 
             <Link
               href="/dashboard/personal"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary/90 shadow-md transition-all w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-600/90 shadow-md transition-all w-full sm:w-auto justify-center"
             >
               <Database className="w-4 h-4" />
               Ver Empleados en Padrón Activo
@@ -376,6 +383,6 @@ export default function CargaMasivaPage() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

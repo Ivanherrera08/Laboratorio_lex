@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
 import { HistorialAcceso } from '@/types';
 import {
   FileText,
@@ -122,17 +124,22 @@ export default function HistorialAccesosPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
-          <h1 className="text-2xl font-heading font-extrabold text-brand-dark flex items-center gap-2">
+          <h1 className="text-2xl font-heading font-extrabold text-slate-800 flex items-center gap-2">
             Historial Inmutable de Accesos
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary font-bold">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-600/10 text-emerald-600 font-bold">
               {filtrados.length} {filtrados.length === 1 ? 'registro' : 'registros'}
             </span>
           </h1>
-          <p className="text-xs text-brand-text/70 mt-1">
+          <p className="text-xs text-slate-500/70 mt-1">
             Auditoría continua de todos los intentos de acceso registrados en torniquetes, lectores biométricos y simulador.
           </p>
         </div>
@@ -141,10 +148,10 @@ export default function HistorialAccesosPage() {
           <button
             onClick={() => cargarDatos(true)}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-brand-accent/60 text-brand-dark text-xs font-semibold hover:bg-brand-secondary/40 shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-emerald-200/60 text-slate-800 text-xs font-semibold hover:bg-emerald-50/40 shadow-xs transition-colors"
             title="Sincronizar con servidor"
           >
-            <RotateCw className={`w-3.5 h-3.5 text-brand-primary ${loading ? 'animate-spin' : ''}`} />
+            <RotateCw className={`w-3.5 h-3.5 text-emerald-600 ${loading ? 'animate-spin' : ''}`} />
             Sincronizar
           </button>
           <button
@@ -157,14 +164,14 @@ export default function HistorialAccesosPage() {
           </button>
           <button
             onClick={exportarCSV}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-brand-accent/60 text-brand-dark text-xs font-semibold hover:bg-brand-secondary/40 shadow-xs transition-colors"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-emerald-200/60 text-slate-800 text-xs font-semibold hover:bg-emerald-50/40 shadow-xs transition-colors"
           >
-            <Download className="w-3.5 h-3.5 text-brand-primary" />
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
             Exportar CSV
           </button>
           <button
             onClick={exportarPDF}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary/90 shadow-sm transition-colors"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-600/90 shadow-sm transition-colors"
           >
             <FileText className="w-3.5 h-3.5" />
             Imprimir / PDF
@@ -179,15 +186,15 @@ export default function HistorialAccesosPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white p-4 rounded-2xl border border-brand-accent/40 shadow-xs grid grid-cols-1 sm:grid-cols-12 gap-3 items-center print:hidden">
+      <div className="bg-white p-4 rounded-2xl border border-emerald-200/40 shadow-xs grid grid-cols-1 sm:grid-cols-12 gap-3 items-center print:hidden">
         <div className="sm:col-span-4 relative">
-          <Search className="w-4 h-4 text-brand-text/50 absolute left-3.5 top-3" />
+          <Search className="w-4 h-4 text-slate-500/50 absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Buscar por documento, carnet, nombre o área..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-brand-accent/60 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
           />
         </div>
 
@@ -195,7 +202,7 @@ export default function HistorialAccesosPage() {
           <select
             value={filtroResultado}
             onChange={(e) => setFiltroResultado(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/40 font-semibold"
+            className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/40 font-semibold"
           >
             <option value="TODOS">Todos los Resultados</option>
             <option value="AUTORIZADO">Solo AUTORIZADOS</option>
@@ -205,42 +212,42 @@ export default function HistorialAccesosPage() {
         </div>
 
         <div className="sm:col-span-5 flex items-center gap-2">
-          <div className="flex items-center gap-1 text-xs text-brand-text/70">
-            <Calendar className="w-3.5 h-3.5 text-brand-primary" />
+          <div className="flex items-center gap-1 text-xs text-slate-500/70">
+            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
             <span>Rango:</span>
           </div>
           <input
             type="date"
             value={fechaInicio}
             onChange={(e) => setFechaInicio(e.target.value)}
-            className="w-full px-2 py-1.5 rounded-xl border border-brand-accent/60 text-xs"
+            className="w-full px-2 py-1.5 rounded-xl border border-emerald-200/60 text-xs"
           />
           <span className="text-xs text-gray-400">-</span>
           <input
             type="date"
             value={fechaFin}
             onChange={(e) => setFechaFin(e.target.value)}
-            className="w-full px-2 py-1.5 rounded-xl border border-brand-accent/60 text-xs"
+            className="w-full px-2 py-1.5 rounded-xl border border-emerald-200/60 text-xs"
           />
         </div>
       </div>
 
       {/* Tabla de Historial */}
-      <div className="bg-white rounded-2xl border border-brand-accent/40 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-emerald-200/40 shadow-xs overflow-hidden">
         {filtrados.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-brand-secondary/60 flex items-center justify-center mb-3 text-brand-primary">
+            <div className="w-12 h-12 rounded-full bg-emerald-50/60 flex items-center justify-center mb-3 text-emerald-600">
               <ShieldAlert className="w-6 h-6" />
             </div>
-            <h3 className="font-heading font-bold text-brand-dark text-sm">No hay registros que coincidan</h3>
-            <p className="text-xs text-brand-text/70 max-w-sm mt-1">
+            <h3 className="font-heading font-bold text-slate-800 text-sm">No hay registros que coincidan</h3>
+            <p className="text-xs text-slate-500/70 max-w-sm mt-1">
               No se han encontrado registros con los filtros actuales. Puedes ir al <strong>Simulador de Acceso</strong> para escanear documentos o carnets y generar eventos en tiempo real.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-brand-secondary/70 border-b border-brand-accent/30 text-brand-dark font-bold">
+              <thead className="bg-emerald-50/70 border-b border-emerald-200/30 text-slate-800 font-bold">
                 <tr>
                   <th className="p-4">Timestamp (UTC / Local)</th>
                   <th className="p-4">Credencial / Identificador</th>
@@ -250,26 +257,26 @@ export default function HistorialAccesosPage() {
                   <th className="p-4">Detalle / Motivo</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-accent/20">
+              <tbody className="divide-y divide-emerald-200/20">
                 {filtrados.map((item) => (
-                  <tr key={item.id} className="hover:bg-brand-light/60 transition-colors">
-                    <td className="p-4 font-mono text-[11px] text-brand-text/80 whitespace-nowrap">
+                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="p-4 font-mono text-[11px] text-slate-500/80 whitespace-nowrap">
                       {new Date(item.timestamp).toLocaleString()}
                     </td>
                     <td className="p-4 whitespace-nowrap">
-                      <p className="font-mono font-bold text-brand-dark">{item.numeroDocumentoIngresado || '—'}</p>
+                      <p className="font-mono font-bold text-slate-800">{item.numeroDocumentoIngresado || '—'}</p>
                       {item.codigoTarjetaIngresado && (
-                        <span className="text-[10px] text-brand-primary font-mono block">
+                        <span className="text-[10px] text-emerald-600 font-mono block">
                           {item.codigoTarjetaIngresado}
                         </span>
                       )}
                     </td>
-                    <td className="p-4 font-semibold text-brand-dark">
+                    <td className="p-4 font-semibold text-slate-800">
                       {item.empleadoNombreCompleto || (
                         <span className="text-gray-400 italic">No empadronado</span>
                       )}
                     </td>
-                    <td className="p-4 text-brand-text font-medium">{item.areaNombre}</td>
+                    <td className="p-4 text-slate-500 font-medium">{item.areaNombre}</td>
                     <td className="p-4 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
@@ -286,7 +293,7 @@ export default function HistorialAccesosPage() {
                         {item.resultadoAcceso}
                       </span>
                     </td>
-                    <td className="p-4 text-brand-text/70 text-[11px] max-w-xs break-words">
+                    <td className="p-4 text-slate-500/70 text-[11px] max-w-xs break-words">
                       {item.motivoDenegacion || 'Acceso concedido exitosamente'}
                     </td>
                   </tr>
@@ -296,6 +303,6 @@ export default function HistorialAccesosPage() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

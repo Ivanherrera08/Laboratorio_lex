@@ -8,6 +8,7 @@ import Header from '@/components/layout/Header';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 import { RolUsuario } from '@/types';
 import { usePreventBackNavigation } from '@/hooks/usePreventBackNavigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Matriz estricta de permisos por ruta (RBAC)
 const routePermissions: Record<string, RolUsuario[]> = {
@@ -24,11 +25,11 @@ const routePermissions: Record<string, RolUsuario[]> = {
 // Pantalla de carga neutral — mismo contenido en SSR y CSR para evitar hydration mismatch
 function LoadingScreen({ message }: { message: string }) {
   return (
-    <div className="min-h-screen bg-brand-light flex flex-col items-center justify-center space-y-4">
-      <div className="w-12 h-12 rounded-2xl bg-brand-secondary flex items-center justify-center text-brand-primary animate-pulse border border-brand-accent/40 shadow-xs">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-4">
+      <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 animate-pulse border border-emerald-200/40 shadow-xs">
         <ShieldCheck className="w-6 h-6" />
       </div>
-      <p className="text-xs font-bold text-brand-dark animate-pulse">{message}</p>
+      <p className="text-xs font-bold text-slate-800 animate-pulse">{message}</p>
     </div>
   );
 }
@@ -105,32 +106,42 @@ export default function DashboardLayout({
   // Sin el rol requerido para la ruta (RBAC Guard)
   if (accesoPermitido === false) {
     return (
-      <div className="flex min-h-screen bg-brand-light">
+      <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
+        {/* Fondo animado */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <motion.div animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, -30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }} className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-200/40 mix-blend-multiply filter blur-[100px]" />
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#10b981 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+        </div>
+        
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <div className="flex-1 flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col min-h-screen relative z-10">
           <Header
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isSidebarOpen={isSidebarOpen}
           />
           <main className="p-8 flex-1 flex flex-col items-center justify-center text-center">
-            <div className="max-w-md bg-white p-8 rounded-3xl border border-red-200 shadow-lg space-y-4 animate-fade-in">
-              <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-200">
-                <ShieldAlert className="w-7 h-7" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="max-w-md bg-white/80 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/50 shadow-2xl space-y-4"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto border border-rose-100 shadow-inner">
+                <ShieldAlert className="w-8 h-8" />
               </div>
-              <h2 className="font-heading font-extrabold text-xl text-brand-dark">
-                Acceso Restringido por Nivel de Rol
+              <h2 className="font-heading font-black text-2xl text-slate-800 tracking-tight">
+                Acceso Restringido
               </h2>
-              <p className="text-xs text-brand-text/70 leading-relaxed">
-                Su rol actual (<strong className="text-brand-dark">{user?.rol}</strong>) no cuenta con las
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                Su rol actual (<strong className="text-emerald-600">{user?.rol}</strong>) no cuenta con las
                 atribuciones de seguridad requeridas para operar en este módulo.
               </p>
               <button
                 onClick={() => router.replace('/dashboard/simulador')}
-                className="px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary/90 shadow-md transition-all cursor-pointer"
+                className="mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/30 transition-all cursor-pointer w-full"
               >
                 Volver al Simulador de Acceso
               </button>
-            </div>
+            </motion.div>
           </main>
         </div>
       </div>
@@ -138,15 +149,53 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-brand-light">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col overflow-x-hidden min-h-screen">
-        <Header
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          isSidebarOpen={isSidebarOpen}
+    <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
+      {/* Global Animated Background para toda la aplicación */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, -30, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-200/40 mix-blend-multiply filter blur-[100px]"
         />
-        {/* Contenido protegido */}
-        <main className="p-4 sm:p-8 flex-1">{children}</main>
+        <motion.div 
+          animate={{ scale: [1, 1.3, 1], x: [0, -40, 0], y: [0, 50, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute top-[40%] -right-[10%] w-[40%] h-[60%] rounded-full bg-teal-200/30 mix-blend-multiply filter blur-[120px]"
+        />
+        <motion.div 
+          animate={{ scale: [1, 1.5, 1], x: [0, 30, 0], y: [0, -40, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+          className="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] rounded-full bg-green-200/30 mix-blend-multiply filter blur-[100px]"
+        />
+        
+        {/* Patrón de puntos sutil */}
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#10b981 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+      </div>
+
+      {/* Z-10 Context for Interactive Elements */}
+      <div className="relative z-20 flex min-h-screen w-full">
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <div className="flex-1 flex flex-col overflow-x-hidden min-h-screen relative">
+          <Header
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            isSidebarOpen={isSidebarOpen}
+          />
+          {/* Contenido protegido con transiciones de página */}
+          <main className="p-4 sm:p-8 flex-1 relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 15, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.99 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="h-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
       </div>
     </div>
   );

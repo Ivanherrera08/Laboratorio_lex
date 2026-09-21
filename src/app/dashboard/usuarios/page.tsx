@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { UsuarioAuth, RolUsuario } from '@/types';
 import {
   UserCog,
@@ -395,12 +396,17 @@ export default function UsuariosSistemaPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-extrabold text-brand-dark">Usuarios del Sistema y Credenciales</h1>
-          <p className="text-xs text-brand-text/70 mt-1">
+          <h1 className="text-2xl font-heading font-extrabold text-slate-800">Usuarios del Sistema y Credenciales</h1>
+          <p className="text-xs text-slate-500/70 mt-1">
             Gestión de operadores internos con autenticación, validación Bean Validation y asignación de roles RBAC.
           </p>
         </div>
@@ -409,15 +415,15 @@ export default function UsuariosSistemaPage() {
           <button
             onClick={cargarUsuariosBackend}
             disabled={cargando}
-            className="p-2.5 rounded-xl border border-brand-accent/40 bg-white hover:bg-brand-secondary text-brand-dark transition-all cursor-pointer shadow-xs disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-emerald-200/40 bg-white hover:bg-emerald-50 text-slate-800 transition-all cursor-pointer shadow-xs disabled:opacity-50"
             title="Sincronizar con PostgreSQL"
           >
-            <RefreshCw className={`w-4 h-4 text-brand-primary ${cargando ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-emerald-600 ${cargando ? 'animate-spin' : ''}`} />
           </button>
 
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-semibold text-xs shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
             <Plus className="w-4 h-4" />
             Registrar Usuario Interno
@@ -441,8 +447,8 @@ export default function UsuariosSistemaPage() {
       )}
 
       {/* Barra de Búsqueda */}
-      <div className="bg-white p-3.5 rounded-2xl border border-brand-accent/40 shadow-xs flex items-center gap-3">
-        <Search className="w-4 h-4 text-brand-text/50" />
+      <div className="bg-white p-3.5 rounded-2xl border border-emerald-200/40 shadow-xs flex items-center gap-3">
+        <Search className="w-4 h-4 text-slate-500/50" />
         <input
           type="text"
           placeholder="Buscar por cédula, nombre, correo institucional o rol..."
@@ -453,10 +459,10 @@ export default function UsuariosSistemaPage() {
       </div>
 
       {/* Tabla de Usuarios del Sistema */}
-      <div className="bg-white rounded-3xl border border-brand-accent/40 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-emerald-200/40 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-brand-secondary/70 border-b border-brand-accent/30 text-brand-dark font-bold">
+            <thead className="bg-emerald-50/70 border-b border-emerald-200/30 text-slate-800 font-bold">
               <tr>
                 <th className="p-4">Cédula / Documento</th>
                 <th className="p-4">Operador / Nombre Completo</th>
@@ -466,7 +472,7 @@ export default function UsuariosSistemaPage() {
                 <th className="p-4 text-right">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-brand-accent/20">
+            <tbody className="divide-y divide-emerald-200/20">
               {cargando && usuarios.length === 0 ? (
                 // Skeletons de Carga
                 Array.from({ length: 3 }).map((_, idx) => (
@@ -481,12 +487,12 @@ export default function UsuariosSistemaPage() {
                 ))
               ) : usuariosFiltrados.length > 0 ? (
                 usuariosFiltrados.map((item) => (
-                  <tr key={item.id} className="hover:bg-brand-light/60 transition-colors">
-                    <td className="p-4 font-mono font-bold text-brand-dark">{item.documento}</td>
-                    <td className="p-4 font-semibold text-brand-dark">
+                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="p-4 font-mono font-bold text-slate-800">{item.documento}</td>
+                    <td className="p-4 font-semibold text-slate-800">
                       {item.nombres} {item.apellidos}
                     </td>
-                    <td className="p-4 text-brand-text/80 font-mono text-[11px]">{item.correo}</td>
+                    <td className="p-4 text-slate-500/80 font-mono text-[11px]">{item.correo}</td>
                     <td className="p-4">
                       <span
                         className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
@@ -546,19 +552,19 @@ export default function UsuariosSistemaPage() {
 
       {/* MODAL: REGISTRO DE USUARIO CON CREDENCIALES */}
       {showModal && (
-        <div className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-brand-accent/40 animate-modal-pop relative max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-emerald-200/40 animate-modal-pop relative max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between gap-3 mb-4 border-b border-brand-accent/30 pb-3 shrink-0">
+            <div className="flex items-center justify-between gap-3 mb-4 border-b border-emerald-200/30 pb-3 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-brand-secondary text-brand-primary">
+                <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600">
                   <UserCog className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-heading font-bold text-brand-dark">
+                  <h3 className="text-base font-heading font-bold text-slate-800">
                     Crear Usuario con Credenciales
                   </h3>
-                  <p className="text-xs text-brand-text/70">
+                  <p className="text-xs text-slate-500/70">
                     Validación estricta de formatos institucionales y roles RBAC.
                   </p>
                 </div>
@@ -577,10 +583,10 @@ export default function UsuariosSistemaPage() {
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text">
+                    <label className="block text-[11px] font-bold text-slate-500">
                       Nombres * <span className="text-gray-400 font-normal">(Solo letras)</span>
                     </label>
-                    <span className="text-[10px] font-mono text-brand-primary">{nombres.length}/50</span>
+                    <span className="text-[10px] font-mono text-emerald-600">{nombres.length}/50</span>
                   </div>
                   <input
                     type="text"
@@ -592,17 +598,17 @@ export default function UsuariosSistemaPage() {
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
                       errores.nombres
                         ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                        : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                        : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {errores.nombres && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.nombres}</p>}
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text">
+                    <label className="block text-[11px] font-bold text-slate-500">
                       Apellidos * <span className="text-gray-400 font-normal">(Solo letras)</span>
                     </label>
-                    <span className="text-[10px] font-mono text-brand-primary">{apellidos.length}/50</span>
+                    <span className="text-[10px] font-mono text-emerald-600">{apellidos.length}/50</span>
                   </div>
                   <input
                     type="text"
@@ -614,7 +620,7 @@ export default function UsuariosSistemaPage() {
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
                       errores.apellidos
                         ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                        : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                        : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {errores.apellidos && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.apellidos}</p>}
@@ -624,10 +630,10 @@ export default function UsuariosSistemaPage() {
               {/* Cédula */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-bold text-brand-text">
+                  <label className="block text-[11px] font-bold text-slate-500">
                     Cédula de Ciudadanía (CC) * <span className="text-gray-400 font-normal">(4 - 12 dígitos)</span>
                   </label>
-                  <span className="text-[10px] font-mono text-brand-primary">{doc.length}/12</span>
+                  <span className="text-[10px] font-mono text-emerald-600">{doc.length}/12</span>
                 </div>
                 <input
                   type="text"
@@ -639,7 +645,7 @@ export default function UsuariosSistemaPage() {
                   className={`w-full px-3.5 py-2 rounded-xl border text-xs font-mono font-bold focus:outline-none focus:ring-2 ${
                     errores.doc
                       ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                      : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                      : 'border-emerald-200/60 focus:ring-emerald-600/40'
                   }`}
                 />
                 {errores.doc && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.doc}</p>}
@@ -649,8 +655,8 @@ export default function UsuariosSistemaPage() {
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text">Correo Institucional *</label>
-                    <span className="text-[10px] font-mono text-brand-primary">{correo.length}/100</span>
+                    <label className="block text-[11px] font-bold text-slate-500">Correo Institucional *</label>
+                    <span className="text-[10px] font-mono text-emerald-600">{correo.length}/100</span>
                   </div>
                   <input
                     type="email"
@@ -662,17 +668,17 @@ export default function UsuariosSistemaPage() {
                     className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 ${
                       errores.correo
                         ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                        : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                        : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {errores.correo && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.correo}</p>}
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-brand-text">
+                    <label className="block text-[11px] font-bold text-slate-500">
                       Celular <span className="text-gray-400 font-normal">(10 dígitos)</span>
                     </label>
-                    <span className="text-[10px] font-mono text-brand-primary">{telefono.length}/10</span>
+                    <span className="text-[10px] font-mono text-emerald-600">{telefono.length}/10</span>
                   </div>
                   <input
                     type="text"
@@ -683,7 +689,7 @@ export default function UsuariosSistemaPage() {
                     className={`w-full px-3 py-2 rounded-xl border text-xs font-mono focus:outline-none focus:ring-2 ${
                       errores.telefono
                         ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                        : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                        : 'border-emerald-200/60 focus:ring-emerald-600/40'
                     }`}
                   />
                   {errores.telefono && <p className="text-[10px] text-red-600 font-semibold mt-1">{errores.telefono}</p>}
@@ -692,11 +698,11 @@ export default function UsuariosSistemaPage() {
 
               {/* Rol Asignado */}
               <div>
-                <label className="block text-[11px] font-bold text-brand-text mb-1">Rol en el Sistema (RBAC) *</label>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1">Rol en el Sistema (RBAC) *</label>
                 <select
                   value={rol}
                   onChange={(e) => setRol(e.target.value as RolUsuario)}
-                  className="w-full px-3 py-2 rounded-xl border border-brand-accent/60 text-xs bg-white font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                  className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs bg-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/40"
                 >
                   <option value="ADMINISTRADOR">ADMINISTRADOR (Control total del sistema)</option>
                   <option value="GESTOR_PERSONAL">GESTOR_PERSONAL (Personal, Carga CSV y Carnets)</option>
@@ -705,17 +711,17 @@ export default function UsuariosSistemaPage() {
               </div>
 
               {/* Contraseñas de Acceso */}
-              <div className="p-3.5 bg-brand-light rounded-2xl border border-brand-accent/40 space-y-2.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-brand-dark">
-                  <KeyRound className="w-3.5 h-3.5 text-brand-primary" />
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-emerald-200/40 space-y-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                  <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Credenciales de Acceso al Portal (Bean Validation)</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[10px] font-bold text-brand-text">Contraseña (Mín 8 car.) *</label>
-                      <span className="text-[9px] font-mono text-brand-primary">{password.length}/30</span>
+                      <label className="block text-[10px] font-bold text-slate-500">Contraseña (Mín 8 car.) *</label>
+                      <span className="text-[9px] font-mono text-emerald-600">{password.length}/30</span>
                     </div>
                     <div className="relative">
                       <input
@@ -728,7 +734,7 @@ export default function UsuariosSistemaPage() {
                         className={`w-full px-3 py-2 pr-9 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
                           errores.password
                             ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                            : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                            : 'border-emerald-200/60 focus:ring-emerald-600/40'
                         }`}
                       />
                       <button
@@ -743,8 +749,8 @@ export default function UsuariosSistemaPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[10px] font-bold text-brand-text">Confirmar Contraseña *</label>
-                      <span className="text-[9px] font-mono text-brand-primary">{confirmPassword.length}/30</span>
+                      <label className="block text-[10px] font-bold text-slate-500">Confirmar Contraseña *</label>
+                      <span className="text-[9px] font-mono text-emerald-600">{confirmPassword.length}/30</span>
                     </div>
                     <div className="relative">
                       <input
@@ -757,7 +763,7 @@ export default function UsuariosSistemaPage() {
                         className={`w-full px-3 py-2 pr-9 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 ${
                           errores.confirmPassword
                             ? 'border-red-400 focus:ring-red-200 bg-red-50/40'
-                            : 'border-brand-accent/60 focus:ring-brand-primary/40'
+                            : 'border-emerald-200/60 focus:ring-emerald-600/40'
                         }`}
                       />
                       <button
@@ -778,18 +784,18 @@ export default function UsuariosSistemaPage() {
                 </p>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-brand-accent/30">
+              <div className="flex justify-end gap-2 pt-3 border-t border-emerald-200/30">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-brand-text hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-gray-100 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={guardando}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-brand-primary text-white hover:bg-brand-primary/90 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-600/90 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-2"
                 >
                   {guardando ? (
                     <>
@@ -808,49 +814,49 @@ export default function UsuariosSistemaPage() {
 
       {/* Modal Dinámico de Registro Exitoso */}
       {showExitoModal && usuarioCreado && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-brand-accent/40 relative overflow-hidden animate-modal-pop">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-800/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-200/40 relative overflow-hidden animate-modal-pop">
             <div className="relative z-10 text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-accent/80 flex items-center justify-center shadow-lg shadow-brand-primary/30 text-white mb-4 animate-bounce">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-200/80 flex items-center justify-center shadow-lg shadow-emerald-600/30 text-white mb-4 animate-bounce">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-light border border-brand-accent/60 text-brand-dark text-[11px] font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-brand-primary animate-spin" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-emerald-200/60 text-slate-800 text-[11px] font-bold mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
                 USUARIO CREADO CON ÉXITO
               </div>
 
-              <h2 className="text-xl font-heading font-extrabold text-brand-dark mb-1">
+              <h2 className="text-xl font-heading font-extrabold text-slate-800 mb-1">
                 ¡Credenciales Asignadas!
               </h2>
-              <p className="text-xs text-brand-text/75 mb-5">
-                El usuario interno ya cuenta con autorización para autenticarse en el portal de <strong className="text-brand-dark font-semibold">Laboratorio Lex</strong>.
+              <p className="text-xs text-slate-500/75 mb-5">
+                El usuario interno ya cuenta con autorización para autenticarse en el portal de <strong className="text-slate-800 font-semibold">Laboratorio Lex</strong>.
               </p>
 
               {/* Ficha Resumen del Usuario */}
-              <div className="bg-brand-secondary/70 p-4 rounded-2xl border border-brand-accent/50 text-left space-y-2 mb-6">
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Operador:</span>
-                  <span className="text-xs font-bold text-brand-dark">
+              <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/50 text-left space-y-2 mb-6">
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Operador:</span>
+                  <span className="text-xs font-bold text-slate-800">
                     {usuarioCreado.nombres} {usuarioCreado.apellidos}
                   </span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Documento / Cédula:</span>
-                  <span className="text-xs font-mono font-bold text-brand-primary">{usuarioCreado.documento}</span>
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Documento / Cédula:</span>
+                  <span className="text-xs font-mono font-bold text-emerald-600">{usuarioCreado.documento}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Correo Institucional:</span>
-                  <span className="text-xs font-medium text-brand-dark">{usuarioCreado.correo}</span>
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Correo Institucional:</span>
+                  <span className="text-xs font-medium text-slate-800">{usuarioCreado.correo}</span>
                 </div>
-                <div className="flex items-center justify-between pb-2 border-b border-brand-accent/30">
-                  <span className="text-[11px] font-medium text-brand-text/70">Rol de Seguridad:</span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200/30">
+                  <span className="text-[11px] font-medium text-slate-500/70">Rol de Seguridad:</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-600/10 text-emerald-600 border border-emerald-600/20">
                     {usuarioCreado.rol}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] font-medium text-brand-text/70">Estado de la Cuenta:</span>
+                  <span className="text-[11px] font-medium text-slate-500/70">Estado de la Cuenta:</span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#4A9B8E]/15 text-[#2E6F64]">
                     <ShieldCheck className="w-3 h-3" />
                     ACTIVO
@@ -864,7 +870,7 @@ export default function UsuariosSistemaPage() {
                   setShowExitoModal(false);
                   setUsuarioCreado(null);
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-lg shadow-brand-primary/25 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 Aceptar y Continuar
@@ -873,6 +879,6 @@ export default function UsuariosSistemaPage() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
