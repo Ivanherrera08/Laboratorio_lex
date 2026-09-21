@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const routePermissions: Record<string, RolUsuario[]> = {
   '/dashboard/simulador': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
   '/dashboard/personal': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
-  '/dashboard/usuarios': ['ADMINISTRADOR'],
+  '/dashboard/usuarios': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
   '/dashboard/carga-masiva': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/catalogos': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/historial': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
@@ -109,7 +109,7 @@ export default function DashboardLayout({
       <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
         {/* Fondo animado */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <motion.div animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, -30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }} className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-200/40 mix-blend-multiply filter blur-[100px]" />
+          <div className="absolute top-0 right-0 w-[40%] h-[40%] rounded-full bg-emerald-100/20 mix-blend-multiply filter blur-[60px]" />
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#10b981 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
         </div>
         
@@ -151,22 +151,8 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-slate-50 relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
       {/* Global Animated Background para toda la aplicación */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, -30, 0] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-200/40 mix-blend-multiply filter blur-[100px]"
-        />
-        <motion.div 
-          animate={{ scale: [1, 1.3, 1], x: [0, -40, 0], y: [0, 50, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-[40%] -right-[10%] w-[40%] h-[60%] rounded-full bg-teal-200/30 mix-blend-multiply filter blur-[120px]"
-        />
-        <motion.div 
-          animate={{ scale: [1, 1.5, 1], x: [0, 30, 0], y: [0, -40, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] rounded-full bg-green-200/30 mix-blend-multiply filter blur-[100px]"
-        />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-slate-50">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-100/30 mix-blend-multiply filter blur-[40px] opacity-70" />
         
         {/* Patrón de puntos sutil */}
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#10b981 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
@@ -180,15 +166,14 @@ export default function DashboardLayout({
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             isSidebarOpen={isSidebarOpen}
           />
-          {/* Contenido protegido con transiciones de página */}
+          {/* Contenido protegido con transiciones rápidas */}
           <main className="p-4 sm:p-8 flex-1 relative">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               <motion.div
                 key={pathname}
-                initial={{ opacity: 0, y: 15, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -15, scale: 0.99 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
                 className="h-full"
               >
                 {children}

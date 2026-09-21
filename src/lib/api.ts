@@ -35,14 +35,11 @@ api.interceptors.response.use(
         error.config?.url?.includes('/auth/reset-password');
 
       if (error.response?.status === 401 && !isAuthEndpoint) {
-        // Token expirado o sesión inválida en endpoints protegidos
-        sessionStorage.removeItem('zone_control_token');
-        sessionStorage.removeItem('zone_control_user');
-        localStorage.removeItem('zone_control_token');
-        localStorage.removeItem('zone_control_user');
-        document.cookie = 'zone_control_token=; path=/; max-age=0; SameSite=Strict;';
-        document.cookie = 'zone_control_role=; path=/; max-age=0; SameSite=Strict;';
-        window.location.href = '/';
+        console.warn("401 Unauthorized detectado, despachando evento de sesión expirada:", error.config?.url);
+        // Despachar un evento personalizado para que AuthContext lo maneje suavemente
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('session_expired'));
+        }
       }
     }
     return Promise.reject(error);

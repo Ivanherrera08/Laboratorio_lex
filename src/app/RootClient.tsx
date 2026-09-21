@@ -106,8 +106,7 @@ export default function PortalPublicoPage() {
               <div className="flex items-center gap-2">
                 <span className="font-heading font-extrabold text-xl text-brand-dark tracking-tight">Zone Control</span>
                 <motion.span 
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
+                  
                   className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold tracking-wide border border-emerald-200"
                 >
                   v2.0 TOP
@@ -160,8 +159,7 @@ export default function PortalPublicoPage() {
                 className="space-y-8"
               >
                 <motion.div 
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 4 }}
+                  
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-brand-primary/20 text-brand-primary text-xs font-extrabold shadow-sm"
                 >
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
@@ -208,8 +206,7 @@ export default function PortalPublicoPage() {
                 
                 {/* Central Card */}
                 <motion.div 
-                  animate={{ y: [0, -30, 10, -20, 0], x: [0, 15, -10, 5, 0], rotate: [0, 2, -1, 0] }}
-                  transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
+                  
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50 z-20"
                 >
                   <div className="flex items-center gap-4 border-b border-slate-100/50 pb-4 mb-4">
@@ -224,8 +221,7 @@ export default function PortalPublicoPage() {
                   <div className="space-y-3">
                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                       <motion.div 
-                        animate={{ width: ["0%", "100%", "0%"] }}
-                        transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                        
                         className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600"
                       />
                     </div>
@@ -238,8 +234,7 @@ export default function PortalPublicoPage() {
                   initial={{ opacity: 0, x: -100 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false }}
-                  animate={{ y: [0, 40, -10, 20, 0], x: [0, -20, 10, -15, 0], rotate: [-5, 2, -4, 0] }}
-                  transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
+                  
                   className="absolute top-16 left-0 w-64 bg-slate-900/95 backdrop-blur-md text-white p-5 rounded-3xl shadow-2xl border border-slate-700/50 z-10"
                 >
                   <div className="flex items-center gap-3">
@@ -256,8 +251,7 @@ export default function PortalPublicoPage() {
                   initial={{ opacity: 0, x: 100 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false }}
-                  animate={{ y: [0, -35, 15, -25, 0], x: [0, 25, -15, 20, 0], rotate: [5, -3, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
+                  
                   className="absolute bottom-24 right-0 w-64 bg-white/70 backdrop-blur-xl p-5 rounded-3xl shadow-2xl border border-white/60 z-30"
                 >
                   <div className="flex items-center gap-3">
@@ -274,8 +268,7 @@ export default function PortalPublicoPage() {
 
                 {/* New Floating Mini-Card 1: Temperatura */}
                 <motion.div 
-                  animate={{ y: [0, 25, -20, 10, 0], x: [0, 15, -15, 5, 0], rotate: [0, 10, -5, 0], scale: [1, 1.1, 0.9, 1] }}
-                  transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
+                  
                   className="absolute top-10 right-10 bg-white/80 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white/50 z-10 flex items-center gap-2"
                 >
                   <Thermometer className="w-5 h-5 text-blue-500" />
@@ -287,8 +280,7 @@ export default function PortalPublicoPage() {
 
                 {/* New Floating Mini-Card 2: Presión */}
                 <motion.div 
-                  animate={{ y: [0, -20, 25, -10, 0], x: [0, -20, 10, -15, 0], rotate: [0, -8, 6, 0], scale: [1, 0.9, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 19, ease: "easeInOut" }}
+                  
                   className="absolute bottom-10 left-10 bg-slate-900/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-slate-700/50 z-20 flex items-center gap-2 text-white"
                 >
                   <Wind className="w-5 h-5 text-teal-400" />
@@ -300,8 +292,7 @@ export default function PortalPublicoPage() {
 
                 {/* New Floating Mini-Card 3: HEPA */}
                 <motion.div 
-                  animate={{ y: [0, 30, -15, 20, 0], x: [0, -10, 20, -10, 0], rotate: [-10, 5, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 28, ease: "easeInOut" }}
+                  
                   className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/4 bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-lg border border-slate-100 z-0 flex items-center gap-2"
                 >
                   <Activity className="w-5 h-5 text-emerald-500" />
@@ -381,9 +372,8 @@ export default function PortalPublicoPage() {
                 >
                   {/* Animated Big Orb inside the card */}
                   <motion.div 
-                    animate={{ x: [0, -30, 20, 0], y: [0, 30, -20, 0], scale: [1, 1.4, 1] }}
-                    transition={{ repeat: Infinity, duration: 8 + i * 1.5, ease: "easeInOut" }}
-                    className="absolute -top-12 -right-12 w-64 h-64 rounded-full filter blur-[80px] opacity-30 mix-blend-screen group-hover:opacity-50 pointer-events-none transition-opacity duration-700"
+                    
+                    className="absolute -top-12 -right-12 w-64 h-64 rounded-full filter blur-[30px] opacity-30 mix-blend-screen group-hover:opacity-50 pointer-events-none transition-opacity duration-700"
                     style={{ backgroundColor: bsl.hex }}
                   />
 
@@ -417,8 +407,7 @@ export default function PortalPublicoPage() {
                   {/* Bottom Threat Level Bar */}
                   <div className="absolute bottom-0 left-0 w-full h-1.5 bg-slate-900">
                     <motion.div 
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ repeat: Infinity, duration: 2, delay: i * 0.5 }}
+                      
                       className="h-full"
                       style={{ backgroundColor: bsl.hex, width: `${(i+1)*25}%` }}
                     />
@@ -508,15 +497,13 @@ export default function PortalPublicoPage() {
                 >
                   {/* Animated Big Orb inside the card */}
                   <motion.div 
-                    animate={{ x: [0, -40, 20, 0], y: [0, 40, -10, 0], scale: [1, 1.3, 1] }}
-                    transition={{ repeat: Infinity, duration: 10 + i * 2, ease: "easeInOut" }}
-                    className="absolute -top-16 -right-16 w-64 h-64 rounded-full mix-blend-multiply filter blur-[60px] opacity-40 pointer-events-none"
+                    
+                    className="absolute -top-16 -right-16 w-64 h-64 rounded-full mix-blend-multiply filter blur-[20px] opacity-40 pointer-events-none"
                     style={{ backgroundColor: mod.colorCode }}
                   />
                   
                   <motion.div 
-                    animate={{ rotateY: [0, 180, 0] }}
-                    transition={{ repeat: Infinity, duration: 6, delay: i }}
+                    
                     className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm relative z-10 ${mod.iconBg}`}
                   >
                     <mod.icon className="w-6 h-6" />

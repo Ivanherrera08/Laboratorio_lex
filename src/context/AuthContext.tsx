@@ -27,8 +27,8 @@ const AuthContext = createContext<AuthContextType>({
   hasRole: () => false,
 });
 
-// Timeout Estricto de 5 Minutos (300,000 ms) según RF F-03 y CU-10
-const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+// Timeout// Configuración de Seguridad: 60 minutos de inactividad (para pruebas)
+const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Inicialización SÍNCRONA de sesión desde sessionStorage
@@ -153,9 +153,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [token, logout]);
 
-  // Sincronización continua de cookies de sesión
+  // Sincronización continua de cookies de sesión y escucha de evento de expiración
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const handleSessionExpired = () => {
+        alert('Tu sesión ha expirado por seguridad. Por favor, vuelve a iniciar sesión.');
+        logout();
+      };
+      
+      window.addEventListener('session_expired', handleSessionExpired);
+
       const storedToken = sessionStorage.getItem('zone_control_token');
       const storedUser = sessionStorage.getItem('zone_control_user');
       const isHttps = window.location.protocol === 'https:';
@@ -182,6 +189,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setToken(null);
       }
+      
+      return () => {
+        window.removeEventListener('session_expired', handleSessionExpired);
+      };
     }
   }, [logout]);
 
