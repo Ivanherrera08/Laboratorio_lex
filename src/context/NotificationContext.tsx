@@ -26,6 +26,11 @@ export interface NotificacionSistema {
   rolesDestino: RolUsuario[];
   accionUrl?: string;
   detallesAuditoria?: DetallesAuditoria;
+  codigoRef?: string;
+  accionAuditoria?: string;
+  entidadAuditoria?: string;
+  valorAnterior?: string;
+  valorNuevo?: string;
 }
 
 const STORAGE_KEY = 'zone_control_notifications_v3';

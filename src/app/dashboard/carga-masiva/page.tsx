@@ -137,7 +137,12 @@ export default function CargaMasivaPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="max-w-4xl mx-auto space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -158,12 +163,7 @@ export default function CargaMasivaPage() {
 
       {/* 1. SECCIÓN DE CARGA (SOLO SE MUESTRA SI NO SE HA PROCESADO AÚN) */}
       {!resultado && (
-        <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="space-y-6"
-    >
+        <div className="space-y-6">
           {/* Zona Drag & Drop */}
           <div
             onDragEnter={handleDrag}

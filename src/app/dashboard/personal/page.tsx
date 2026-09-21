@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
+  Mail,
 } from 'lucide-react';
 
 export interface CatalogoAreaLab {
