@@ -50,7 +50,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: 'Usuarios y Credenciales',
       href: '/dashboard/usuarios',
       icon: UserCog,
-      roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
+      roles: ['ADMINISTRADOR'],
     },
     {
       name: 'Carga Masiva',

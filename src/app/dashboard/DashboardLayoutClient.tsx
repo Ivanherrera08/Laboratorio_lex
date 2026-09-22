@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const routePermissions: Record<string, RolUsuario[]> = {
   '/dashboard/simulador': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
   '/dashboard/personal': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
-  '/dashboard/usuarios': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
+  '/dashboard/usuarios': ['ADMINISTRADOR'],
   '/dashboard/carga-masiva': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/catalogos': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/historial': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
