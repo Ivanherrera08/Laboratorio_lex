@@ -77,7 +77,7 @@ const mockEmpleados: Empleado[] = [
     correo: 'laura.restrepo@laboratorioxyz.com',
     telefono: '3201123344',
     codigoTarjetaRfid: 'RFID-002',
-    estado: 'REVOCADO',
+    estado: 'INACTIVO',
     motivoCambioEstado: 'Finalización de contrato temporal y auditoría de seguridad.',
   },
   {
@@ -94,7 +94,7 @@ const mockEmpleados: Empleado[] = [
     correo: 'guillermo.von@laboratorioxyz.com',
     telefono: '3154432211',
     codigoTarjetaRfid: 'RFID-003',
-    estado: 'SUSPENDIDO',
+    estado: 'INACTIVO',
     motivoCambioEstado: 'Incumplimiento de protocolo de esterilidad en esclusa.',
   },
 ];
@@ -186,20 +186,18 @@ export default function GestionPersonalPage() {
     }
   };
 
-  // Manejo de Documento: Máximo 12 dígitos si es CC/Numérico
+  // Manejo de Documento: Máximo 10 dígitos si es CC/Numérico
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valor = e.target.value.replace(/\D/g, '');
-    if (valor.length <= 12) {
-      setNuevoDoc(valor);
-      if (valor.length < 6 && valor.length > 0) {
-        setErroresForm((prev) => ({ ...prev, doc: 'La cédula debe contener entre 6 y 12 dígitos.' }));
-      } else {
-        setErroresForm((prev) => {
-          const c = { ...prev };
-          delete c.doc;
-          return c;
-        });
-      }
+    const valor = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setNuevoDoc(valor);
+    if (valor.length < 6 && valor.length > 0) {
+      setErroresForm((prev) => ({ ...prev, doc: 'La cédula debe contener entre 6 y 10 dígitos.' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.doc;
+        return c;
+      });
     }
   };
 
@@ -236,20 +234,18 @@ export default function GestionPersonalPage() {
     }
   };
 
-  // Manejo de Código de Carnet / RFID: Máximo 14 caracteres
+  // Manejo de Código de Carnet / RFID: Máximo 15 caracteres, solo letras minúsculas, números y guiones
   const handleRfidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valor = e.target.value;
-    if (valor.length <= 14) {
-      setNuevoRfid(valor);
-      if (valor.length > 0 && valor.length < 4) {
-        setErroresForm((prev) => ({ ...prev, rfid: 'El número de carnet debe tener entre 4 y 14 caracteres.' }));
-      } else {
-        setErroresForm((prev) => {
-          const c = { ...prev };
-          delete c.rfid;
-          return c;
-        });
-      }
+    const valor = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 15);
+    setNuevoRfid(valor);
+    if (valor.length > 0 && valor.length < 4) {
+      setErroresForm((prev) => ({ ...prev, rfid: 'El número de carnet debe tener al menos 4 caracteres.' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.rfid;
+        return c;
+      });
     }
   };
 
@@ -410,7 +406,7 @@ export default function GestionPersonalPage() {
     e.preventDefault();
     if (!empleadoSeleccionado) return;
 
-    if ((nuevoEstado === 'REVOCADO' || nuevoEstado === 'SUSPENDIDO') && !motivoEstado.trim()) {
+    if (nuevoEstado === 'INACTIVO' && !motivoEstado.trim()) {
       setErroresForm((prev) => ({ ...prev, estadoMotivo: 'Es obligatorio ingresar el motivo del cambio de estado.' }));
       return;
     }
@@ -579,14 +575,11 @@ export default function GestionPersonalPage() {
                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black tracking-wider uppercase shadow-sm border ${
                       emp.estado === 'ACTIVO'
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                        : emp.estado === 'REVOCADO'
-                        ? 'bg-rose-50 text-rose-600 border-rose-200'
-                        : 'bg-amber-50 text-amber-600 border-amber-200'
+                        : 'bg-rose-50 text-rose-600 border-rose-200'
                     }`}
                   >
                     {emp.estado === 'ACTIVO' && <CheckCircle className="w-3.5 h-3.5" />}
-                    {emp.estado === 'REVOCADO' && <XCircle className="w-3.5 h-3.5" />}
-                    {emp.estado === 'SUSPENDIDO' && <Clock className="w-3.5 h-3.5" />}
+                    {emp.estado === 'INACTIVO' && <XCircle className="w-3.5 h-3.5" />}
                     {emp.estado}
                   </span>
                 </div>
@@ -676,8 +669,8 @@ export default function GestionPersonalPage() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-slate-500">Cédula * (Máx 12 dígitos)</label>
-                    <span className="text-[10px] font-mono text-emerald-600">{nuevoDoc.length}/12</span>
+                    <label className="block text-[11px] font-bold text-slate-500">Cédula * (Máx 10 dígitos)</label>
+                    <span className="text-[10px] font-mono text-emerald-600">{nuevoDoc.length}/10</span>
                   </div>
                   <input
                     type="text"
@@ -779,14 +772,14 @@ export default function GestionPersonalPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-[11px] font-bold text-slate-500">Código / N° Carnet</label>
-                    <span className="text-[9px] text-gray-500 font-medium">{nuevoRfid.length}/14 máx.</span>
+                    <span className="text-[9px] text-gray-500 font-medium">{nuevoRfid.length}/15 máx.</span>
                   </div>
                   <input
                     type="text"
-                    maxLength={14}
+                    maxLength={15}
                     value={nuevoRfid}
                     onChange={handleRfidChange}
-                    placeholder="Ej. CRN-XYZ-901"
+                    placeholder="Ej. crn-cnj-857"
                     className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs font-mono font-bold"
                   />
                   {erroresForm.rfid && (
@@ -1096,33 +1089,12 @@ export default function GestionPersonalPage() {
                     </span>
                   </button>
 
-                  {/* Opción 2: SUSPENDIDO (Amarillo) */}
+                  {/* Opción 2: INACTIVO (Rojo) */}
                   <button
                     type="button"
-                    onClick={() => setNuevoEstado('SUSPENDIDO')}
+                    onClick={() => setNuevoEstado('INACTIVO')}
                     className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
-                      nuevoEstado === 'SUSPENDIDO'
-                        ? 'bg-amber-50 border-amber-500 shadow-md scale-102 ring-2 ring-amber-400/20'
-                        : 'bg-white border-slate-200 hover:border-amber-300 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
-                      <Clock className="w-4 h-4" />
-                    </div>
-                    <span className="text-[11px] font-extrabold text-amber-800">
-                      SUSPENDIDO
-                    </span>
-                    <span className="text-[9px] text-amber-700 font-medium">
-                      Temporal
-                    </span>
-                  </button>
-
-                  {/* Opción 3: REVOCADO (Rojo) */}
-                  <button
-                    type="button"
-                    onClick={() => setNuevoEstado('REVOCADO')}
-                    className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
-                      nuevoEstado === 'REVOCADO'
+                      nuevoEstado === 'INACTIVO'
                         ? 'bg-red-50 border-red-500 shadow-md scale-102 ring-2 ring-red-400/20'
                         : 'bg-white border-slate-200 hover:border-red-300 opacity-70 hover:opacity-100'
                     }`}
@@ -1131,10 +1103,10 @@ export default function GestionPersonalPage() {
                       <XCircle className="w-4 h-4" />
                     </div>
                     <span className="text-[11px] font-extrabold text-red-800">
-                      REVOCADO
+                      INACTIVO
                     </span>
                     <span className="text-[9px] text-red-700 font-medium">
-                      Bloqueado
+                      Sin Acceso
                     </span>
                   </button>
                 </div>
@@ -1150,10 +1122,8 @@ export default function GestionPersonalPage() {
                   value={motivoEstado}
                   onChange={(e) => setMotivoEstado(e.target.value)}
                   placeholder={
-                    nuevoEstado === 'SUSPENDIDO'
-                      ? 'Ejemplo: Suspensión preventiva temporal por protocolo de seguridad...'
-                      : nuevoEstado === 'REVOCADO'
-                      ? 'Ejemplo: Bloqueo definitivo por finalización de contrato o falta grave...'
+                    nuevoEstado === 'INACTIVO'
+                      ? 'Ejemplo: Revocación por incumplimiento o inactividad temporal...'
                       : 'Ejemplo: Reactivación autorizada tras cumplimiento de protocolo...'
                   }
                   className="w-full px-3.5 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40 leading-relaxed"
@@ -1173,8 +1143,6 @@ export default function GestionPersonalPage() {
                   className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
                     nuevoEstado === 'ACTIVO'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
-                      : nuevoEstado === 'SUSPENDIDO'
-                      ? 'bg-amber-600 hover:bg-amber-700'
                       : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
@@ -1272,32 +1240,27 @@ export default function GestionPersonalPage() {
               <div className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg text-white mb-4 animate-bounce ${
                 bitacoraInfo.nuevoEstado === 'ACTIVO'
                   ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 shadow-emerald-500/30'
-                  : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                  : bitacoraInfo.nuevoEstado === 'INACTIVO'
                   ? 'bg-gradient-to-tr from-amber-500 to-yellow-600 shadow-amber-500/30'
                   : 'bg-gradient-to-tr from-red-500 to-rose-600 shadow-red-500/30'
               }`}>
                 {bitacoraInfo.nuevoEstado === 'ACTIVO' && <CheckCircle className="w-8 h-8" />}
-                {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && <Clock className="w-8 h-8" />}
-                {bitacoraInfo.nuevoEstado === 'REVOCADO' && <XCircle className="w-8 h-8" />}
+                {bitacoraInfo.nuevoEstado === 'INACTIVO' && <XCircle className="w-8 h-8" />}
               </div>
 
               <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold mb-2 ${
                 bitacoraInfo.nuevoEstado === 'ACTIVO'
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
-                  ? 'bg-amber-50 border-amber-200 text-amber-800'
                   : 'bg-red-50 border-red-200 text-red-800'
               }`}>
                 <Sparkles className="w-3.5 h-3.5 animate-spin" />
                 {bitacoraInfo.nuevoEstado === 'ACTIVO' && 'AUTORIZACIÓN ACTIVA 21 CFR 11'}
-                {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && 'SUSPENSIÓN TEMPORAL AUDITADA'}
-                {bitacoraInfo.nuevoEstado === 'REVOCADO' && 'BLOQUEO PERMANENTE AUDITADO'}
+                {bitacoraInfo.nuevoEstado === 'INACTIVO' && 'ACCESO INACTIVO AUDITADO'}
               </div>
 
               <h2 className="text-xl font-heading font-extrabold text-slate-800 mb-1">
                 {bitacoraInfo.nuevoEstado === 'ACTIVO' && '¡Colaborador Activado!'}
-                {bitacoraInfo.nuevoEstado === 'SUSPENDIDO' && '¡Suspensión Temporal Registrada!'}
-                {bitacoraInfo.nuevoEstado === 'REVOCADO' && '¡Acceso Revocado y Bloqueado!'}
+                {bitacoraInfo.nuevoEstado === 'INACTIVO' && '¡Acceso Inactivo Registrado!'}
               </h2>
               <p className="text-xs text-slate-500/75 mb-4">
                 La modificación ha sido procesada e inscrita de forma inmutable en el registro de auditoría.
@@ -1307,8 +1270,6 @@ export default function GestionPersonalPage() {
               <div className={`p-4 rounded-2xl border text-left space-y-2 mb-5 ${
                 bitacoraInfo.nuevoEstado === 'ACTIVO'
                   ? 'bg-emerald-50/60 border-emerald-200'
-                  : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
-                  ? 'bg-amber-50/60 border-amber-200'
                   : 'bg-red-50/60 border-red-200'
               }`}>
                 <div className="flex items-center justify-between pb-2 border-b border-black/5">
@@ -1327,7 +1288,7 @@ export default function GestionPersonalPage() {
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold shadow-2xs ${
                       bitacoraInfo.nuevoEstado === 'ACTIVO'
                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                        : bitacoraInfo.nuevoEstado === 'INACTIVO'
                         ? 'bg-amber-100 text-amber-800 border border-amber-300'
                         : 'bg-red-100 text-red-800 border border-red-300'
                     }`}>
@@ -1359,7 +1320,7 @@ export default function GestionPersonalPage() {
                 className={`w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs shadow-lg transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2 ${
                   bitacoraInfo.nuevoEstado === 'ACTIVO'
                     ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
-                    : bitacoraInfo.nuevoEstado === 'SUSPENDIDO'
+                    : bitacoraInfo.nuevoEstado === 'INACTIVO'
                     ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/30'
                     : 'bg-red-600 hover:bg-red-700 shadow-red-600/30'
                 }`}

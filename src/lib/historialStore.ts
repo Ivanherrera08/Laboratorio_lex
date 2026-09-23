@@ -36,7 +36,7 @@ const registrosIniciales: HistorialAcceso[] = [
     numeroDocumentoIngresado: '1087654321',
     codigoTarjetaIngresado: 'RFID-002',
     resultadoAcceso: 'DENEGADO',
-    motivoDenegacion: 'Permiso REVOCADO en área de alto riesgo',
+    motivoDenegacion: 'Permiso INACTIVO en área de alto riesgo',
     timestamp: new Date(Date.now() - 3600000).toISOString(),
   },
   {
@@ -153,13 +153,12 @@ export async function obtenerHistorialCombinado(): Promise<HistorialAcceso[]> {
       combined.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       // Guardar caché actualizada
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORE_KEY, JSON.stringify(combined));
-      }
+      saveHistorialLocal(combined);
 
       return combined;
     }
   } catch (err) {
+    console.error("Error al sincronizar el historial con el backend:", err);
     // Si no hay conexión al backend, retornar local
   }
 

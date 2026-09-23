@@ -39,7 +39,7 @@ function LoginFormContent() {
   // Si el usuario ya está autenticado, redirigir al simulador
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard/simulador');
+      router.replace('/dashboard/historial');
     }
   }, [isAuthenticated, router]);
 
@@ -87,14 +87,14 @@ function LoginFormContent() {
         estado: res.data.usuario.estado,
       };
       login(res.data.token, usuarioBackend);
-      router.replace('/dashboard/simulador');
+      router.replace('/dashboard/historial');
     } catch (err: any) {
       // Fallback demo cuando el backend no está disponible
       const demoAccount = usuariosDemo[correo.toLowerCase()];
 
       if (demoAccount && password === demoAccount.pass) {
         login(`mock_jwt_${demoAccount.user.rol.toLowerCase()}`, demoAccount.user);
-        router.replace('/dashboard/simulador');
+        router.replace('/dashboard/historial');
         return;
       }
 
@@ -105,7 +105,7 @@ function LoginFormContent() {
       if (localUser && localUser.mockPass === password) {
         const { mockPass, ...userSinPass } = localUser;
         login(`mock_jwt_${localUser.rol.toLowerCase()}`, userSinPass);
-        router.replace('/dashboard/simulador');
+        router.replace('/dashboard/historial');
         return;
       }
 
@@ -138,7 +138,7 @@ function LoginFormContent() {
         // Pequeño delay visual
         await new Promise(r => setTimeout(r, 600));
         login(`mock_jwt_${demoAccount.user.rol.toLowerCase()}`, demoAccount.user);
-        router.replace('/dashboard/simulador');
+        router.replace('/dashboard/historial');
       }
     } finally {
       setLoading(false);

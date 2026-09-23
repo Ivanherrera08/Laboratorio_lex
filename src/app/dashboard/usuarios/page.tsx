@@ -358,10 +358,21 @@ export default function UsuariosSistemaPage() {
   const handleAlternarEstado = async (u: UsuarioAuth) => {
     const nuevoEstado = u.estado === 'ACTIVO' ? 'BLOQUEADO' : 'ACTIVO';
 
+    // Guard: nadie puede suspenderse a sí mismo (también lo valida el backend)
+    if (esCuentaPropia(u)) {
+      alert('No puedes suspender tu propia cuenta desde tu sesión.');
+      return;
+    }
+
     try {
       await api.patch(`/auth/usuarios/${u.id}/estado?nuevoEstado=${nuevoEstado}`);
-    } catch {
-      // Sigue adelante en modo resiliente
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        'No se pudo actualizar el estado en el servidor.';
+      alert(msg);
+      return;
     }
 
     const listaActualizada = usuarios.map((item) =>
@@ -393,6 +404,9 @@ export default function UsuariosSistemaPage() {
       },
     });
   };
+
+  const esCuentaPropia = (u: UsuarioAuth) =>
+    !!user && (u.id === user.id || (!!user.documento && u.documento === user.documento));
 
   const usuariosFiltrados = usuarios.filter(
     (u) =>
@@ -552,7 +566,11 @@ export default function UsuariosSistemaPage() {
               </div>
 
               <div className="pt-5 mt-5 border-t border-slate-100/60 flex items-center justify-end relative z-10">
-                {item.documento !== '0000000001' && (
+                {esCuentaPropia(item) ? (
+                  <span className="px-4 py-2 rounded-xl text-[11px] font-bold text-slate-400 bg-slate-50 border border-slate-200 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Tu cuenta actual
+                  </span>
+                ) : item.documento !== '0000000001' && (
                   <button
                     onClick={() => handleAlternarEstado(item)}
                     className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm btn-glow-effect flex items-center gap-1.5 ${

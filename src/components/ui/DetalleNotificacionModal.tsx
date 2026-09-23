@@ -84,19 +84,28 @@ export default function DetalleNotificacionModal({
   };
 
   const renderJsonPretty = (val: string | null | undefined) => {
-    if (!val) return <span className="text-slate-400 italic">Sin datos previos</span>;
+    if (!val) return <span className="text-slate-400 italic text-[11px]">Sin datos previos</span>;
     try {
       const obj = JSON.parse(val);
       return (
-        <pre className="font-mono text-[11px] bg-slate-900 text-emerald-300 p-2.5 rounded-xl overflow-x-auto">
-          {JSON.stringify(obj, null, 2)}
-        </pre>
+        <div className="space-y-1.5 mt-1">
+          {Object.entries(obj).map(([k, v]) => (
+            <div key={k} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-lg bg-white border border-slate-100 shadow-xs">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                {k.replace(/([A-Z])/g, ' $1').trim()}
+              </span>
+              <span className="text-[11px] font-semibold text-slate-800 bg-slate-50 px-2.5 py-0.5 rounded-md border border-slate-200 shadow-xs truncate max-w-full sm:max-w-[150px]">
+                {String(v)}
+              </span>
+            </div>
+          ))}
+        </div>
       );
     } catch {
       return (
-        <code className="font-mono text-[11px] bg-slate-100 text-slate-700 px-2 py-1 rounded">
+        <div className="p-2 rounded-lg bg-white border border-slate-100 text-[11px] font-medium text-slate-700 shadow-xs">
           {val}
-        </code>
+        </div>
       );
     }
   };

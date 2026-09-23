@@ -70,7 +70,7 @@ const mockLoteActual: HistorialAcceso[] = [
     numeroDocumentoIngresado: '1087654321',
     codigoTarjetaIngresado: 'RFID-002',
     resultadoAcceso: 'DENEGADO',
-    motivoDenegacion: 'Permiso REVOCADO en área de alto riesgo',
+    motivoDenegacion: 'Permiso INACTIVO en área de alto riesgo',
     timestamp: new Date().toISOString(),
   }
 ];

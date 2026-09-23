@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Matriz estricta de permisos por ruta (RBAC)
 const routePermissions: Record<string, RolUsuario[]> = {
-  '/dashboard/simulador': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
+
   '/dashboard/personal': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/usuarios': ['ADMINISTRADOR'],
   '/dashboard/carga-masiva': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
@@ -136,10 +136,10 @@ export default function DashboardLayout({
                 atribuciones de seguridad requeridas para operar en este módulo.
               </p>
               <button
-                onClick={() => router.replace('/dashboard/simulador')}
+                onClick={() => router.replace('/dashboard/historial')}
                 className="mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/30 transition-all cursor-pointer w-full"
               >
-                Volver al Simulador de Acceso
+                Volver al Historial de Accesos
               </button>
             </motion.div>
           </main>

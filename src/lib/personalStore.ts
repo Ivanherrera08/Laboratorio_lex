@@ -45,7 +45,7 @@ const empleadosIniciales: Empleado[] = [
     correo: 'laura.restrepo@laboratorioxyz.com',
     telefono: '3201123344',
     codigoTarjetaRfid: 'RFID-002',
-    estado: 'REVOCADO',
+    estado: 'INACTIVO',
     motivoCambioEstado: 'Finalización de contrato temporal y auditoría de seguridad.',
   },
   {
@@ -62,7 +62,7 @@ const empleadosIniciales: Empleado[] = [
     correo: 'guillermo.von@laboratorioxyz.com',
     telefono: '3154432211',
     codigoTarjetaRfid: 'RFID-003',
-    estado: 'SUSPENDIDO',
+    estado: 'INACTIVO',
     motivoCambioEstado: 'Incumplimiento de protocolo de esterilidad en esclusa.',
   },
 ];

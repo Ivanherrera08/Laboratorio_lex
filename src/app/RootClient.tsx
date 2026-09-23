@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import SimuladorAccesoPage from '@/components/SimuladorAcceso';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck,
@@ -183,7 +184,7 @@ export default function PortalPublicoPage() {
                       Cerrando sesión...
                     </div>
                   ) : (
-                    <Link href="/login">
+                    <a href="#simulador-esclusas">
                       <motion.div
                         whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(16, 185, 129, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
@@ -193,10 +194,10 @@ export default function PortalPublicoPage() {
                           className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" 
                         />
                         <ScanFace className="w-5 h-5" />
-                        Identificación Biométrica
+                        Acceso a Esclusas (Torniquete)
                         <ArrowRight className="w-5 h-5" />
                       </motion.div>
-                    </Link>
+                    </a>
                   )}
                 </div>
               </motion.div>
@@ -304,6 +305,28 @@ export default function PortalPublicoPage() {
 
               </div>
 
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION: SIMULADOR DE ESCLUSAS */}
+        <section id="simulador-esclusas" className="py-24 relative overflow-hidden bg-white/50 border-t border-slate-200/60">
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.1 }}
+              className="mb-12"
+            >
+              <h2 className="text-4xl font-heading font-black text-brand-dark">Punto de Control (Escáner Público)</h2>
+              <p className="text-slate-500 mt-2">
+                Simulador del escáner físico de exclusas. Al leer la credencial, contacta directamente a los servidores biométricos.
+              </p>
+            </motion.div>
+            
+            {/* The actual simulator component */}
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+              <SimuladorAccesoPage />
             </div>
           </div>
         </section>

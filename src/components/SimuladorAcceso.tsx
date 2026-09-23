@@ -15,6 +15,7 @@ import {
   Building2,
   ShieldCheck,
   ShieldAlert,
+  Fingerprint,
 } from 'lucide-react';
 
 export default function SimuladorAccesoPage() {
@@ -26,7 +27,6 @@ export default function SimuladorAccesoPage() {
 
   useEffect(() => {
     import('@/lib/usuariosStore').then(({ getUsuariosSistema }) => getUsuariosSistema());
-    import('@/lib/personalStore').then(({ getEmpleados }) => getEmpleados());
   }, []);
 
   const [resultado, setResultado] = useState<{
@@ -46,6 +46,9 @@ export default function SimuladorAccesoPage() {
     { id: '2', nombre: 'Zona de Empaque 1' },
   ];
 
+  const [areas, setAreas] = useState<{ id: string; nombre: string }[]>(areasDemo);
+  const [empleadosPadron, setEmpleadosPadron] = useState<Empleado[]>([]);
+
   const handleSimular = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identificador.trim()) {
@@ -58,7 +61,7 @@ export default function SimuladorAccesoPage() {
     
     toast.loading('Analizando credencial en el servidor biométrico...', { id: 'scan-toast' });
 
-    const areaSeleccionada = areasDemo.find((a) => a.id === areaId)?.nombre ?? 'Área General';
+    const areaSeleccionada = areas.find((a) => a.id === areaId)?.nombre ?? 'Área General';
 
     // Función de resolución y fallback local
     const buscarEnLocal = async (doc: string, rfid: string | null, area: string) => {
@@ -73,7 +76,7 @@ export default function SimuladorAccesoPage() {
         if (usuarioSistema) {
           esUsuarioSistema = true;
           rolSistema = usuarioSistema.rol;
-          const estadoMapeado = usuarioSistema.estado === 'ACTIVO' ? 'ACTIVO' : usuarioSistema.estado === 'BLOQUEADO' ? 'REVOCADO' : 'SUSPENDIDO';
+          const estadoMapeado = usuarioSistema.estado === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO';
           empleado = {
             id: usuarioSistema.id,
             departamentoId: 0,
@@ -96,10 +99,14 @@ export default function SimuladorAccesoPage() {
             estado: estadoMapeado as any,
           };
         } else {
-          empleado = buscarPorDocumento(doc.trim());
+          empleado =
+            empleadosPadron.find((emp) => emp.numeroDocumento === doc.trim()) ??
+            buscarPorDocumento(doc.trim());
         }
       } else if (rfid) {
-        empleado = buscarPorRfid(rfid.trim());
+        empleado =
+          empleadosPadron.find((emp) => (emp.codigoTarjetaRfid || '').toLowerCase() === rfid.trim().toLowerCase()) ??
+          buscarPorRfid(rfid.trim());
       }
 
       const timestampActual = new Date().toISOString();
@@ -128,10 +135,10 @@ export default function SimuladorAccesoPage() {
         return;
       }
 
-      if (empleado.estado === 'REVOCADO' || empleado.estado === 'SUSPENDIDO' || empleado.estado === 'INACTIVO') {
+      if (empleado.estado === 'INACTIVO') {
         const estadoFinal: ResultadoAcceso = 'DENEGADO';
-        const motivo = `Credencial en estado ${empleado.estado}. Acceso revocado por protocolo de seguridad.`;
-        toast.error(`Acceso Denegado — ${empleado.estado}`, { id: 'scan-toast' });
+        const motivo = `Permisos de acceso inactivos.`;
+        toast.error(`Acceso Denegado`, { id: 'scan-toast' });
 
         setResultado({
           estado: estadoFinal,
@@ -154,6 +161,7 @@ export default function SimuladorAccesoPage() {
         });
         return;
       }
+
 
       // Validación de acceso por zona
       const normalizar = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -200,7 +208,7 @@ export default function SimuladorAccesoPage() {
       // Simulación de delay de lectura biométrica de torniquete
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const res = await api.post('/accesos/molinete', {
+      const res = await api.post('/publico/accesos/molinete', {
         numeroDocumento: tipoIdentificador === 'DOCUMENTO' ? identificador.trim() : undefined,
         codigoTarjetaRfid: tipoIdentificador === 'RFID' ? identificador.trim() : undefined,
         areaId: parseInt(areaId, 10),
@@ -209,23 +217,34 @@ export default function SimuladorAccesoPage() {
       const estado = res.data.resultado as ResultadoAcceso;
       const timestampActual = new Date().toISOString();
 
+      const nombreBackend = res.data.nombreEmpleado;
+      const perfilReal =
+        tipoIdentificador === 'DOCUMENTO'
+          ? empleadosPadron.find((emp) => emp.numeroDocumento === identificador.trim())
+          : empleadosPadron.find((emp) => (emp.codigoTarjetaRfid || '').toLowerCase() === identificador.trim().toLowerCase());
+
       setResultado({
         estado,
         motivo: res.data.motivo || res.data.mensaje,
         timestamp: timestampActual,
-        areaConsultada: res.data.nombreArea || areaSeleccionada,
-        perfil: res.data.nombreEmpleado ? {
-          id: 0,
-          departamentoId: 0,
-          tipoDocumento: 'CC',
-          numeroDocumento: identificador,
-          nombres: res.data.nombreEmpleado.split(' ')[0] || res.data.nombreEmpleado,
-          apellidos: res.data.nombreEmpleado.split(' ').slice(1).join(' ') || '',
-          correo: 'personal@laboratorioxyz.com',
-          telefono: 'Registrado en Servidor',
-          estado: res.data.estadoEmpleado || (estado === 'AUTORIZADO' ? 'ACTIVO' : 'REVOCADO'),
-          areaPrincipalNombre: res.data.nombreArea || areaSeleccionada,
-        } : undefined,
+        areaConsultada: res.data.nombreArea && res.data.nombreArea !== 'N/A' ? res.data.nombreArea : areaSeleccionada,
+        perfil:
+          perfilReal
+            ? { ...perfilReal, areaPrincipalNombre: perfilReal.areaPrincipalNombre || res.data.nombreArea || areaSeleccionada }
+            : (nombreBackend && nombreBackend !== 'DESCONOCIDO'
+                ? {
+                    id: 0,
+                    departamentoId: 0,
+                    tipoDocumento: 'CC',
+                    numeroDocumento: identificador,
+                    nombres: nombreBackend.split(' ')[0] || nombreBackend,
+                    apellidos: nombreBackend.split(' ').slice(1).join(' ') || '',
+                    correo: 'personal@laboratorioxyz.com',
+                    telefono: 'Registrado en Servidor',
+                    estado: res.data.estadoEmpleado || 'ACTIVO',
+                    areaPrincipalNombre: res.data.nombreArea && res.data.nombreArea !== 'N/A' ? res.data.nombreArea : areaSeleccionada,
+                  }
+                : undefined),
       });
 
       if (estado === 'AUTORIZADO') {
@@ -235,6 +254,17 @@ export default function SimuladorAccesoPage() {
       } else {
         toast.warning('Credencial Desconocida', { id: 'scan-toast' });
       }
+
+      // Guardar en el store local para que el Administrador lo vea en tiempo real
+      registrarAccesoLocal({
+        areaId: parseInt(areaId, 10),
+        areaNombre: res.data.nombreArea && res.data.nombreArea !== 'N/A' ? res.data.nombreArea : areaSeleccionada,
+        numeroDocumentoIngresado: tipoIdentificador === 'DOCUMENTO' ? identificador.trim() : '',
+        codigoTarjetaIngresado: tipoIdentificador === 'RFID' ? identificador.trim() : undefined,
+        resultadoAcceso: estado,
+        motivoDenegacion: res.data.motivo || res.data.mensaje,
+        empleadoNombreCompleto: nombreBackend && nombreBackend !== 'DESCONOCIDO' ? nombreBackend : undefined,
+      });
 
     } catch (error) {
       // Fallback a lógica local si no hay backend (o si la API falla)
@@ -296,37 +326,13 @@ export default function SimuladorAccesoPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Panel de Configuración del Escaneo */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-emerald-200/40 shadow-xs space-y-6">
-          <div className="flex items-center gap-3 border-b border-emerald-200/30 pb-4">
-            <div className="p-2.5 rounded-2xl bg-emerald-600/10 text-emerald-600">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-heading font-bold text-slate-800 text-sm">Punto de Verificación</h2>
-              <p className="text-[11px] text-slate-500/70">Selecciona el área donde se ubica el lector</p>
-            </div>
-          </div>
+        {/* Panel de Configuración del Escaneo - Light/Modern Design */}
+        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-emerald-200/40 shadow-xs relative overflow-hidden space-y-6">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-60" />
+          
+          <form onSubmit={handleSimular} className="space-y-6 relative z-10 mt-2">
 
-          <form onSubmit={handleSimular} className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
-                Zona de Bioseguridad Destino
-              </label>
-              <select
-                value={areaId}
-                onChange={(e) => setAreaId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-emerald-50/30 border border-emerald-200/60 text-slate-800 text-xs font-semibold focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all shadow-xs"
-              >
-                {areasDemo.map((area) => (
-                  <option key={area.id} value={area.id}>
-                    {area.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
                 Método de Identificación
               </label>
@@ -338,8 +344,8 @@ export default function SimuladorAccesoPage() {
                     onClick={() => setTipoIdentificador(tipo as any)}
                     className={`py-3 text-xs font-bold rounded-xl border transition-all ${
                       tipoIdentificador === tipo 
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' 
-                        : 'bg-emerald-50/40 text-slate-500 border-emerald-200/40 hover:border-emerald-600/50'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20' 
+                        : 'bg-emerald-50/40 text-slate-500 border-emerald-200/40 hover:border-emerald-600/50 hover:bg-emerald-50'
                     }`}
                   >
                     {tipo === 'DOCUMENTO' ? 'Documento ID' : 'Tarjeta RFID'}
@@ -348,31 +354,53 @@ export default function SimuladorAccesoPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
                   Credencial / Identificador
                 </label>
-                <span className="text-[10px] font-medium text-slate-500/50">{identificador.length}/20</span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {identificador.length}/{tipoIdentificador === 'DOCUMENTO' ? 10 : 15}
+                </span>
               </div>
-              <input
-                type="text"
-                required
-                value={identificador}
-                onChange={(e) => setIdentificador(e.target.value)}
-                placeholder={tipoIdentificador === 'DOCUMENTO' ? 'Ej. 10001234 o 1012345678' : 'Ej. RFID-001'}
-                className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200/60 text-slate-800 font-mono text-base focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all placeholder:text-slate-500/30 shadow-xs"
-              />
-              <p className="text-[10px] text-slate-500/60">
-                💡 Prueba con: <strong>10001234</strong> (Admin), <strong>1012345678</strong> (Carlos Mendoza), o <strong>1087654321</strong> (Revocado).
+              <div className="relative group">
+                <input
+                  type="text"
+                  required
+                  value={identificador}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (tipoIdentificador === 'DOCUMENTO') {
+                      val = val.replace(/\D/g, '').slice(0, 10);
+                    } else {
+                      val = val.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 15);
+                    }
+                    setIdentificador(val);
+                  }}
+                  maxLength={tipoIdentificador === 'DOCUMENTO' ? 10 : 15}
+                  placeholder={
+                    tipoIdentificador === 'DOCUMENTO'
+                      ? 'Ej. 1012345678'
+                      : 'Ej. crn-cnj-857'
+                  }
+                  className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200/60 text-slate-800 font-mono text-base tracking-widest focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400/50 shadow-sm"
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-focus-within:opacity-100 transition-opacity">
+                  <Fingerprint className="w-5 h-5 text-emerald-500" />
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500/70 flex items-center gap-1.5 mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                Sistema Biométrico y RFID en línea.
               </p>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-600/90 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full mt-6 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
             >
+              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
               <ScanLine className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'ANALIZANDO CREDENCIAL...' : 'ESCANEAR EN TORNIQUETE'}
             </button>

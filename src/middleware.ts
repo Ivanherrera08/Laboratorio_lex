@@ -3,12 +3,11 @@ import type { NextRequest } from 'next/server';
 
 // Matriz de permisos RBAC para rutas de Next.js en el Servidor / Edge (Vercel)
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  '/dashboard/simulador': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
   '/dashboard/personal': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/usuarios': ['ADMINISTRADOR'],
   '/dashboard/carga-masiva': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
-  '/dashboard/catalogos': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
-  '/dashboard/historial': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
+  '/dashboard/catalogos': ['ADMINISTRADOR'],
+  '/dashboard/historial': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
   '/dashboard/socio-sync': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
   '/dashboard/auditoria': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
 };
@@ -52,9 +51,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Si un usuario autenticado intenta entrar a /login, redirigirlo a /dashboard/simulador
+  // 2. Si un usuario autenticado intenta entrar a /login, redirigirlo a /dashboard/historial
   if (pathname === '/login' && token && token.trim() !== '') {
-    return NextResponse.redirect(new URL('/dashboard/simulador', request.url), 307);
+    return NextResponse.redirect(new URL('/dashboard/historial', request.url), 307);
   }
 
   // 3. Si un usuario sin token intenta entrar a /dashboard/:path*, redirigirlo a /login (HTTP 307)
@@ -68,7 +67,7 @@ export function middleware(request: NextRequest) {
     // 4. Verificación de Roles en el Edge (RBAC)
     const allowedRoles = ROLE_PERMISSIONS[pathname];
     if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/dashboard/simulador', request.url), 307);
+      return NextResponse.redirect(new URL('/dashboard/historial', request.url), 307);
     }
   }
 

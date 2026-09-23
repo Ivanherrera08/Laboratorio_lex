@@ -2,7 +2,7 @@ export type RolUsuario = 'ADMINISTRADOR' | 'GESTOR_PERSONAL' | 'SUPERVISOR_ACCES
 
 export type EstadoUsuario = 'ACTIVO' | 'BLOQUEADO' | 'INACTIVO';
 
-export type EstadoEmpleado = 'ACTIVO' | 'REVOCADO' | 'SUSPENDIDO' | 'INACTIVO';
+export type EstadoEmpleado = 'ACTIVO' | 'INACTIVO';
 
 export type ResultadoAcceso = 'AUTORIZADO' | 'DENEGADO' | 'NO_REGISTRADO';
 

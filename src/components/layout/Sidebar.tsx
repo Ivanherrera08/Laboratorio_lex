@@ -32,13 +32,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
   const navigation = [
-    {
-      name: 'Simulador de Acceso',
-      href: '/dashboard/simulador',
-      icon: ScanLine,
-      badge: 'RFID Activo',
-      roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
-    },
+
     {
       name: 'Gestión de Personal',
       href: '/dashboard/personal',
@@ -46,12 +40,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       badge: 'Multi-Área',
       roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
     },
-    {
-      name: 'Usuarios y Credenciales',
-      href: '/dashboard/usuarios',
-      icon: UserCog,
-      roles: ['ADMINISTRADOR'],
-    },
+
     {
       name: 'Carga Masiva',
       href: '/dashboard/carga-masiva',
@@ -62,13 +51,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: 'Catálogos y Zonas',
       href: '/dashboard/catalogos',
       icon: Building2,
-      roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
+      roles: ['ADMINISTRADOR'],
     },
     {
       name: 'Historial de Accesos',
       href: '/dashboard/historial',
       icon: FileText,
-      roles: ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
+      roles: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
     },
     {
       name: 'Socio Internacional',
