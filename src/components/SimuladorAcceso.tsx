@@ -218,33 +218,40 @@ export default function SimuladorAccesoPage() {
       const timestampActual = new Date().toISOString();
 
       const nombreBackend = res.data.nombreEmpleado;
-      const perfilReal =
+      const data = res.data;
+
+      // Construir perfil directamente desde los campos del backend
+      // Buscar también en padrón local por si hay foto guardada
+      const perfilLocal =
         tipoIdentificador === 'DOCUMENTO'
           ? empleadosPadron.find((emp) => emp.numeroDocumento === identificador.trim())
           : empleadosPadron.find((emp) => (emp.codigoTarjetaRfid || '').toLowerCase() === identificador.trim().toLowerCase());
 
+      const perfilCompleto =
+        nombreBackend && nombreBackend !== 'DESCONOCIDO'
+          ? {
+              id: perfilLocal?.id ?? 0,
+              departamentoId: perfilLocal?.departamentoId ?? 0,
+              tipoDocumento: data.tipoDocumento || perfilLocal?.tipoDocumento || 'CC',
+              numeroDocumento: data.numeroDocumentoIngresado || identificador,
+              nombres: perfilLocal?.nombres || nombreBackend.split(' ')[0] || nombreBackend,
+              apellidos: perfilLocal?.apellidos || nombreBackend.split(' ').slice(1).join(' ') || '',
+              correo: data.correo || perfilLocal?.correo || '',
+              telefono: data.telefono || perfilLocal?.telefono || '',
+              estado: data.estadoEmpleado || perfilLocal?.estado || 'ACTIVO',
+              departamentoNombre: data.departamentoNombre || perfilLocal?.departamentoNombre || '',
+              areaPrincipalNombre: data.nombreArea && data.nombreArea !== 'N/A' ? data.nombreArea : areaSeleccionada,
+              fotoPerfil: perfilLocal?.fotoPerfil || undefined,
+              codigoTarjetaRfid: data.codigoTarjetaRfid || perfilLocal?.codigoTarjetaRfid,
+            }
+          : undefined;
+
       setResultado({
         estado,
-        motivo: res.data.motivo || res.data.mensaje,
+        motivo: data.motivo || data.mensaje,
         timestamp: timestampActual,
-        areaConsultada: res.data.nombreArea && res.data.nombreArea !== 'N/A' ? res.data.nombreArea : areaSeleccionada,
-        perfil:
-          perfilReal
-            ? { ...perfilReal, areaPrincipalNombre: perfilReal.areaPrincipalNombre || res.data.nombreArea || areaSeleccionada }
-            : (nombreBackend && nombreBackend !== 'DESCONOCIDO'
-                ? {
-                    id: 0,
-                    departamentoId: 0,
-                    tipoDocumento: 'CC',
-                    numeroDocumento: identificador,
-                    nombres: nombreBackend.split(' ')[0] || nombreBackend,
-                    apellidos: nombreBackend.split(' ').slice(1).join(' ') || '',
-                    correo: 'personal@laboratorioxyz.com',
-                    telefono: 'Registrado en Servidor',
-                    estado: res.data.estadoEmpleado || 'ACTIVO',
-                    areaPrincipalNombre: res.data.nombreArea && res.data.nombreArea !== 'N/A' ? res.data.nombreArea : areaSeleccionada,
-                  }
-                : undefined),
+        areaConsultada: data.nombreArea && data.nombreArea !== 'N/A' ? data.nombreArea : areaSeleccionada,
+        perfil: perfilCompleto,
       });
 
       if (estado === 'AUTORIZADO') {
@@ -258,12 +265,12 @@ export default function SimuladorAccesoPage() {
       // Guardar en el store local para que el Administrador lo vea en tiempo real
       registrarAccesoLocal({
         areaId: parseInt(areaId, 10),
-        areaNombre: res.data.nombreArea && res.data.nombreArea !== 'N/A' ? res.data.nombreArea : areaSeleccionada,
+        areaNombre: data.nombreArea && data.nombreArea !== 'N/A' ? data.nombreArea : areaSeleccionada,
         numeroDocumentoIngresado: tipoIdentificador === 'DOCUMENTO' ? identificador.trim() : '',
         codigoTarjetaIngresado: tipoIdentificador === 'RFID' ? identificador.trim() : undefined,
         resultadoAcceso: estado,
-        motivoDenegacion: res.data.motivo || res.data.mensaje,
-        empleadoNombreCompleto: nombreBackend && nombreBackend !== 'DESCONOCIDO' ? nombreBackend : undefined,
+        motivoDenegacion: data.motivo || data.mensaje,
+        empleadoNombreCompleto: (nombreBackend && nombreBackend !== 'DESCONOCIDO') ? nombreBackend : undefined,
       });
 
     } catch (error) {
@@ -318,55 +325,87 @@ export default function SimuladorAccesoPage() {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="space-y-6"
     >
-      <div>
-        <h1 className="text-2xl font-heading font-extrabold text-slate-800">Simulador de Esclusa y Control de Acceso</h1>
-        <p className="text-xs text-slate-500/70 mt-1">
-          Validación biométrica e inspección de credenciales RFID en tiempo real con registro inmutable en bitácora.
-        </p>
+      {/* ── ENCABEZADO ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0">
+            <ScanLine className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold text-slate-800 leading-tight">Control de Acceso</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Valide credenciales RFID o documento en tiempo real</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold w-fit">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          Sistema en línea
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Panel de Configuración del Escaneo - Light/Modern Design */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-emerald-200/40 shadow-xs relative overflow-hidden space-y-6">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-60" />
-          
-          <form onSubmit={handleSimular} className="space-y-6 relative z-10 mt-2">
+      {/* ── CARD PRINCIPAL UNIFICADA ── */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2">
 
-            <div className="space-y-3">
-              <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
-                Método de Identificación
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {['DOCUMENTO', 'RFID'].map((tipo) => (
-                  <button
+          {/* ─ PANEL IZQUIERDO: Formulario ─ */}
+          <div className="p-8 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col justify-center gap-7">
+
+            <div>
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Escanear Credencial</p>
+              <p className="text-slate-500 text-xs leading-relaxed">Seleccione el tipo e ingrese el identificador para verificar el acceso al laboratorio.</p>
+            </div>
+
+            {/* Selector de tipo animado */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tipo de credencial</p>
+              <div className="relative flex bg-slate-100 rounded-xl p-1 gap-1">
+                {(['DOCUMENTO', 'RFID'] as const).map((tipo) => (
+                  <motion.button
                     key={tipo}
                     type="button"
-                    onClick={() => setTipoIdentificador(tipo as any)}
-                    className={`py-3 text-xs font-bold rounded-xl border transition-all ${
-                      tipoIdentificador === tipo 
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20' 
-                        : 'bg-emerald-50/40 text-slate-500 border-emerald-200/40 hover:border-emerald-600/50 hover:bg-emerald-50'
+                    layout
+                    onClick={() => setTipoIdentificador(tipo)}
+                    className={`relative flex-1 py-2.5 text-xs font-bold rounded-lg transition-colors z-10 ${
+                      tipoIdentificador === tipo ? 'text-white' : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
-                    {tipo === 'DOCUMENTO' ? 'Documento ID' : 'Tarjeta RFID'}
-                  </button>
+                    {tipoIdentificador === tipo && (
+                      <motion.div
+                        layoutId="pill"
+                        className="absolute inset-0 rounded-lg bg-emerald-600 shadow-md shadow-emerald-600/30"
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center justify-center gap-1.5">
+                      {tipo === 'DOCUMENTO' ? (
+                        <><Building2 className="w-3.5 h-3.5" /> Documento ID</>
+                      ) : (
+                        <><ScanLine className="w-3.5 h-3.5" /> Tarjeta RFID</>
+                      )}
+                    </span>
+                  </motion.button>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-3">
+            {/* Input de credencial */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="block text-[11px] font-bold text-slate-500/70 uppercase tracking-wider">
-                  Credencial / Identificador
-                </label>
-                <span className="text-[10px] font-mono text-slate-400">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  {tipoIdentificador === 'DOCUMENTO' ? 'Número de documento' : 'Código de carnet'}
+                </p>
+                <span className={`text-[10px] font-mono font-bold ${
+                  identificador.length === (tipoIdentificador === 'DOCUMENTO' ? 10 : 15)
+                    ? 'text-emerald-500' : 'text-slate-300'
+                }`}>
                   {identificador.length}/{tipoIdentificador === 'DOCUMENTO' ? 10 : 15}
                 </span>
               </div>
               <div className="relative group">
                 <input
+                  id="input-credencial"
                   type="text"
                   required
+                  autoComplete="off"
                   value={identificador}
                   onChange={(e) => {
                     let val = e.target.value;
@@ -378,156 +417,205 @@ export default function SimuladorAccesoPage() {
                     setIdentificador(val);
                   }}
                   maxLength={tipoIdentificador === 'DOCUMENTO' ? 10 : 15}
-                  placeholder={
-                    tipoIdentificador === 'DOCUMENTO'
-                      ? 'Ej. 1012345678'
-                      : 'Ej. crn-cnj-857'
-                  }
-                  className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200/60 text-slate-800 font-mono text-base tracking-widest focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-400/50 shadow-sm"
+                  placeholder={tipoIdentificador === 'DOCUMENTO' ? 'Ej. 1012345678' : 'Ej. crn-cnj-857'}
+                  className="w-full px-4 py-3.5 pr-12 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-sm tracking-widest focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-300"
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-focus-within:opacity-100 transition-opacity">
-                  <Fingerprint className="w-5 h-5 text-emerald-500" />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-25 group-focus-within:opacity-70 transition-opacity">
+                  <Fingerprint className="w-5 h-5 text-emerald-600" />
                 </div>
               </div>
-              <p className="text-[10px] text-slate-500/70 flex items-center gap-1.5 mt-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                Sistema Biométrico y RFID en línea.
+              <p className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                {tipoIdentificador === 'DOCUMENTO' ? 'Solo números · Máx. 10 dígitos' : 'Formato: abc-xyz-123 · Máx. 15 chars'}
               </p>
             </div>
 
-            <button
-              type="submit"
+            {/* Botón de escaneo */}
+            <motion.button
+              type="button"
               disabled={loading}
-              className="w-full mt-6 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+              whileHover={{ scale: loading ? 1 : 1.015 }}
+              whileTap={{ scale: loading ? 1 : 0.975 }}
+              onClick={handleSimular as any}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
-              <ScanLine className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'ANALIZANDO CREDENCIAL...' : 'ESCANEAR EN TORNIQUETE'}
-            </button>
-          </form>
-        </div>
-
-        {/* Panel de Resultado Animado */}
-        <div className="lg:col-span-7 flex flex-col justify-center min-h-[480px]">
-          <AnimatePresence mode="wait">
-            {loading ? (
               <motion.div
-                key="scanning"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="w-full h-full min-h-[450px] rounded-[2.5rem] bg-white/60 backdrop-blur-md border border-emerald-200/40 flex flex-col items-center justify-center p-12 relative overflow-hidden"
-              >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    animate={{ scale: [1, 2.5], opacity: [0.5, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
-                    className="w-32 h-32 rounded-full border-2 border-emerald-600/40 absolute"
-                  />
-                  <motion.div
-                    animate={{ scale: [1, 2], opacity: [0.8, 0] }}
-                    transition={{ duration: 1.5, delay: 0.4, repeat: Infinity, ease: 'easeOut' }}
-                    className="w-32 h-32 rounded-full border-2 border-emerald-600/20 absolute"
-                  />
-                </div>
-                <ScanLine className="w-16 h-16 text-emerald-600 relative z-10 animate-bounce" />
-                <h3 className="text-emerald-600 font-mono font-bold mt-6 relative z-10 tracking-widest animate-pulse text-sm">
-                  VALIDANDO PERMISOS Y BIOMETRÍA...
-                </h3>
-              </motion.div>
-            ) : resultado ? (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, y: 30, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                className={`rounded-[2.5rem] overflow-hidden ${colors[resultado.estado].bg} border ${colors[resultado.estado].border} ${colors[resultado.estado].glow} p-8 relative`}
-              >
-                <div className="text-center mb-6 relative z-10">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', delay: 0.15 }}
-                    className={`w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-4 ${colors[resultado.estado].iconBg} border`}
-                  >
-                    {resultado.estado === 'AUTORIZADO' && <CheckCircle2 className={`w-10 h-10 ${colors[resultado.estado].icon}`} />}
-                    {resultado.estado === 'DENEGADO' && <XCircle className={`w-10 h-10 ${colors[resultado.estado].icon}`} />}
-                    {resultado.estado === 'NO_REGISTRADO' && <AlertCircle className={`w-10 h-10 ${colors[resultado.estado].icon}`} />}
-                  </motion.div>
-                  <h2 className={`text-3xl font-heading font-black tracking-tight ${colors[resultado.estado].text}`}>
-                    {resultado.estado === 'AUTORIZADO' ? 'ACCESO OTORGADO' : resultado.estado === 'DENEGADO' ? 'ACCESO DENEGADO' : 'NO REGISTRADO'}
-                  </h2>
-                </div>
+                className="absolute inset-0 bg-white/15"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.55, ease: 'easeInOut' }}
+              />
+              <ScanLine className={`w-5 h-5 relative z-10 ${loading ? 'animate-spin' : ''}`} />
+              <span className="relative z-10">{loading ? 'Analizando credencial...' : 'Escanear en Torniquete'}</span>
+            </motion.button>
+          </div>
 
-                {resultado.perfil && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-white/80 backdrop-blur-md rounded-3xl p-6 border border-black/5 shadow-xs"
-                  >
-                    <div className="flex items-center gap-5 border-b border-gray-200/60 pb-5 mb-5">
-                      <div className="w-16 h-16 rounded-2xl bg-emerald-50/40 border border-emerald-200/40 flex items-center justify-center text-3xl">
-                        {resultado.perfil.fotoPerfil ? (
-                          <img src={resultado.perfil.fotoPerfil} alt="Perfil" className="w-full h-full rounded-2xl object-cover" />
-                        ) : '👤'}
-                      </div>
-                      <div>
-                        <p className={`text-lg font-heading font-bold ${colors[resultado.estado].text}`}>
-                          {resultado.perfil.nombres} {resultado.perfil.apellidos}
-                        </p>
-                        <p className="text-xs text-slate-500/70">{resultado.perfil.departamentoNombre || 'Personal Autorizado'}</p>
-                      </div>
+          {/* ─ PANEL DERECHO: Resultado ─ */}
+          <div className="flex flex-col justify-center min-h-[440px] bg-slate-50/50">
+            <AnimatePresence mode="wait">
+              {loading ? (
+                <motion.div
+                  key="scanning"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center h-full p-12"
+                >
+                  <div className="relative flex items-center justify-center w-32 h-32 mb-6">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute rounded-full border-2 border-emerald-400/50"
+                        animate={{ scale: [1, 2.4], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.5, ease: 'easeOut' }}
+                        style={{ width: 76, height: 76 }}
+                      />
+                    ))}
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center relative z-10">
+                      <ScanLine className="w-8 h-8 text-emerald-600 animate-pulse" />
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 text-xs font-medium text-slate-500/80">
-                      <div>
-                        <span className="text-slate-500/50 block mb-1">Documento Identidad</span>
-                        <span className="font-mono font-bold text-slate-800">{resultado.perfil.tipoDocumento} {resultado.perfil.numeroDocumento}</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500/50 block mb-1">Estado de Credencial</span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200/40 font-bold">
-                          {resultado.perfil.estado}
-                        </span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-slate-500/50 block mb-1">Área Principal</span>
-                        <span className="font-semibold text-slate-800">{resultado.perfil.areaPrincipalNombre || 'Laboratorio Central'}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Mensaje de Resultado con el color EXACTO según el estado */}
-                {resultado.motivo && (
-                  <div className={`mt-5 p-4 rounded-2xl border text-xs font-semibold flex items-start gap-2.5 shadow-xs ${colors[resultado.estado].alertBg}`}>
-                    {resultado.estado === 'AUTORIZADO' ? (
-                      <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-700 mt-0.5" />
-                    ) : (
-                      <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-                    )}
-                    <span>{resultado.motivo}</span>
                   </div>
-                )}
+                  <p className="text-sm font-bold text-emerald-700 tracking-widest font-mono">VALIDANDO...</p>
+                  <p className="text-xs text-slate-400 mt-1.5">Consultando base de datos biométrica</p>
+                </motion.div>
 
-                <div className="mt-6 flex items-center justify-between text-[11px] text-slate-500/50 font-mono">
-                  <span>LOG: {new Date(resultado.timestamp).toLocaleTimeString()}</span>
-                  <span>ZONA: {resultado.areaConsultada}</span>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-full h-full min-h-[450px] rounded-[2.5rem] bg-emerald-50/20 border border-emerald-200/40 border-dashed flex flex-col items-center justify-center p-12 text-slate-500/40"
-              >
-                <ScanLine className="w-16 h-16 mb-4 opacity-20" />
-                <p className="text-sm font-heading font-bold">ESCLUSAS EN ESPERA DE LECTURA</p>
-                <p className="text-xs text-slate-500/50 mt-1">Ingresa una credencial a la izquierda para simular el paso</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              ) : resultado ? (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', damping: 22, stiffness: 120 }}
+                  className="p-7"
+                >
+                  {/* Badge de estado */}
+                  <div className={`flex items-center gap-3 p-4 rounded-2xl mb-5 ${colors[resultado.estado].bg} border ${colors[resultado.estado].border}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[resultado.estado].iconBg} border ${colors[resultado.estado].border} flex-shrink-0`}>
+                      {resultado.estado === 'AUTORIZADO' && <CheckCircle2 className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
+                      {resultado.estado === 'DENEGADO' && <XCircle className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
+                      {resultado.estado === 'NO_REGISTRADO' && <AlertCircle className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
+                    </div>
+                    <div>
+                      <p className={`font-extrabold text-base leading-tight ${colors[resultado.estado].text}`}>
+                        {resultado.estado === 'AUTORIZADO' ? 'Acceso Otorgado' : resultado.estado === 'DENEGADO' ? 'Acceso Denegado' : 'No Registrado'}
+                      </p>
+                      <p className={`text-xs mt-0.5 ${colors[resultado.estado].text} opacity-60`}>
+                        {new Date(resultado.timestamp).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Perfil completo */}
+                  {resultado.perfil && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className="bg-white rounded-2xl border border-slate-100 overflow-hidden"
+                    >
+                      {/* Encabezado del perfil: foto + nombre */}
+                      <div className={`flex items-center gap-4 p-4 ${colors[resultado.estado].bg} border-b ${colors[resultado.estado].border}`}>
+                        <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-white/60 shadow-md flex-shrink-0 bg-slate-100 flex items-center justify-center">
+                          {resultado.perfil.fotoPerfil
+                            ? <img src={resultado.perfil.fotoPerfil} alt="Foto" className="w-full h-full object-cover" />
+                            : <span className="text-3xl">👤</span>}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={`font-extrabold text-base leading-tight ${colors[resultado.estado].text} truncate`}>
+                            {resultado.perfil.nombres} {resultado.perfil.apellidos}
+                          </p>
+                          {resultado.perfil.departamentoNombre && (
+                            <p className={`text-xs mt-0.5 ${colors[resultado.estado].text} opacity-70 truncate`}>
+                              {resultado.perfil.departamentoNombre}
+                            </p>
+                          )}
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/70 border ${colors[resultado.estado].border} ${colors[resultado.estado].icon}`}>
+                            {resultado.perfil.estado}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Grid de datos */}
+                      <div className="p-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Tipo Doc.</p>
+                          <p className="font-bold text-slate-700">{resultado.perfil.tipoDocumento || 'CC'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">N° Documento</p>
+                          <p className="font-mono font-bold text-slate-700">{resultado.perfil.numeroDocumento}</p>
+                        </div>
+                        {resultado.perfil.correo && (
+                          <div className="col-span-2">
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Correo</p>
+                            <p className="font-medium text-slate-600 truncate">{resultado.perfil.correo}</p>
+                          </div>
+                        )}
+                        {resultado.perfil.telefono && (
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Teléfono</p>
+                            <p className="font-medium text-slate-600">{resultado.perfil.telefono}</p>
+                          </div>
+                        )}
+                        <div className={resultado.perfil.telefono ? '' : 'col-span-2'}>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Área Autorizada</p>
+                          <p className="font-semibold text-slate-700">{resultado.perfil.areaPrincipalNombre || resultado.areaConsultada}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Motivo */}
+                  {resultado.motivo && (
+                    <div className={`mt-4 p-3.5 rounded-xl border text-xs font-semibold flex items-start gap-2 ${colors[resultado.estado].alertBg}`}>
+                      {resultado.estado === 'AUTORIZADO'
+                        ? <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-700 mt-0.5" />
+                        : <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />}
+                      <span>{resultado.motivo}</span>
+                    </div>
+                  )}
+                </motion.div>
+
+              ) : (
+                /* Idle state */
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center h-full min-h-[440px] p-10 text-center"
+                >
+                  <div className="relative flex items-center justify-center w-28 h-28 mb-6">
+                    {[0, 1].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute rounded-full border border-dashed border-slate-200"
+                        animate={{ rotate: i === 0 ? 360 : -360 }}
+                        transition={{ duration: i === 0 ? 12 : 18, repeat: Infinity, ease: 'linear' }}
+                        style={{ width: 76 + i * 24, height: 76 + i * 24 }}
+                      />
+                    ))}
+                    <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center z-10">
+                      <ScanLine className="w-7 h-7 text-slate-300" />
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-slate-400">En espera de credencial</p>
+                  <p className="text-xs text-slate-300 mt-1.5 max-w-[200px] leading-relaxed">
+                    Ingrese un documento o carnet para verificar el acceso
+                  </p>
+                  <div className="flex items-center gap-4 mt-7 text-[10px] font-semibold text-slate-300">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Biometría activa
+                    </span>
+                    <span className="w-px h-3 bg-slate-200" />
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                      RFID en línea
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
         </div>
       </div>
     </motion.div>

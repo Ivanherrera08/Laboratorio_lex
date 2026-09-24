@@ -125,16 +125,26 @@ export async function obtenerHistorialCombinado(): Promise<HistorialAcceso[]> {
     const res = await api.get<any[]>('/accesos/historial');
     if (res.data && Array.isArray(res.data)) {
       const backendItems: HistorialAcceso[] = res.data.map((item) => ({
-        id: item.id?.toString() || `bk-${item.timestamp}`,
+        // idHistorial viene del DTO del backend
+        id: item.idHistorial?.toString() || item.id?.toString() || `bk-${item.fechaHora || item.timestamp}`,
         empleadoId: item.empleadoId ?? undefined,
-        empleadoNombreCompleto: item.empleadoNombreCompleto || (item.resultadoAcceso === 'NO_REGISTRADO' ? 'Credencial No Registrada' : 'Usuario del Sistema'),
+        // nombreEmpleado viene del backend, empleadoNombreCompleto es el nombre local
+        empleadoNombreCompleto:
+          item.empleadoNombreCompleto ||
+          item.nombreEmpleado ||
+          undefined,
         areaId: item.areaId || 1,
-        areaNombre: item.areaNombre || 'Área no especificada',
+        // nombreArea viene del backend, areaNombre es el nombre local
+        areaNombre: item.areaNombre || item.nombreArea || 'N/A',
         numeroDocumentoIngresado: item.numeroDocumentoIngresado || '',
-        codigoTarjetaIngresado: item.codigoTarjetaIngresado || undefined,
-        resultadoAcceso: item.resultadoAcceso as ResultadoAcceso,
-        motivoDenegacion: item.motivoDenegacion || undefined,
-        timestamp: item.timestamp || new Date().toISOString(),
+        // codigoTarjetaRfid viene del backend
+        codigoTarjetaIngresado: item.codigoTarjetaIngresado || item.codigoTarjetaRfid || undefined,
+        // resultado viene del backend (no resultadoAcceso)
+        resultadoAcceso: (item.resultadoAcceso || item.resultado) as ResultadoAcceso,
+        // motivo viene del backend (no motivoDenegacion)
+        motivoDenegacion: item.motivoDenegacion || item.motivo || undefined,
+        // fechaHora viene del backend (no timestamp)
+        timestamp: item.timestamp || item.fechaHora || new Date().toISOString(),
       }));
 
       // Fusionar evitando duplicados por id o por timestamp exacto + documento
