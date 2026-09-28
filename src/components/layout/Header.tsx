@@ -70,11 +70,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
   const handleAbrirDetalle = (item: NotificacionSistema) => {
     marcarComoLeida(item.id);
-    setNotificacionSeleccionada(item);
     setShowNotifications(false);
-    if (item.accionUrl) {
-      router.push(item.accionUrl);
-    }
+    setNotificacionSeleccionada(item);
   };
 
   const getIconoTipo = (tipo: NotificacionSistema['tipo']) => {

@@ -8,7 +8,7 @@
 
 import { Empleado } from '@/types';
 
-const STORE_KEY = 'zone_control_personal_v2';
+const STORE_KEY = 'zone_control_personal_v3';
 
 // Empleados demo iniciales que se cargan si el store está vacío
 const empleadosIniciales: Empleado[] = [
@@ -28,7 +28,7 @@ const empleadosIniciales: Empleado[] = [
     apellidos: 'Mendoza Pérez',
     correo: 'carlos.mendoza@laboratorioxyz.com',
     telefono: '3109988776',
-    codigoTarjetaRfid: 'RFID-001',
+    codigoTarjetaRfid: 'car-los-001',
     estado: 'ACTIVO',
   },
   {
@@ -44,7 +44,7 @@ const empleadosIniciales: Empleado[] = [
     apellidos: 'Restrepo Villa',
     correo: 'laura.restrepo@laboratorioxyz.com',
     telefono: '3201123344',
-    codigoTarjetaRfid: 'RFID-002',
+    codigoTarjetaRfid: 'lau-ras-002',
     estado: 'INACTIVO',
     motivoCambioEstado: 'Finalización de contrato temporal y auditoría de seguridad.',
   },
@@ -61,9 +61,25 @@ const empleadosIniciales: Empleado[] = [
     apellidos: 'Von Hassen',
     correo: 'guillermo.von@laboratorioxyz.com',
     telefono: '3154432211',
-    codigoTarjetaRfid: 'RFID-003',
+    codigoTarjetaRfid: 'gui-lle-003',
     estado: 'INACTIVO',
     motivoCambioEstado: 'Incumplimiento de protocolo de esterilidad en esclusa.',
+  },
+  {
+    id: 4,
+    departamentoId: 3,
+    departamentoNombre: 'Bioseguridad',
+    areaPrincipalId: 1,
+    areaPrincipalNombre: 'Laboratorio de Bioseguridad 1',
+    areasAutorizadas: ['Laboratorio de Bioseguridad 1', 'Zona de Empaque 1'],
+    tipoDocumento: 'CC',
+    numeroDocumento: '1122334455',
+    nombres: 'Prueba',
+    apellidos: 'Exitosa',
+    correo: 'prueba@laboratorioxyz.com',
+    telefono: '3000000000',
+    codigoTarjetaRfid: 'pru-eba-123',
+    estado: 'ACTIVO',
   },
 ];
 

@@ -20,7 +20,7 @@ export function usePreventHistoryTraversal(redirectTo: string = '/login?error=se
     if (!token || !user) {
       try {
         sessionStorage.clear();
-        localStorage.clear();
+        localStorage.removeItem('zone_control_token');
       } catch {}
 
       document.cookie = 'zone_control_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict; Secure;';

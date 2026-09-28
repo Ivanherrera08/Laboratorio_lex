@@ -6,8 +6,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   '/dashboard/personal': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
   '/dashboard/usuarios': ['ADMINISTRADOR'],
   '/dashboard/carga-masiva': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
-  '/dashboard/catalogos': ['ADMINISTRADOR'],
-  '/dashboard/historial': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
+  '/dashboard/catalogos': ['ADMINISTRADOR', 'GESTOR_PERSONAL'],
+  '/dashboard/historial': ['ADMINISTRADOR', 'GESTOR_PERSONAL', 'SUPERVISOR_ACCESOS'],
   '/dashboard/socio-sync': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
   '/dashboard/auditoria': ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
 };
@@ -72,7 +72,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 5. Redirección limpia de rutas no reconocidas a la raíz
-  const validPublicRoutes = ['/', '/login'];
+  const validPublicRoutes = ['/', '/login', '/acceso'];
   if (!pathname.startsWith('/dashboard') && !validPublicRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL('/', request.url), 307);
   }

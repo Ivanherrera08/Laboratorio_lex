@@ -477,7 +477,7 @@ export default function CatalogosPage() {
                   value={rfidCodigo}
                   onChange={handleCarnetCodigoChange}
                   placeholder="Ej. CRN-XYZ-123456"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-600/40 bg-emerald-50/20 text-emerald-600 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 bg-white"
                 />
                 {errorCarnet && (
                   <p className="text-[10px] text-red-600 font-semibold mt-1">{errorCarnet}</p>

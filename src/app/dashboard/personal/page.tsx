@@ -148,9 +148,13 @@ export default function GestionPersonalPage() {
   // Errores de validación en tiempo real
   const [erroresForm, setErroresForm] = useState<Record<string, string>>({});
 
-  // Formulario de estado
+  // Formulario de estado y edición
   const [nuevoEstado, setNuevoEstado] = useState<EstadoEmpleado>('ACTIVO');
   const [motivoEstado, setMotivoEstado] = useState('');
+  const [editNombres, setEditNombres] = useState('');
+  const [editApellidos, setEditApellidos] = useState('');
+  const [editDoc, setEditDoc] = useState('');
+  const [editTelefono, setEditTelefono] = useState('');
 
   // Validación de Nombres: Solo letras, espacios, tildes y ñ (Sin números ni signos)
   const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -234,12 +238,25 @@ export default function GestionPersonalPage() {
     }
   };
 
-  // Manejo de Código de Carnet / RFID: Máximo 15 caracteres, solo letras minúsculas, números y guiones
+  // Manejo de Código de Carnet / RFID: Auto-formateo a bloques de 3 (ej. crn-cnj-857)
   const handleRfidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valor = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 15);
+    const raw = e.target.value.toLowerCase().replace(/-/g, '');
+    let allowedRaw = '';
+    
+    for (let i = 0; i < raw.length; i++) {
+      if (i < 6) {
+        if (/[a-z]/.test(raw[i])) allowedRaw += raw[i];
+      } else if (i < 9) {
+        if (/[0-9]/.test(raw[i])) allowedRaw += raw[i];
+      }
+    }
+    
+    // Insertar un guion cada 3 caracteres
+    const valor = allowedRaw.match(/.{1,3}/g)?.join('-') || '';
+
     setNuevoRfid(valor);
-    if (valor.length > 0 && valor.length < 4) {
-      setErroresForm((prev) => ({ ...prev, rfid: 'El número de carnet debe tener al menos 4 caracteres.' }));
+    if (valor.length > 0 && valor.length < 11) {
+      setErroresForm((prev) => ({ ...prev, rfid: 'El carnet debe estar completo (ej. crn-cnj-857)' }));
     } else {
       setErroresForm((prev) => {
         const c = { ...prev };
@@ -350,6 +367,14 @@ export default function GestionPersonalPage() {
       departamentoId: nuevo.departamentoId,
       codigoTarjetaRfid: nuevo.codigoTarjetaRfid,
       estado: 'ACTIVO',
+    }).then((res) => {
+      const empId = res.data.id;
+      // Asignar al menos el área principal para que el simulador lo apruebe
+      api.post('/accesos/autorizaciones', {
+        empleadoId: empId,
+        areaId: 1, // Simulador hardcodeado a 1
+        asignadoPorId: 1
+      }).catch(() => {});
     }).catch(() => {});
 
     // Notificación en el sistema global con auditoría completa
@@ -399,6 +424,10 @@ export default function GestionPersonalPage() {
     setEmpleadoSeleccionado(emp);
     setNuevoEstado(emp.estado);
     setMotivoEstado(emp.motivoCambioEstado || '');
+    setEditNombres(emp.nombres);
+    setEditApellidos(emp.apellidos);
+    setEditDoc(emp.numeroDocumento);
+    setEditTelefono(emp.telefono || '');
     setShowEstadoModal(true);
   };
 
@@ -417,7 +446,15 @@ export default function GestionPersonalPage() {
     setEmpleados((prev) => {
       const updated = prev.map((emp) =>
         emp.id === empleadoSeleccionado.id
-          ? { ...emp, estado: nuevoEstado, motivoCambioEstado: motivoEstado }
+          ? { 
+              ...emp, 
+              estado: nuevoEstado, 
+              motivoCambioEstado: motivoEstado,
+              nombres: editNombres.trim() || emp.nombres,
+              apellidos: editApellidos.trim() || emp.apellidos,
+              numeroDocumento: editDoc.trim() || emp.numeroDocumento,
+              telefono: editTelefono.trim() || emp.telefono
+            }
           : emp
       );
       saveEmpleados(updated);
@@ -1054,13 +1091,32 @@ export default function GestionPersonalPage() {
               </div>
               <div>
                 <h3 className="text-base font-heading font-bold text-slate-800">
-                  Modificar Estado de {empleadoSeleccionado.nombres}
+                  Editar Información de {empleadoSeleccionado.nombres}
                 </h3>
                 <p className="text-xs text-slate-500/70">Documento: {empleadoSeleccionado.numeroDocumento}</p>
               </div>
             </div>
 
             <form onSubmit={handleGuardarEstado} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 mb-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Nombres</label>
+                  <input type="text" required value={editNombres} onChange={e => setEditNombres(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ''))} className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Apellidos</label>
+                  <input type="text" required value={editApellidos} onChange={e => setEditApellidos(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ''))} className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Documento</label>
+                  <input type="text" required value={editDoc} onChange={e => setEditDoc(e.target.value.replace(/\D/g, '').slice(0, 10))} className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Celular</label>
+                  <input type="text" required value={editTelefono} onChange={e => setEditTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))} className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40" />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2">
                   Seleccionar Nuevo Estado de Acceso:

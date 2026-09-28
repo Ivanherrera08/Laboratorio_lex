@@ -89,26 +89,6 @@ function LoginFormContent() {
       login(res.data.token, usuarioBackend);
       router.replace('/dashboard/historial');
     } catch (err: any) {
-      // Fallback demo cuando el backend no está disponible
-      const demoAccount = usuariosDemo[correo.toLowerCase()];
-
-      if (demoAccount && password === demoAccount.pass) {
-        login(`mock_jwt_${demoAccount.user.rol.toLowerCase()}`, demoAccount.user);
-        router.replace('/dashboard/historial');
-        return;
-      }
-
-      // 2. Fallback a usuarios registrados localmente en simulador
-      const usuariosLocales = getUsuariosSistema();
-      const localUser = usuariosLocales.find(u => u.correo.toLowerCase() === correo.toLowerCase());
-      
-      if (localUser && localUser.mockPass === password) {
-        const { mockPass, ...userSinPass } = localUser;
-        login(`mock_jwt_${localUser.rol.toLowerCase()}`, userSinPass);
-        router.replace('/dashboard/historial');
-        return;
-      }
-
       // Conteo de intentos fallidos
       const nuevosIntentos = intentosFallidos + 1;
       setIntentosFallidos(nuevosIntentos);
@@ -118,7 +98,7 @@ function LoginFormContent() {
         setIsBloqueado(true);
         setErrorMsg('Cuenta BLOQUEADA por seguridad tras 3 intentos fallidos consecutivos. Contacte a Soporte.');
       } else {
-        setErrorMsg(`Credenciales incorrectas. Intento ${nuevosIntentos} de 3 permitidos.`);
+        setErrorMsg(err.response?.data?.message || `Credenciales incorrectas. Intento ${nuevosIntentos} de 3 permitidos.`);
       }
     } finally {
       setLoading(false);
@@ -218,25 +198,7 @@ function LoginFormContent() {
             <p className="text-xs font-bold text-emerald-600 mt-2 uppercase tracking-widest">Autenticación Biométrica</p>
           </div>
 
-          {/* Selector visual de Roles */}
-          <div className="mb-8 relative z-20">
-            <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mb-3">Rol de Usuario</p>
-            <div className="flex justify-center relative">
-              <select 
-                defaultValue=""
-                className="w-full max-w-[280px] px-5 py-3 rounded-xl bg-emerald-50 text-emerald-800 text-sm font-bold border border-emerald-200 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer shadow-sm hover:border-emerald-400 transition-all text-center appearance-none"
-              >
-                <option value="" disabled>Seleccionar un Rol...</option>
-                <option value="ADMINISTRADOR">👤 Administrador General</option>
-                <option value="GESTOR_PERSONAL">👥 Gestor de Personal</option>
-                <option value="SUPERVISOR_ACCESOS">🛡️ Auditor / Supervisor</option>
-              </select>
-              {/* Icono de flecha simulado para el select */}
-              <div className="absolute right-[calc(50%-120px)] top-1/2 -translate-y-1/2 pointer-events-none text-emerald-600">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
-            </div>
-          </div>
+
 
           {/* Alertas con animaciones ricas */}
           <AnimatePresence>

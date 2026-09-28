@@ -130,16 +130,28 @@ export default function PortalPublicoPage() {
                 Cerrando sesión segura...
               </div>
             ) : (
-              <Link href="/login" replace>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white font-semibold text-xs transition-shadow shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40"
-                >
-                  <KeyRound className="w-4 h-4" />
-                  Portal Operativo
-                </motion.div>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/acceso">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs transition-shadow hover:border-emerald-300 hover:text-emerald-700 shadow-sm"
+                  >
+                    <Fingerprint className="w-4 h-4" />
+                    Validar Ingreso
+                  </motion.div>
+                </Link>
+                <Link href="/login" replace>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white font-semibold text-xs transition-shadow shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    Portal Operativo
+                  </motion.div>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -184,7 +196,7 @@ export default function PortalPublicoPage() {
                       Cerrando sesión...
                     </div>
                   ) : (
-                    <a href="#simulador-esclusas">
+                    <Link href="/acceso">
                       <motion.div
                         whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(16, 185, 129, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
@@ -197,7 +209,7 @@ export default function PortalPublicoPage() {
                         Acceso a Esclusas (Torniquete)
                         <ArrowRight className="w-5 h-5" />
                       </motion.div>
-                    </a>
+                    </Link>
                   )}
                 </div>
               </motion.div>
@@ -309,27 +321,7 @@ export default function PortalPublicoPage() {
           </div>
         </section>
 
-        {/* SECTION: SIMULADOR DE ESCLUSAS */}
-        <section id="simulador-esclusas" className="py-24 relative overflow-hidden bg-white/50 border-t border-slate-200/60">
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <motion.div 
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              className="mb-12"
-            >
-              <h2 className="text-4xl font-heading font-black text-brand-dark">Punto de Control (Escáner Público)</h2>
-              <p className="text-slate-500 mt-2">
-                Simulador del escáner físico de exclusas. Al leer la credencial, contacta directamente a los servidores biométricos.
-              </p>
-            </motion.div>
-            
-            {/* The actual simulator component */}
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
-              <SimuladorAccesoPage />
-            </div>
-          </div>
-        </section>
+
 
         {/* NIVELES DE BIOSEGURIDAD (Continuous Scroll Animations) */}
         <section className="py-24 bg-[#030712] text-white relative overflow-hidden">

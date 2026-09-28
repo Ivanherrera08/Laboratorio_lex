@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NotificacionSistema } from '@/context/NotificationContext';
 import {
   X,
@@ -15,8 +15,10 @@ import {
   Layers,
   ArrowRight,
   Fingerprint,
+  Info
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DetalleNotificacionModalProps {
   notificacion: NotificacionSistema | null;
@@ -28,6 +30,7 @@ export default function DetalleNotificacionModal({
   onClose,
 }: DetalleNotificacionModalProps) {
   const router = useRouter();
+  const [showToast, setShowToast] = useState(false);
 
   if (!notificacion) return null;
 
@@ -77,9 +80,16 @@ export default function DetalleNotificacionModal({
   const audit = notificacion.detallesAuditoria;
 
   const handleIrAlModulo = () => {
-    onClose();
     if (notificacion.accionUrl) {
-      router.push(notificacion.accionUrl);
+      if (window.location.pathname === notificacion.accionUrl) {
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        router.push(notificacion.accionUrl);
+        onClose();
+      }
+    } else {
+      onClose();
     }
   };
 
@@ -113,9 +123,32 @@ export default function DetalleNotificacionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div
-        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop flex flex-col max-h-[90vh]"
+        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-modal-pop flex flex-col max-h-[90vh] relative"
         onClick={(e) => e.stopPropagation()}
       >
+        <AnimatePresence>
+          {showToast && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-sm rounded-3xl pointer-events-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                className="flex flex-col items-center justify-center gap-2 px-6 py-5 bg-slate-800 text-white rounded-2xl shadow-2xl border border-slate-700 w-auto min-w-[280px] max-w-sm text-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-1 ring-4 ring-emerald-500/10">
+                  <Info className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-100">Módulo Actual</p>
+                  <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                    Ya te encuentras visualizando<br />la pantalla afectada.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Cabecera del Modal */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-3">

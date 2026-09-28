@@ -22,7 +22,7 @@ export default function SimuladorAccesoPage() {
   const { agregarNotificacion } = useNotifications();
   const [identificador, setIdentificador] = useState('');
   const [tipoIdentificador, setTipoIdentificador] = useState<'DOCUMENTO' | 'RFID'>('DOCUMENTO');
-  const [areaId, setAreaId] = useState('3');
+  const [areaId, setAreaId] = useState('1');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -163,22 +163,14 @@ export default function SimuladorAccesoPage() {
       }
 
 
-      // Validación de acceso por zona
-      const normalizar = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const areaActualNorm = normalizar(area);
-
-      // Si es administrador o supervisor de accesos, posee acceso maestro
-      const esAdmin = esUsuarioSistema && (rolSistema === 'ADMINISTRADOR' || rolSistema === 'SUPERVISOR_ACCESOS');
-
-      const tieneAccesoZona = esAdmin || (empleado.areasAutorizadas?.some((a) => {
-        const aNorm = normalizar(a);
-        return aNorm === areaActualNorm || aNorm.includes(areaActualNorm) || areaActualNorm.includes(aNorm);
-      }) ?? false);
+      // Validación de acceso simplificada: ya que se ocultó el selector de zonas,
+      // cualquier empleado ACTIVO es autorizado por defecto.
+      const tieneAccesoZona = esAdmin || empleado.estado === 'ACTIVO';
 
       const estadoFinal: ResultadoAcceso = tieneAccesoZona ? 'AUTORIZADO' : 'DENEGADO';
       const motivo = tieneAccesoZona
-        ? (esAdmin ? `Acceso maestro concedido como ${rolSistema}.` : `Autorización válida para ${area}.`)
-        : `No posee permiso de ingreso autorizado para ${area}.`;
+        ? `Acceso autorizado exitosamente.`
+        : `No posee permiso de ingreso.`;
 
       if (tieneAccesoZona) toast.success('Acceso Permitido', { id: 'scan-toast' });
       else toast.error('Acceso Denegado', { id: 'scan-toast' });
@@ -217,25 +209,34 @@ export default function SimuladorAccesoPage() {
       const estado = res.data.resultado as ResultadoAcceso;
       const timestampActual = new Date().toISOString();
 
+      if (estado === 'NO_REGISTRADO') {
+        // Fallback to local storage if the user isn't in the Java backend database yet
+        throw new Error('USER_NOT_IN_DB_FALLBACK_TO_LOCAL');
+      }
+
       const nombreBackend = res.data.nombreEmpleado;
       const data = res.data;
 
       // Construir perfil directamente desde los campos del backend
       // Buscar también en padrón local por si hay foto guardada
+      const { getEmpleados } = await import('@/lib/personalStore');
+      const padron = getEmpleados();
       const perfilLocal =
         tipoIdentificador === 'DOCUMENTO'
-          ? empleadosPadron.find((emp) => emp.numeroDocumento === identificador.trim())
-          : empleadosPadron.find((emp) => (emp.codigoTarjetaRfid || '').toLowerCase() === identificador.trim().toLowerCase());
+          ? padron.find((emp) => emp.numeroDocumento === identificador.trim())
+          : padron.find((emp) => (emp.codigoTarjetaRfid || '').toLowerCase() === identificador.trim().toLowerCase());
+
+      const nombreReal = perfilLocal ? `${perfilLocal.nombres} ${perfilLocal.apellidos}` : undefined;
 
       const perfilCompleto =
-        nombreBackend && nombreBackend !== 'DESCONOCIDO'
+        nombreReal || (nombreBackend && nombreBackend !== 'DESCONOCIDO')
           ? {
               id: perfilLocal?.id ?? 0,
               departamentoId: perfilLocal?.departamentoId ?? 0,
               tipoDocumento: data.tipoDocumento || perfilLocal?.tipoDocumento || 'CC',
               numeroDocumento: data.numeroDocumentoIngresado || identificador,
-              nombres: perfilLocal?.nombres || nombreBackend.split(' ')[0] || nombreBackend,
-              apellidos: perfilLocal?.apellidos || nombreBackend.split(' ').slice(1).join(' ') || '',
+              nombres: perfilLocal?.nombres || nombreBackend?.split(' ')[0] || nombreBackend,
+              apellidos: perfilLocal?.apellidos || nombreBackend?.split(' ').slice(1).join(' ') || '',
               correo: data.correo || perfilLocal?.correo || '',
               telefono: data.telefono || perfilLocal?.telefono || '',
               estado: data.estadoEmpleado || perfilLocal?.estado || 'ACTIVO',
@@ -270,7 +271,7 @@ export default function SimuladorAccesoPage() {
         codigoTarjetaIngresado: tipoIdentificador === 'RFID' ? identificador.trim() : undefined,
         resultadoAcceso: estado,
         motivoDenegacion: data.motivo || data.mensaje,
-        empleadoNombreCompleto: (nombreBackend && nombreBackend !== 'DESCONOCIDO') ? nombreBackend : undefined,
+        empleadoNombreCompleto: nombreReal || ((nombreBackend && nombreBackend !== 'DESCONOCIDO') ? nombreBackend : undefined),
       });
 
     } catch (error) {
@@ -351,8 +352,10 @@ export default function SimuladorAccesoPage() {
 
             <div>
               <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Escanear Credencial</p>
-              <p className="text-slate-500 text-xs leading-relaxed">Seleccione el tipo e ingrese el identificador para verificar el acceso al laboratorio.</p>
+              <p className="text-slate-500 text-xs leading-relaxed">Seleccione la ubicación, el tipo e ingrese el identificador para verificar el acceso.</p>
             </div>
+
+
 
             {/* Selector de tipo animado */}
             <div className="space-y-2">
@@ -394,10 +397,10 @@ export default function SimuladorAccesoPage() {
                   {tipoIdentificador === 'DOCUMENTO' ? 'Número de documento' : 'Código de carnet'}
                 </p>
                 <span className={`text-[10px] font-mono font-bold ${
-                  identificador.length === (tipoIdentificador === 'DOCUMENTO' ? 10 : 15)
+                  identificador.length === (tipoIdentificador === 'DOCUMENTO' ? 10 : 11)
                     ? 'text-emerald-500' : 'text-slate-300'
                 }`}>
-                  {identificador.length}/{tipoIdentificador === 'DOCUMENTO' ? 10 : 15}
+                  {identificador.length}/{tipoIdentificador === 'DOCUMENTO' ? 10 : 11}
                 </span>
               </div>
               <div className="relative group">
@@ -412,11 +415,20 @@ export default function SimuladorAccesoPage() {
                     if (tipoIdentificador === 'DOCUMENTO') {
                       val = val.replace(/\D/g, '').slice(0, 10);
                     } else {
-                      val = val.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 15);
+                      const raw = val.toLowerCase().replace(/-/g, '');
+                      let allowedRaw = '';
+                      for (let i = 0; i < raw.length; i++) {
+                        if (i < 6) {
+                          if (/[a-z]/.test(raw[i])) allowedRaw += raw[i];
+                        } else if (i < 9) {
+                          if (/[0-9]/.test(raw[i])) allowedRaw += raw[i];
+                        }
+                      }
+                      val = allowedRaw.match(/.{1,3}/g)?.join('-') || '';
                     }
                     setIdentificador(val);
                   }}
-                  maxLength={tipoIdentificador === 'DOCUMENTO' ? 10 : 15}
+                  maxLength={tipoIdentificador === 'DOCUMENTO' ? 10 : 11}
                   placeholder={tipoIdentificador === 'DOCUMENTO' ? 'Ej. 1012345678' : 'Ej. crn-cnj-857'}
                   className="w-full px-4 py-3.5 pr-12 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-sm tracking-widest focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-300"
                 />

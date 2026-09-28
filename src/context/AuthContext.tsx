@@ -31,29 +31,23 @@ const AuthContext = createContext<AuthContextType>({
 const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Inicialización SÍNCRONA de sesión desde sessionStorage
-  const [user, setUser] = useState<UsuarioAuth | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedUser = sessionStorage.getItem('zone_control_user');
-        return storedUser ? JSON.parse(storedUser) : null;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
-
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('zone_control_token') || null;
-    }
-    return null;
-  });
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<UsuarioAuth | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showConfirmLogout, setShowConfirmLogout] = useState<boolean>(false);
   const timerInactividadRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    try {
+      const storedUser = sessionStorage.getItem('zone_control_user');
+      const storedToken = sessionStorage.getItem('zone_control_token');
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+      }
+    } catch {}
+    setIsLoading(false);
+  }, []);
 
   // Función de Logout Manual y Automático (RF F-04, CU-02)
   const logout = useCallback(() => {
@@ -66,10 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 2. Limpiar headers de autorización de Axios
       delete api.defaults.headers.common['Authorization'];
 
-      // 3. Destrucción total de almacenamiento local y de sesión
+      // 3. Destrucción selectiva de almacenamiento local y de sesión
       try {
         sessionStorage.clear();
-        localStorage.clear();
+        localStorage.removeItem('zone_control_token');
       } catch {}
 
       // 4. Eliminación de cookies seguras de sesión

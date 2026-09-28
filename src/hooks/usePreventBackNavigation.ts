@@ -27,7 +27,7 @@ export function usePreventBackNavigation(redirectTo: string = '/login') {
       // Limpiar cualquier residuo
       try {
         sessionStorage.clear();
-        localStorage.clear();
+        localStorage.removeItem('zone_control_token');
       } catch {}
 
       // Eliminar cookies

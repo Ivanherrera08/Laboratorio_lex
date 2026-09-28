@@ -38,10 +38,47 @@ export default function HistorialAccesosPage() {
     try {
       setLoading(true);
       const datos = await obtenerHistorialCombinado();
-      setHistorial(datos);
+      const { getEmpleados } = await import('@/lib/personalStore');
+      const padron = getEmpleados();
+
+      const enriquecidos = datos.map(item => {
+        if (!item.empleadoNombreCompleto) {
+          let empleado;
+          if (item.numeroDocumentoIngresado) {
+            empleado = padron.find(e => e.numeroDocumento === item.numeroDocumentoIngresado?.trim());
+          }
+          if (!empleado && item.codigoTarjetaIngresado) {
+            empleado = padron.find(e => (e.codigoTarjetaRfid || '').toLowerCase() === item.codigoTarjetaIngresado?.trim().toLowerCase());
+          }
+          if (empleado) {
+            return { ...item, empleadoNombreCompleto: `${empleado.nombres} ${empleado.apellidos}` };
+          }
+        }
+        return item;
+      });
+
+      setHistorial(enriquecidos);
       if (mostrarToast) toast.success('Historial actualizado desde el servidor');
     } catch {
-      setHistorial(getHistorialLocal());
+      const { getEmpleados } = await import('@/lib/personalStore');
+      const padron = getEmpleados();
+      const locales = getHistorialLocal();
+      const enriquecidos = locales.map(item => {
+        if (!item.empleadoNombreCompleto) {
+          let empleado;
+          if (item.numeroDocumentoIngresado) {
+            empleado = padron.find(e => e.numeroDocumento === item.numeroDocumentoIngresado?.trim());
+          }
+          if (!empleado && item.codigoTarjetaIngresado) {
+            empleado = padron.find(e => (e.codigoTarjetaRfid || '').toLowerCase() === item.codigoTarjetaIngresado?.trim().toLowerCase());
+          }
+          if (empleado) {
+            return { ...item, empleadoNombreCompleto: `${empleado.nombres} ${empleado.apellidos}` };
+          }
+        }
+        return item;
+      });
+      setHistorial(enriquecidos);
     } finally {
       setLoading(false);
     }
@@ -332,16 +369,13 @@ export default function HistorialAccesosPage() {
                         {new Date(item.timestamp).toLocaleString()}
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        <p className="font-mono font-bold text-slate-800">{item.numeroDocumentoIngresado || '—'}</p>
-                        {item.codigoTarjetaIngresado && (
-                          <span className="text-[10px] text-emerald-600 font-mono block">
-                            {item.codigoTarjetaIngresado}
-                          </span>
-                        )}
+                        <p className="font-mono font-bold text-slate-800">
+                          {item.numeroDocumentoIngresado || item.codigoTarjetaIngresado || '—'}
+                        </p>
                       </td>
                       <td className="p-4 font-semibold text-slate-800">
                         {item.empleadoNombreCompleto || (
-                          <span className="text-gray-400 italic">No empadronado</span>
+                          <span className="text-slate-400 italic font-medium">Usuario no identificado</span>
                         )}
                       </td>
                       <td className="p-4 text-slate-500 font-medium">{item.areaNombre}</td>

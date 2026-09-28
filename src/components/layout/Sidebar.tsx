@@ -243,26 +243,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
         </div>
 
-        {/* Footer / Botón de Cerrar Sesión con Animación */}
-        <div className="p-2.5 border-t border-slate-100/50 bg-white/40">
-          <button
-            onClick={solicitarConfirmacionSalir}
-            className={`flex items-center gap-3 w-full p-2.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50/80 hover:bg-gradient-to-r hover:from-rose-500 hover:to-red-600 hover:text-white border border-rose-100 hover:border-rose-400 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg hover:shadow-rose-500/25 group hover:scale-[1.02] relative overflow-hidden`}
-          >
-            <div className="absolute inset-0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 z-0"></div>
-            <div className="shrink-0 p-1 relative z-10">
-              <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            </div>
-            
-            <div
-              className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${
-                isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3 pointer-events-none'
-              }`}
-            >
-              <span>Cerrar Sesión</span>
-            </div>
-          </button>
-        </div>
       </aside>
 
       {/* Espaciador invisible para no tapar el contenido en Desktop */}
