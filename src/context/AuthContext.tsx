@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UsuarioAuth, RolUsuario } from '@/types';
 import { api } from '@/lib/api';
-import { LogOut } from 'lucide-react';
+import { LogOut, ShieldAlert } from 'lucide-react';
 
 interface AuthContextType {
   user: UsuarioAuth | null;
@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showConfirmLogout, setShowConfirmLogout] = useState<boolean>(false);
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState<boolean>(false);
   const timerInactividadRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -151,8 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const handleSessionExpired = () => {
-        alert('Tu sesión ha expirado por seguridad. Por favor, vuelve a iniciar sesión.');
-        logout();
+        setShowSessionExpiredModal(true);
       };
       
       window.addEventListener('session_expired', handleSessionExpired);
@@ -248,6 +248,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               >
                 <LogOut className="w-3.5 h-3.5 text-white" />
                 <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Global de Sesión Expirada */}
+      {showSessionExpiredModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white max-w-sm w-full rounded-3xl p-6 shadow-2xl border border-red-200/40 animate-slide-down">
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="p-3 rounded-2xl bg-red-50 text-red-600 border border-red-200">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-heading font-bold text-slate-800">
+                  Sesión Expirada
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Por tu seguridad
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-5">
+              Tu sesión ha caducado por inactividad. Por favor, vuelve a iniciar sesión para continuar trabajando.
+            </p>
+
+            <div className="flex items-center justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSessionExpiredModal(false);
+                  logout();
+                }}
+                className="w-full px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-emerald-600 shadow-md transition-all cursor-pointer hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                Volver al Login
               </button>
             </div>
           </div>
