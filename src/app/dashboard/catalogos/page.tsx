@@ -61,6 +61,53 @@ export default function CatalogosPage() {
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [fotoNombre, setFotoNombre] = useState('');
   const [errorCarnet, setErrorCarnet] = useState('');
+  const [erroresForm, setErroresForm] = useState<Record<string, string>>({});
+
+  const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    const sanitized = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    setNombres(sanitized);
+
+    if (valor !== sanitized) {
+      setErroresForm((prev) => ({ ...prev, nombres: 'El nombre solo debe contener letras (sin números ni signos).' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.nombres;
+        return c;
+      });
+    }
+  };
+
+  const handleApellidosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    const sanitized = valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    setApellidos(sanitized);
+
+    if (valor !== sanitized) {
+      setErroresForm((prev) => ({ ...prev, apellidos: 'El apellido solo debe contener letras (sin números ni signos).' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.apellidos;
+        return c;
+      });
+    }
+  };
+
+  const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value.replace(/\D/g, '').slice(0, 12);
+    setRfidDoc(valor);
+    if (valor.length < 6 && valor.length > 0) {
+      setErroresForm((prev) => ({ ...prev, doc: 'La cédula debe contener al menos 6 dígitos.' }));
+    } else {
+      setErroresForm((prev) => {
+        const c = { ...prev };
+        delete c.doc;
+        return c;
+      });
+    }
+  };
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -381,40 +428,50 @@ export default function CatalogosPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">Nombres</label>
+                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">
+                      Nombres * <span className="text-gray-400 font-normal capitalize">(Solo letras)</span>
+                    </label>
                     <span className="text-[10px] font-medium text-slate-500/50">{nombres.length}/50</span>
                   </div>
                   <input
                     type="text"
                     required
                     value={nombres}
-                    onChange={(e) => setNombres(e.target.value)}
+                    onChange={handleNombresChange}
                     placeholder="Ej. Carlos Andrés"
                     maxLength={50}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+                      erroresForm.nombres ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/20 focus:border-emerald-600'
+                    }`}
                   />
+                  {erroresForm.nombres && <p className="text-[10px] text-red-600 font-semibold mt-1">{erroresForm.nombres}</p>}
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">Apellidos</label>
+                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">
+                      Apellidos * <span className="text-gray-400 font-normal capitalize">(Solo letras)</span>
+                    </label>
                     <span className="text-[10px] font-medium text-slate-500/50">{apellidos.length}/50</span>
                   </div>
                   <input
                     type="text"
                     required
                     value={apellidos}
-                    onChange={(e) => setApellidos(e.target.value)}
+                    onChange={handleApellidosChange}
                     placeholder="Ej. Mendoza Pérez"
                     maxLength={50}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
+                      erroresForm.apellidos ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/20 focus:border-emerald-600'
+                    }`}
                   />
+                  {erroresForm.apellidos && <p className="text-[10px] text-red-600 font-semibold mt-1">{erroresForm.apellidos}</p>}
                 </div>
               </div>
 
               {/* Identidad */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-1">
-                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Tipo</label>
+                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Tipo *</label>
                   <select
                     value={tipoDocumento}
                     onChange={(e) => setTipoDocumento(e.target.value)}
@@ -427,25 +484,30 @@ export default function CatalogosPage() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">Núm. Documento</label>
+                    <label className="block text-[11px] font-bold text-slate-500/70 uppercase">
+                      Núm. Documento * <span className="text-gray-400 font-normal capitalize">(Máx 12 dígitos)</span>
+                    </label>
                     <span className="text-[10px] font-medium text-slate-500/50">{rfidDoc.length}/12</span>
                   </div>
                   <input
                     type="text"
                     required
                     value={rfidDoc}
-                    onChange={(e) => setRfidDoc(e.target.value)}
+                    onChange={handleDocChange}
                     placeholder="Ej. 1012345678"
                     maxLength={12}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-200/60 text-sm font-mono font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium focus:outline-none focus:ring-2 ${
+                      erroresForm.doc ? 'border-red-400 focus:ring-red-200 bg-red-50/40' : 'border-emerald-200/60 focus:ring-emerald-600/20 focus:border-emerald-600'
+                    }`}
                   />
+                  {erroresForm.doc && <p className="text-[10px] text-red-600 font-semibold mt-1">{erroresForm.doc}</p>}
                 </div>
               </div>
 
               {/* Asignación Operativa */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Departamento</label>
+                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Departamento *</label>
                   <select
                     value={deptoId}
                     onChange={(e) => setDeptoId(e.target.value)}
@@ -457,7 +519,7 @@ export default function CatalogosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Zona Principal Asignada</label>
+                  <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Zona Principal Asignada *</label>
                   <select
                     value={areaId}
                     onChange={(e) => setAreaId(e.target.value)}
@@ -492,12 +554,16 @@ export default function CatalogosPage() {
 
               {/* Contraseña de Acceso */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Contraseña de Acceso *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-500/70 uppercase">Contraseña de Acceso *</label>
+                  <span className="text-[10px] font-medium text-slate-500/50">{contrasena.length}/14 máx.</span>
+                </div>
                 <div className="relative">
                   <input
                     type={mostrarContrasena ? "text" : "password"}
                     autoComplete="new-password"
                     required
+                    maxLength={14}
                     value={contrasena}
                     onChange={(e) => setContrasena(e.target.value)}
                     placeholder="Contraseña numérica o alfanumérica"
