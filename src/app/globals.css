@@ -259,3 +259,28 @@ body {
   border-color: rgba(255, 255, 255, 1);
 }
 
+/* =========================================
+   ESTILOS PARA IMPRESIÓN (PDF / PRINT)
+   ========================================= */
+@media print {
+  @page {
+    /* Elimina los headers y footers predeterminados del navegador (URL, Fecha, Paginación) */
+    margin: 0; 
+  }
+  
+  body {
+    /* Agrega el margen al cuerpo en lugar de la página para mantener el documento centrado y sin textos predeterminados */
+    margin: 1.5cm;
+    background-color: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Forzar que los fondos y colores se impriman bien */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+

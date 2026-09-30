@@ -298,9 +298,9 @@ export default function BitacoraAuditoriaPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 print:block">
         {/* Lista de Eventos Documentados */}
-        <div className="lg:col-span-6 space-y-3">
+        <div className="lg:col-span-6 space-y-3 print:hidden">
           <div className="bg-white p-3.5 rounded-2xl border border-emerald-200/40 shadow-xs flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 flex items-center gap-2.5 bg-slate-50 px-3 py-2 rounded-xl border border-emerald-100">
@@ -432,7 +432,7 @@ export default function BitacoraAuditoriaPage() {
         </div>
 
         {/* Panel de Documentación Detallada del Evento */}
-        <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-emerald-200/40 shadow-xs flex flex-col space-y-5">
+        <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-emerald-200/40 shadow-xs flex flex-col space-y-5 print:w-full print:block print:p-0 print:border-none print:shadow-none print:m-0 print:bg-transparent">
           <div className="border-b border-emerald-200/30 pb-4">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
