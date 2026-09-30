@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Empleado, EstadoEmpleado } from '@/types';
 import { useNotifications } from '@/context/NotificationContext';
+import { useAuth } from '@/context/AuthContext';
 import { getEmpleados, saveEmpleados } from '@/lib/personalStore';
 import { api } from '@/lib/api';
 import { registrarAccesoLocal } from '@/lib/historialStore';
@@ -29,6 +30,8 @@ import {
   ChevronUp,
   SlidersHorizontal,
   Mail,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export interface CatalogoAreaLab {
@@ -100,6 +103,7 @@ const mockEmpleados: Empleado[] = [
 ];
 
 export default function GestionPersonalPage() {
+  const { usuario } = useAuth();
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
 
   useEffect(() => {
@@ -126,6 +130,8 @@ export default function GestionPersonalPage() {
   const [areasPermitidas, setAreasPermitidas] = useState<string[]>(['Laboratorio de Síntesis Molecular (Área A)']);
   const [showDropdownAreas, setShowDropdownAreas] = useState<boolean>(false);
   const [nuevoRfid, setNuevoRfid] = useState('');
+  const [nuevaContrasena, setNuevaContrasena] = useState('');
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [nuevoFotoPerfil, setNuevoFotoPerfil] = useState<string>(''); // base64 de la foto
 
   const { agregarNotificacion } = useNotifications();
@@ -155,6 +161,8 @@ export default function GestionPersonalPage() {
   const [editApellidos, setEditApellidos] = useState('');
   const [editDoc, setEditDoc] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
+  const [editContrasena, setEditContrasena] = useState('');
+  const [mostrarEditContrasena, setMostrarEditContrasena] = useState(false);
 
   // Validación de Nombres: Solo letras, espacios, tildes y ñ (Sin números ni signos)
   const handleNombresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,11 +205,16 @@ export default function GestionPersonalPage() {
     if (valor.length < 6 && valor.length > 0) {
       setErroresForm((prev) => ({ ...prev, doc: 'La cédula debe contener entre 6 y 10 dígitos.' }));
     } else {
-      setErroresForm((prev) => {
-        const c = { ...prev };
-        delete c.doc;
-        return c;
-      });
+      const existe = empleados.some(emp => emp.numeroDocumento === valor);
+      if (existe) {
+        setErroresForm((prev) => ({ ...prev, doc: 'Ya existe un empleado con esta cédula.' }));
+      } else {
+        setErroresForm((prev) => {
+          const c = { ...prev };
+          delete c.doc;
+          return c;
+        });
+      }
     }
   };
 
@@ -258,11 +271,16 @@ export default function GestionPersonalPage() {
     if (valor.length > 0 && valor.length < 11) {
       setErroresForm((prev) => ({ ...prev, rfid: 'El carnet debe estar completo (ej. crn-cnj-857)' }));
     } else {
-      setErroresForm((prev) => {
-        const c = { ...prev };
-        delete c.rfid;
-        return c;
-      });
+      const existe = empleados.some(emp => emp.codigoTarjetaRfid && emp.codigoTarjetaRfid.toLowerCase() === valor.toLowerCase());
+      if (valor.length > 0 && existe) {
+        setErroresForm((prev) => ({ ...prev, rfid: 'Ya existe un empleado con este carnet.' }));
+      } else {
+        setErroresForm((prev) => {
+          const c = { ...prev };
+          delete c.rfid;
+          return c;
+        });
+      }
     }
   };
 
@@ -325,10 +343,18 @@ export default function GestionPersonalPage() {
       return;
     }
 
-    const existe = empleados.some((emp) => emp.numeroDocumento === nuevoDoc);
-    if (existe) {
-      alert('Error: Ya existe un empleado registrado con este número de cédula.');
+    const existeDoc = empleados.some((emp) => emp.numeroDocumento === nuevoDoc);
+    if (existeDoc) {
+      setErroresForm((prev) => ({ ...prev, doc: 'Ya existe un empleado con esta cédula.' }));
       return;
+    }
+
+    if (nuevoRfid.trim()) {
+      const existeRfid = empleados.some(emp => emp.codigoTarjetaRfid && emp.codigoTarjetaRfid.toLowerCase() === nuevoRfid.trim().toLowerCase());
+      if (existeRfid) {
+        setErroresForm((prev) => ({ ...prev, rfid: 'Ya existe un empleado con este carnet.' }));
+        return;
+      }
     }
 
     const labObj = catalogoLaboratoriosAreas.find((l) => l.nombre === nuevoLaboratorioPrincipal);
@@ -347,6 +373,7 @@ export default function GestionPersonalPage() {
       correo: nuevoCorreo.trim().toLowerCase(),
       telefono: nuevoTelefono,
       codigoTarjetaRfid: nuevoRfid.trim() ? nuevoRfid.trim() : `CRN-XYZ-${Math.floor(100000 + Math.random() * 900000)}`,
+      contrasenaAcceso: nuevaContrasena,
       estado: 'ACTIVO',
       fotoPerfil: nuevoFotoPerfil || undefined,
     };
@@ -388,7 +415,8 @@ export default function GestionPersonalPage() {
         evento: 'Alta y Asignación Biométrica de Personal',
         modulo: 'Gestión de Personal Farmacéutico',
         operacion: 'ALTA_PERSONAL',
-        usuarioResponsable: 'Gestor de Personal',
+        usuarioResponsable: usuario ? `${usuario.nombres} ${usuario.apellidos}` : 'Gestor de Personal',
+        usuarioRol: usuario?.rol || 'GESTOR_PERSONAL',
         entidadInvolucrada: `${nuevo.tipoDocumento} ${nuevo.numeroDocumento} - ${nuevo.nombres} ${nuevo.apellidos}`,
         valorAnterior: null,
         valorNuevo: JSON.stringify({
@@ -412,6 +440,7 @@ export default function GestionPersonalPage() {
     setNuevoCorreo('');
     setNuevoTelefono('');
     setNuevoRfid('');
+    setNuevaContrasena('');
     setNuevoFotoPerfil('');
     setAreasPermitidas([catalogoLaboratoriosAreas[0].nombre]);
     setNuevoLaboratorioPrincipal(catalogoLaboratoriosAreas[0].nombre);
@@ -428,6 +457,8 @@ export default function GestionPersonalPage() {
     setEditApellidos(emp.apellidos);
     setEditDoc(emp.numeroDocumento);
     setEditTelefono(emp.telefono || '');
+    setEditContrasena(emp.contrasenaAcceso || '');
+    setMostrarEditContrasena(false);
     setShowEstadoModal(true);
   };
 
@@ -453,7 +484,8 @@ export default function GestionPersonalPage() {
               nombres: editNombres.trim() || emp.nombres,
               apellidos: editApellidos.trim() || emp.apellidos,
               numeroDocumento: editDoc.trim() || emp.numeroDocumento,
-              telefono: editTelefono.trim() || emp.telefono
+              telefono: editTelefono.trim() || emp.telefono,
+              contrasenaAcceso: editContrasena || emp.contrasenaAcceso
             }
           : emp
       );
@@ -472,7 +504,8 @@ export default function GestionPersonalPage() {
         evento: 'Cambio de Estado y Concesión de Acceso',
         modulo: 'Gestión de Personal',
         operacion: nuevoEstado === 'ACTIVO' ? 'REACTIVACION_PERSONAL' : 'SUSPENSION_REVOCACION',
-        usuarioResponsable: 'Gestor de Personal',
+        usuarioResponsable: usuario ? `${usuario.nombres} ${usuario.apellidos}` : 'Gestor de Personal',
+        usuarioRol: usuario?.rol || 'GESTOR_PERSONAL',
         entidadInvolucrada: `${empleadoSeleccionado.tipoDocumento} ${empleadoSeleccionado.numeroDocumento} - ${empleadoSeleccionado.nombres} ${empleadoSeleccionado.apellidos}`,
         valorAnterior: JSON.stringify({ estado: estadoPrevio }),
         valorNuevo: JSON.stringify({ estado: nuevoEstado, motivo: motivoEstado.trim() }),
@@ -825,6 +858,31 @@ export default function GestionPersonalPage() {
                 </div>
               </div>
 
+              {/* Contraseña de Acceso */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-500">Contraseña de Acceso *</label>
+                </div>
+                <div className="relative">
+                  <input
+                    type={mostrarContrasena ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    value={nuevaContrasena}
+                    onChange={(e) => setNuevaContrasena(e.target.value)}
+                    placeholder="Contraseña numérica o alfanumérica"
+                    className="w-full px-3 py-2 pr-9 rounded-xl border border-emerald-200/60 text-xs font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 focus:outline-none transition-colors"
+                  >
+                    {mostrarContrasena ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
               {/* Selector de Laboratorio / Área Principal */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 mb-1">
@@ -1114,6 +1172,15 @@ export default function GestionPersonalPage() {
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 mb-1">Celular</label>
                   <input type="text" required value={editTelefono} onChange={e => setEditTelefono(e.target.value.replace(/\D/g, '').slice(0, 10))} className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Contraseña de Acceso</label>
+                  <div className="relative">
+                    <input type={mostrarEditContrasena ? "text" : "password"} value={editContrasena} onChange={e => setEditContrasena(e.target.value)} placeholder="Dejar en blanco para sin clave" className="w-full px-3 py-2 rounded-xl border border-emerald-200/60 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/40 pr-9" />
+                    <button type="button" onClick={() => setMostrarEditContrasena(!mostrarEditContrasena)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors">
+                      {mostrarEditContrasena ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

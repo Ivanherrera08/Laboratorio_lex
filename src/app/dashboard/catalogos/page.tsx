@@ -24,6 +24,8 @@ import {
   Upload,
   Trash2,
   User,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const mockDeptos: Departamento[] = [
@@ -51,6 +53,8 @@ export default function CatalogosPage() {
   const [nombres, setNombres] = useState('');
   const [apellidos, setApellidos] = useState('');
   const [rfidCodigo, setRfidCodigo] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [deptoId, setDeptoId] = useState('1');
   const [areaId, setAreaId] = useState('1');
   
@@ -124,6 +128,7 @@ export default function CatalogosPage() {
       correo: `${nombres.split(' ')[0].toLowerCase()}.${apellidos.split(' ')[0].toLowerCase()}@laboratorioxyz.com`,
       telefono: 'No registrado',
       codigoTarjetaRfid: code,
+      contrasenaAcceso: contrasena,
       estado: 'ACTIVO',
       fotoPerfil: fotoUrl || undefined,
       createdAt: new Date().toISOString()
@@ -177,6 +182,7 @@ export default function CatalogosPage() {
       setNombres('');
       setApellidos('');
       setRfidCodigo('');
+      setContrasena('');
       handleEliminarFoto();
       setErrorCarnet('');
       
@@ -482,6 +488,29 @@ export default function CatalogosPage() {
                 {errorCarnet && (
                   <p className="text-[10px] text-red-600 font-semibold mt-1">{errorCarnet}</p>
                 )}
+              </div>
+
+              {/* Contraseña de Acceso */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500/70 uppercase mb-1">Contraseña de Acceso *</label>
+                <div className="relative">
+                  <input
+                    type={mostrarContrasena ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    value={contrasena}
+                    onChange={(e) => setContrasena(e.target.value)}
+                    placeholder="Contraseña numérica o alfanumérica"
+                    className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-emerald-200/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 focus:outline-none transition-colors"
+                  >
+                    {mostrarContrasena ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="pt-2">

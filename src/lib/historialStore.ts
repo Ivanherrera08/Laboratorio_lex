@@ -12,43 +12,112 @@
 import { HistorialAcceso, ResultadoAcceso } from '@/types';
 import { api } from './api';
 
-const STORE_KEY = 'zone_control_historial_v3';
+const STORE_KEY = 'zone_control_historial_v5';
 
 // Registros demo iniciales para cuando la base de datos esté vacía
 const registrosIniciales: HistorialAcceso[] = [
   {
     id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     empleadoId: 1,
-    empleadoNombreCompleto: 'Dr. Carlos Mendoza',
+    empleadoNombreCompleto: 'Carlos Andrés Mendoza Pérez',
     areaId: 1,
     areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
     numeroDocumentoIngresado: '1012345678',
-    codigoTarjetaIngresado: 'RFID-001',
+    codigoTarjetaIngresado: 'car-los-001',
     resultadoAcceso: 'AUTORIZADO',
     timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
   },
   {
     id: 'f9e8d7c6-b5a4-3210-fedc-ba9876543210',
     empleadoId: 2,
-    empleadoNombreCompleto: 'Ing. Laura Restrepo',
+    empleadoNombreCompleto: 'Laura Sofía Restrepo Villa',
     areaId: 1,
     areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
     numeroDocumentoIngresado: '1087654321',
-    codigoTarjetaIngresado: 'RFID-002',
+    codigoTarjetaIngresado: 'lau-ras-002',
     resultadoAcceso: 'DENEGADO',
     motivoDenegacion: 'Permiso INACTIVO en área de alto riesgo',
     timestamp: new Date(Date.now() - 3600000).toISOString(),
   },
   {
-    id: '00112233-4455-6677-8899-aabbccddeeff',
-    areaId: 2,
-    areaNombre: 'Sala Limpia de Liofilización (Área B)',
-    numeroDocumentoIngresado: '9988776655',
-    codigoTarjetaIngresado: 'RFID-UNKNOWN',
-    resultadoAcceso: 'NO_REGISTRADO',
-    motivoDenegacion: 'Credencial no existe en padrón de empleados',
+    id: 'a7b8c9d0-1111-2222-3333-445566778899',
+    empleadoId: 4,
+    empleadoNombreCompleto: 'Valeria Montes',
+    areaId: 1,
+    areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
+    numeroDocumentoIngresado: '1122334455',
+    codigoTarjetaIngresado: 'val-mon-004',
+    resultadoAcceso: 'AUTORIZADO',
     timestamp: new Date(Date.now() - 1800000).toISOString(),
   },
+  {
+    id: 'b1c2d3e4-5555-6666-7777-8899aabbccdd',
+    empleadoId: 7,
+    empleadoNombreCompleto: 'Gabriela Salazar',
+    areaId: 3,
+    areaNombre: 'Almacén Central (Área C)',
+    numeroDocumentoIngresado: '55667788',
+    codigoTarjetaIngresado: 'gab-sal-007',
+    resultadoAcceso: 'AUTORIZADO',
+    timestamp: new Date(Date.now() - 900000).toISOString(),
+  },
+  {
+    id: 'c2d3e4f5-aaaa-bbbb-cccc-dddddddddddd',
+    empleadoId: 8,
+    empleadoNombreCompleto: 'Roberto Espinoza',
+    areaId: 4,
+    areaNombre: 'Oficinas Administrativas (Área D)',
+    numeroDocumentoIngresado: '88776655',
+    codigoTarjetaIngresado: 'rob-esp-008',
+    resultadoAcceso: 'DENEGADO',
+    motivoDenegacion: 'Estado de empleado INACTIVO (Licencia no remunerada)',
+    timestamp: new Date(Date.now() - 450000).toISOString(),
+  },
+  {
+    id: 'd3e4f5g6-1234-5678-90ab-cdef12345678',
+    empleadoId: 9,
+    empleadoNombreCompleto: 'Mauricio Vargas',
+    areaId: 2,
+    areaNombre: 'Sala Limpia de Liofilización (Área B)',
+    numeroDocumentoIngresado: '100100200',
+    codigoTarjetaIngresado: 'mau-var-009',
+    resultadoAcceso: 'AUTORIZADO',
+    timestamp: new Date(Date.now() - 120000).toISOString(),
+  },
+  {
+    id: 'e4f5g6h7-2345-6789-01bc-def234567890',
+    empleadoId: 10,
+    empleadoNombreCompleto: 'Elena Vargas',
+    areaId: 1,
+    areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
+    numeroDocumentoIngresado: '300000001',
+    codigoTarjetaIngresado: 'ele-var-020',
+    resultadoAcceso: 'AUTORIZADO',
+    timestamp: new Date(Date.now() - 60000).toISOString(),
+  },
+  {
+    id: 'f5g6h7i8-3456-7890-12cd-ef3456789012',
+    empleadoId: 12,
+    empleadoNombreCompleto: 'Santiago Hoyos',
+    areaId: 1,
+    areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
+    numeroDocumentoIngresado: '300000003',
+    codigoTarjetaIngresado: 'san-hoy-022',
+    resultadoAcceso: 'DENEGADO',
+    motivoDenegacion: 'Estado de empleado INACTIVO (Finalización de proyecto)',
+    timestamp: new Date(Date.now() - 30000).toISOString(),
+  },
+  {
+    id: 'g6h7i8j9-4567-8901-23de-f45678901234',
+    empleadoId: 13,
+    empleadoNombreCompleto: 'Natalia Gomez',
+    areaId: 3,
+    areaNombre: 'Almacén Central (Área C)',
+    numeroDocumentoIngresado: '300000004',
+    codigoTarjetaIngresado: 'nat-gom-023',
+    resultadoAcceso: 'AUTORIZADO',
+    timestamp: new Date().toISOString(),
+  }
 ];
 
 /**
@@ -63,7 +132,14 @@ export function getHistorialLocal(): HistorialAcceso[] {
       return registrosIniciales;
     }
     const parsed = JSON.parse(raw) as HistorialAcceso[];
-    return Array.isArray(parsed) ? parsed : registrosIniciales;
+    return Array.isArray(parsed) 
+      ? parsed
+          .filter(item => item.empleadoNombreCompleto && item.empleadoNombreCompleto.trim() !== '')
+          .map(item => ({
+            ...item,
+            resultadoAcceso: item.resultadoAcceso === 'NO_REGISTRADO' as any ? 'DENEGADO' : item.resultadoAcceso
+          })) 
+      : registrosIniciales;
   } catch {
     return registrosIniciales;
   }

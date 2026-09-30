@@ -16,39 +16,21 @@ import {
   ServerCrash
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import { api } from '@/lib/api';
 import { HistorialAcceso } from '@/types';
 
-const mockLoteActual: HistorialAcceso[] = [
-  {
-    id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    empleadoId: 1,
-    empleadoNombreCompleto: 'Dr. Carlos Mendoza',
-    areaId: 1,
-    areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
-    numeroDocumentoIngresado: '1012345678',
-    codigoTarjetaIngresado: 'RFID-001',
-    resultadoAcceso: 'AUTORIZADO',
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: 'f9e8d7c6-b5a4-3210-fedc-ba9876543210',
-    empleadoId: 2,
-    empleadoNombreCompleto: 'Ing. Laura Restrepo',
-    areaId: 1,
-    areaNombre: 'Laboratorio de Síntesis Molecular (Área A)',
-    numeroDocumentoIngresado: '1087654321',
-    codigoTarjetaIngresado: 'RFID-002',
-    resultadoAcceso: 'DENEGADO',
-    motivoDenegacion: 'Permiso INACTIVO en área de alto riesgo',
-    timestamp: new Date().toISOString(),
-  }
-];
+import { getHistorialLocal } from '@/lib/historialStore';
 
 export default function SocioSyncPage() {
   const [forzando, setForzando] = useState(false);
   const [progreso, setProgreso] = useState(0);
   const [pasoTexto, setPasoTexto] = useState('');
   const [alertaMsg, setAlertaMsg] = useState<{ tipo: 'EXITO' | 'ERROR'; texto: string } | null>(null);
+  const [loteActual, setLoteActual] = useState<HistorialAcceso[]>([]);
+
+  React.useEffect(() => {
+    setLoteActual(getHistorialLocal());
+  }, []);
 
   const { agregarNotificacion } = useNotifications();
 
@@ -57,7 +39,7 @@ export default function SocioSyncPage() {
   };
 
   const enviarCorreo = () => {
-    const textoReporte = mockLoteActual.map((r, i) => 
+    const textoReporte = loteActual.map((r, i) => 
       `📌 Registro #${i + 1}%0D%0A` +
       `👤 Persona: ${r.empleadoNombreCompleto}%0D%0A` +
       `🏢 Área: ${r.areaNombre}%0D%0A` +
@@ -71,30 +53,40 @@ export default function SocioSyncPage() {
     window.location.href = `mailto:compliance@partner-international.com?subject=Reporte de Actividad de Accesos - Laboratorio XYZ&body=${body}`;
   };
 
-  const handleForzarEnvio = () => {
+  const handleForzarEnvio = async () => {
     setForzando(true);
     setAlertaMsg(null);
     setProgreso(20);
     setPasoTexto('Empaquetando registros de accesos...');
 
-    setTimeout(() => {
-      setProgreso(60);
-      setPasoTexto('Conectando con servidor seguro (B2B)...');
-    }, 800);
+    try {
+      // Configuramos el rango de fechas (ej. último mes)
+      const ahora = new Date();
+      const haceUnMes = new Date();
+      haceUnMes.setMonth(ahora.getMonth() - 1);
 
-    setTimeout(() => {
+      // Simulación de carga para mejor UX
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setProgreso(60);
+      setPasoTexto('Conectando con servidor seguro y API Backend...');
+
+      await new Promise(resolve => setTimeout(resolve, 800));
       setProgreso(90);
       setPasoTexto('Transmitiendo reporte de actividad...');
-    }, 1600);
 
-    setTimeout(() => {
+      // Llamada real al backend en Java (axios baseURL ya incluye /api)
+      await api.post('/sincronizacion/socio', {
+        periodoInicio: haceUnMes.toISOString(),
+        periodoFin: ahora.toISOString()
+      });
+
       setProgreso(100);
       setForzando(false);
       setPasoTexto('');
 
       setAlertaMsg({
         tipo: 'EXITO',
-        texto: `¡Transmisión exitosa! La información ha sido recibida y confirmada por el sistema externo del socio internacional.`,
+        texto: `¡Transmisión exitosa! La información ha sido recibida y confirmada por el sistema externo del socio internacional a través de la API.`,
       });
 
       agregarNotificacion({
@@ -104,7 +96,15 @@ export default function SocioSyncPage() {
         rolesDestino: ['ADMINISTRADOR', 'SUPERVISOR_ACCESOS'],
         accionUrl: '/dashboard/socio-sync',
       });
-    }, 2400);
+    } catch (error) {
+      setForzando(false);
+      setProgreso(0);
+      setPasoTexto('');
+      setAlertaMsg({
+        tipo: 'ERROR',
+        texto: `Fallo al sincronizar con la API: ${error instanceof Error ? error.message : 'Error desconocido'}`
+      });
+    }
   };
 
   return (
@@ -132,7 +132,7 @@ export default function SocioSyncPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print:hidden">
         {/* API Sync */}
         <div className="bg-white rounded-3xl p-6 border border-emerald-200/50 shadow-lg shadow-emerald-900/5 flex flex-col items-center text-center group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
             <RefreshCw className={`w-6 h-6 ${forzando ? 'animate-spin' : ''}`} />
           </div>
@@ -220,24 +220,36 @@ export default function SocioSyncPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-400 flex items-center justify-between gap-4 shadow-lg shadow-emerald-500/10"
+            className={`p-5 rounded-2xl border-2 flex items-center justify-between gap-4 shadow-lg ${
+              alertaMsg.tipo === 'EXITO' 
+                ? 'bg-emerald-50 border-emerald-400 shadow-emerald-500/10' 
+                : 'bg-red-50 border-red-400 shadow-red-500/10'
+            }`}
           >
             <div className="flex items-center gap-4">
-              <div className="p-2 rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className={`p-2 rounded-xl text-white shadow-md ${
+                alertaMsg.tipo === 'EXITO' ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-red-500 shadow-red-500/20'
+              }`}>
+                {alertaMsg.tipo === 'EXITO' ? <CheckCircle2 className="w-6 h-6" /> : <ServerCrash className="w-6 h-6" />}
               </div>
               <div>
-                <h4 className="font-heading font-extrabold text-emerald-900 text-sm">
-                  Transmisión Completada
+                <h4 className={`font-heading font-extrabold text-sm ${
+                  alertaMsg.tipo === 'EXITO' ? 'text-emerald-900' : 'text-red-900'
+                }`}>
+                  {alertaMsg.tipo === 'EXITO' ? 'Transmisión Completada' : 'Error de Transmisión'}
                 </h4>
-                <p className="text-xs font-medium text-emerald-700 mt-1">
+                <p className={`text-xs font-medium mt-1 ${
+                  alertaMsg.tipo === 'EXITO' ? 'text-emerald-700' : 'text-red-700'
+                }`}>
                   {alertaMsg.texto}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setAlertaMsg(null)}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-emerald-200/50 text-emerald-700 transition-colors"
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                alertaMsg.tipo === 'EXITO' ? 'hover:bg-emerald-200/50 text-emerald-700' : 'hover:bg-red-200/50 text-red-700'
+              }`}
             >
               ✕
             </button>
@@ -258,7 +270,7 @@ export default function SocioSyncPage() {
             </div>
           </div>
           <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
-            {mockLoteActual.length} Registros Nuevos
+            {loteActual.length} Registros Nuevos
           </span>
         </div>
         <div className="overflow-x-auto p-2">
@@ -272,7 +284,7 @@ export default function SocioSyncPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {mockLoteActual.map((item, idx) => (
+              {loteActual.map((item, idx) => (
                 <tr 
                   key={item.id} 
                   className="hover:bg-slate-50/50 transition-colors"

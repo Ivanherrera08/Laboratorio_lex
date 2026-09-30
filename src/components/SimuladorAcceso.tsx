@@ -16,11 +16,17 @@ import {
   ShieldCheck,
   ShieldAlert,
   Fingerprint,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function SimuladorAccesoPage() {
+  const router = useRouter();
   const { agregarNotificacion } = useNotifications();
   const [identificador, setIdentificador] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [tipoIdentificador, setTipoIdentificador] = useState<'DOCUMENTO' | 'RFID'>('DOCUMENTO');
   const [areaId, setAreaId] = useState('1');
   const [loading, setLoading] = useState(false);
@@ -36,6 +42,8 @@ export default function SimuladorAccesoPage() {
     areaConsultada?: string;
     perfil?: Empleado;
   } | null>(null);
+
+  // Se quitó la redirección automática a petición del usuario
 
   const areasDemo = [
     { id: '3', nombre: 'Laboratorio de Síntesis Molecular (Área A)' },
@@ -112,9 +120,9 @@ export default function SimuladorAccesoPage() {
       const timestampActual = new Date().toISOString();
 
       if (!empleado) {
-        const estadoFinal: ResultadoAcceso = 'NO_REGISTRADO';
+        const estadoFinal: ResultadoAcceso = 'DENEGADO';
         const motivo = 'Credencial no registrada en el padrón del laboratorio.';
-        toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+        toast.error('Acceso Denegado', { id: 'scan-toast' });
         
         setResultado({
           estado: estadoFinal,
@@ -123,15 +131,8 @@ export default function SimuladorAccesoPage() {
           areaConsultada: area,
         });
 
-        registrarAccesoLocal({
-          areaId: parseInt(areaId, 10),
-          areaNombre: area,
-          numeroDocumentoIngresado: identificador,
-          codigoTarjetaIngresado: tipoIdentificador === 'RFID' ? identificador : undefined,
-          resultadoAcceso: estadoFinal,
-          motivoDenegacion: motivo,
-          timestamp: timestampActual,
-        });
+        // NOTA: Se eliminó registrarAccesoLocal a petición del cliente para no llenar
+        // la tabla con registros "Desconocidos". Solo se deniega visualmente.
         return;
       }
 
@@ -163,9 +164,36 @@ export default function SimuladorAccesoPage() {
       }
 
 
-      // Validación de acceso simplificada: ya que se ocultó el selector de zonas,
-      // cualquier empleado ACTIVO es autorizado por defecto.
-      const tieneAccesoZona = esAdmin || empleado.estado === 'ACTIVO';
+      // Validación de acceso simplificada:
+      const tieneAccesoZona = empleado.estado === 'ACTIVO';
+      const contrasenaValida = !empleado.contrasenaAcceso || empleado.contrasenaAcceso === contrasena;
+
+      if (tieneAccesoZona && !contrasenaValida) {
+        const estadoFinal: ResultadoAcceso = 'DENEGADO';
+        const motivo = `Contraseña de acceso incorrecta.`;
+        toast.error(`Acceso Denegado`, { id: 'scan-toast' });
+
+        setResultado({
+          estado: estadoFinal,
+          perfil: empleado,
+          areaConsultada: area,
+          motivo,
+          timestamp: timestampActual,
+        });
+
+        registrarAccesoLocal({
+          areaId: parseInt(areaId, 10),
+          areaNombre: area,
+          numeroDocumentoIngresado: identificador,
+          codigoTarjetaIngresado: tipoIdentificador === 'RFID' ? identificador : undefined,
+          resultadoAcceso: estadoFinal,
+          motivoDenegacion: motivo,
+          empleadoNombreCompleto: `${empleado.nombres} ${empleado.apellidos}`,
+          empleadoId: empleado.id,
+          timestamp: timestampActual,
+        });
+        return;
+      }
 
       const estadoFinal: ResultadoAcceso = tieneAccesoZona ? 'AUTORIZADO' : 'DENEGADO';
       const motivo = tieneAccesoZona
@@ -209,7 +237,7 @@ export default function SimuladorAccesoPage() {
       const estado = res.data.resultado as ResultadoAcceso;
       const timestampActual = new Date().toISOString();
 
-      if (estado === 'NO_REGISTRADO') {
+      if (estado === 'DENEGADO' && (res.data.motivo || '').includes("no registrada")) {
         // Fallback to local storage if the user isn't in the Java backend database yet
         throw new Error('USER_NOT_IN_DB_FALLBACK_TO_LOCAL');
       }
@@ -257,10 +285,8 @@ export default function SimuladorAccesoPage() {
 
       if (estado === 'AUTORIZADO') {
         toast.success('Acceso Permitido', { id: 'scan-toast' });
-      } else if (estado === 'DENEGADO') {
-        toast.error('Acceso Denegado', { id: 'scan-toast' });
       } else {
-        toast.warning('Credencial Desconocida', { id: 'scan-toast' });
+        toast.error('Acceso Denegado', { id: 'scan-toast' });
       }
 
       // Guardar en el store local para que el Administrador lo vea en tiempo real
@@ -306,16 +332,6 @@ export default function SimuladorAccesoPage() {
       iconBg: 'bg-red-100 border-red-300',
       alertBg: 'bg-red-100/90 border-red-300 text-red-900',
       AlertIcon: ShieldAlert,
-    },
-    NO_REGISTRADO: {
-      bg: 'bg-amber-50/90 backdrop-blur-md',
-      border: 'border-amber-300',
-      text: 'text-amber-950',
-      glow: 'shadow-[0_0_40px_rgba(245,158,11,0.2)]',
-      icon: 'text-amber-600',
-      iconBg: 'bg-amber-100 border-amber-300',
-      alertBg: 'bg-amber-100/90 border-amber-300 text-amber-900',
-      AlertIcon: AlertCircle,
     },
   };
 
@@ -442,6 +458,33 @@ export default function SimuladorAccesoPage() {
               </p>
             </div>
 
+            {/* Input de contraseña */}
+            <div className="space-y-2 mt-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Contraseña de acceso
+                </p>
+              </div>
+              <div className="relative group">
+                <input
+                  id="input-contrasena"
+                  type={mostrarContrasena ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={contrasena}
+                  onChange={(e) => setContrasena(e.target.value)}
+                  placeholder="Ingrese su contraseña"
+                  className="w-full px-4 py-3.5 pr-12 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm tracking-widest focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 focus:outline-none transition-colors"
+                >
+                  {mostrarContrasena ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
             {/* Botón de escaneo */}
             <motion.button
               type="button"
@@ -503,12 +546,11 @@ export default function SimuladorAccesoPage() {
                   <div className={`flex items-center gap-3 p-4 rounded-2xl mb-5 ${colors[resultado.estado].bg} border ${colors[resultado.estado].border}`}>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[resultado.estado].iconBg} border ${colors[resultado.estado].border} flex-shrink-0`}>
                       {resultado.estado === 'AUTORIZADO' && <CheckCircle2 className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
-                      {resultado.estado === 'DENEGADO' && <XCircle className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
-                      {resultado.estado === 'NO_REGISTRADO' && <AlertCircle className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
+                      {resultado.estado === 'DENEGADO' && <AlertTriangle className={`w-5 h-5 ${colors[resultado.estado].icon}`} />}
                     </div>
                     <div>
                       <p className={`font-extrabold text-base leading-tight ${colors[resultado.estado].text}`}>
-                        {resultado.estado === 'AUTORIZADO' ? 'Acceso Otorgado' : resultado.estado === 'DENEGADO' ? 'Acceso Denegado' : 'No Registrado'}
+                        {resultado.estado === 'AUTORIZADO' ? 'Acceso Otorgado' : 'Acceso Denegado'}
                       </p>
                       <p className={`text-xs mt-0.5 ${colors[resultado.estado].text} opacity-60`}>
                         {new Date(resultado.timestamp).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}

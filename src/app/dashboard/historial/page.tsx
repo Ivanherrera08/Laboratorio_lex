@@ -302,7 +302,6 @@ export default function HistorialAccesosPage() {
                     <option value="TODOS">Todos los Resultados</option>
                     <option value="AUTORIZADO">Solo AUTORIZADOS</option>
                     <option value="DENEGADO">Solo DENEGADOS</option>
-                    <option value="NO_REGISTRADO">Solo NO REGISTRADOS</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -375,7 +374,7 @@ export default function HistorialAccesosPage() {
                       </td>
                       <td className="p-4 font-semibold text-slate-800">
                         {item.empleadoNombreCompleto || (
-                          <span className="text-slate-400 italic font-medium">Usuario no identificado</span>
+                          <span className="text-slate-400 italic font-medium">Desconocido</span>
                         )}
                       </td>
                       <td className="p-4 text-slate-500 font-medium">{item.areaNombre}</td>
@@ -384,15 +383,12 @@ export default function HistorialAccesosPage() {
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-sm ${
                             item.resultadoAcceso === 'AUTORIZADO'
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                              : item.resultadoAcceso === 'DENEGADO'
-                              ? 'bg-red-100 text-red-800 border border-red-200'
-                              : 'bg-amber-100 text-amber-800 border border-amber-200'
+                              : 'bg-red-100 text-red-800 border border-red-200'
                           }`}
                         >
                           {item.resultadoAcceso === 'AUTORIZADO' && <CheckCircle className="w-3 h-3" />}
-                          {item.resultadoAcceso === 'DENEGADO' && <XCircle className="w-3 h-3" />}
-                          {item.resultadoAcceso === 'NO_REGISTRADO' && <AlertCircle className="w-3 h-3" />}
-                          {item.resultadoAcceso}
+                          {item.resultadoAcceso !== 'AUTORIZADO' && <XCircle className="w-3 h-3" />}
+                          {item.resultadoAcceso === 'NO_REGISTRADO' as any ? 'DENEGADO' : item.resultadoAcceso}
                         </span>
                       </td>
                       <td className="p-4 text-slate-500/70 text-[11px] max-w-xs break-words">

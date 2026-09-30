@@ -16,7 +16,10 @@ import {
   Lock,
   Download,
   ArrowRight,
+  Star,
+  Save
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 
 interface RegistroAuditoriaHumano {
   id: string;
@@ -120,6 +123,46 @@ const mockBitacoraFormal: RegistroAuditoriaHumano[] = [
 export default function BitacoraAuditoriaPage() {
   const { notificaciones } = useNotifications();
   
+  // Estado para las evaluaciones de rendimiento persistidas localmente
+  const [evaluaciones, setEvaluaciones] = useState<Record<string, { subject: string, score: number }[]>>({});
+  const [isEditingEval, setIsEditingEval] = useState(false);
+  const [tempEval, setTempEval] = useState<{subject: string, score: number}[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('bitacora_evaluaciones');
+      if (saved) {
+        try {
+          setEvaluaciones(JSON.parse(saved));
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  const saveEvaluacion = (id: string) => {
+    const updated = { ...evaluaciones, [id]: tempEval };
+    setEvaluaciones(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bitacora_evaluaciones', JSON.stringify(updated));
+    }
+    setIsEditingEval(false);
+  };
+
+  const handleStartEval = (id: string) => {
+    if (evaluaciones[id]) {
+      setTempEval(evaluaciones[id]);
+    } else {
+      setTempEval([
+        { subject: 'Bioseguridad', score: 85 },
+        { subject: 'Eficiencia', score: 90 },
+        { subject: 'Calidad', score: 80 },
+        { subject: 'Protocolo', score: 95 },
+        { subject: 'T. Equipo', score: 88 }
+      ]);
+    }
+    setIsEditingEval(true);
+  };
+  
   // Transformar las notificaciones globales en registros de bitácora
   const logsDinamicos: RegistroAuditoriaHumano[] = notificaciones
     .filter((n) => n.tipo === 'AUDITORIA' || n.detallesAuditoria)
@@ -151,7 +194,7 @@ export default function BitacoraAuditoriaPage() {
         evento: n.detallesAuditoria?.evento || n.titulo,
         modulo: n.detallesAuditoria?.modulo || n.entidadAuditoria || 'Gestión General',
         responsable: n.detallesAuditoria?.usuarioResponsable || 'Operador Actual',
-        rolResponsable: 'SISTEMA',
+        rolResponsable: n.detallesAuditoria?.usuarioRol || 'SISTEMA',
         ip: n.detallesAuditoria?.direccionIp || '127.0.0.1 (Local)',
         tipoAccion: (n.detallesAuditoria?.operacion || n.accionAuditoria || 'SEGURIDAD_ACCESO') as "MODIFICACION_ESTADO" | "AUTORIZACION_ZONA" | "SEGURIDAD_ACCESO" | "CREACION_EMPLEADO" | "CARGA_MASIVA",
         timestamp: n.fechaHoraIso || new Date().toISOString(),
@@ -185,19 +228,29 @@ export default function BitacoraAuditoriaPage() {
     if (logsDinamicos.length > 0 && !logsDinamicos.find(l => l.id === logSeleccionado?.id) && !mockBitacoraFormal.find(l => l.id === logSeleccionado?.id)) {
       setLogSeleccionado(todosLosLogs[0]);
     }
-  }, [notificaciones]);
+    setIsEditingEval(false);
+  }, [notificaciones, logSeleccionado?.id]);
 
   const modulosUnicos = Array.from(new Set(todosLosLogs.map(l => l.modulo)));
 
   const logsFiltrados = todosLosLogs.filter((l) => {
-    const cumpleBusqueda =
-      !busqueda ||
-      l.evento.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.modulo.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.responsable.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.id.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.detalleDocumentado.sujetoAfectado?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      l.detalleDocumentado.observacionesTecnicas?.toLowerCase().includes(busqueda.toLowerCase());
+    const searchableText = [
+      l.evento,
+      l.modulo,
+      l.responsable,
+      l.rolResponsable,
+      l.id,
+      l.justificacionNormativa,
+      l.detalleDocumentado.sujetoAfectado,
+      l.detalleDocumentado.areaInvolucrada,
+      l.detalleDocumentado.condicionPrevia,
+      l.detalleDocumentado.condicionNueva,
+      l.detalleDocumentado.normaCumplida,
+      l.detalleDocumentado.observacionesTecnicas,
+      "marco legal y normativo"
+    ].join(' ').toLowerCase();
+
+    const cumpleBusqueda = !busqueda || searchableText.includes(busqueda.toLowerCase());
     
     const cumpleModulo = filtroModulo === 'TODOS' || l.modulo === filtroModulo;
     
@@ -422,10 +475,34 @@ export default function BitacoraAuditoriaPage() {
 
           {/* Detalle Técnico de la Modificación */}
           <div className="space-y-3.5 text-xs">
-            <div>
-              <span className="font-bold text-slate-800 block mb-1">Sujeto / Personal Afectado:</span>
-              <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 font-medium text-slate-500">
-                {logSeleccionado.detalleDocumentado.sujetoAfectado}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <span className="font-bold text-slate-800 block mb-1">Autor / Responsable de la Acción:</span>
+                <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-200 flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-blue-900 leading-none mb-1">
+                      {logSeleccionado.responsable}
+                    </p>
+                    <p className="text-[10px] font-bold uppercase text-blue-600">
+                      {logSeleccionado.rolResponsable}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <span className="font-bold text-slate-800 block mb-1">Sujeto / Personal Afectado:</span>
+                <div className="p-3 bg-gray-50/80 rounded-xl border border-gray-200 flex items-center gap-3">
+                  <div className="p-2 bg-gray-200 rounded-lg text-gray-500">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <p className="font-medium text-slate-600 leading-snug">
+                    {logSeleccionado.detalleDocumentado.sujetoAfectado}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -464,6 +541,105 @@ export default function BitacoraAuditoriaPage() {
               <div className="p-3 bg-white rounded-xl border border-emerald-200/50 text-slate-500 leading-relaxed">
                 {logSeleccionado.detalleDocumentado.observacionesTecnicas}
               </div>
+            </div>
+
+            {/* Evaluación de Rendimiento */}
+            <div className="mt-6 pt-5 border-t border-emerald-200/40">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-emerald-600" />
+                  Rendimiento / Desempeño del Involucrado
+                </h4>
+                {evaluaciones[logSeleccionado.id] && !isEditingEval && (
+                  <button 
+                    onClick={() => handleStartEval(logSeleccionado.id)}
+                    className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200/50 transition-colors"
+                  >
+                    Modificar Calificación
+                  </button>
+                )}
+              </div>
+              
+              {isEditingEval ? (
+                <div className="bg-slate-50 p-4 rounded-2xl border border-emerald-200/60 shadow-inner">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    {tempEval.map((item, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-slate-600">
+                          <span>{item.subject}</span>
+                          <span className="text-emerald-700">{item.score}%</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="0" max="100" 
+                          value={item.score}
+                          onChange={(e) => {
+                            const newVals = [...tempEval];
+                            newVals[idx].score = parseInt(e.target.value);
+                            setTempEval(newVals);
+                          }}
+                          className="w-full accent-emerald-600"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      onClick={() => setIsEditingEval(false)}
+                      className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-200 bg-slate-100 rounded-lg transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={() => saveEvaluacion(logSeleccionado.id)}
+                      className="px-4 py-2 flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-all"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      Guardar Calificación
+                    </button>
+                  </div>
+                </div>
+              ) : evaluaciones[logSeleccionado.id] ? (
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm h-[260px] flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={evaluaciones[logSeleccionado.id]} margin={{ top: 15, right: 15, left: -25, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="subject" tick={{fontSize: 10, fill: '#64748b', fontWeight: 600}} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 100]} tick={{fontSize: 10, fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        cursor={{fill: '#f8fafc'}}
+                        contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        formatter={(value: number) => [`${value}%`, 'Puntuación']}
+                      />
+                      <Bar dataKey="score" radius={[6, 6, 0, 0]} maxBarSize={50} animationDuration={1000}>
+                        {evaluaciones[logSeleccionado.id].map((entry, index) => {
+                          const colors = ['#16a34a', '#14b8a6', '#9333ea', '#ef4444', '#f97316'];
+                          return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="bg-slate-50 p-6 rounded-2xl border border-dashed border-emerald-200 text-center space-y-4">
+                  <div className="mx-auto w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                    <Star className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-700">Sin Calificación de Rendimiento</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                      Como administrador, puedes evaluar el desempeño de este operario en base a esta actuación.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => handleStartEval(logSeleccionado.id)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm shadow-emerald-600/20"
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    Calificar Rendimiento
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

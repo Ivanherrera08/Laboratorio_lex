@@ -8,6 +8,7 @@ export interface DetallesAuditoria {
   modulo: string;
   operacion: string;
   usuarioResponsable?: string;
+  usuarioRol?: string;
   entidadInvolucrada?: string;
   valorAnterior?: string | null;
   valorNuevo?: string | null;

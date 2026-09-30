@@ -4,7 +4,7 @@ export type EstadoUsuario = 'ACTIVO' | 'BLOQUEADO' | 'INACTIVO';
 
 export type EstadoEmpleado = 'ACTIVO' | 'INACTIVO';
 
-export type ResultadoAcceso = 'AUTORIZADO' | 'DENEGADO' | 'NO_REGISTRADO';
+export type ResultadoAcceso = 'AUTORIZADO' | 'DENEGADO';
 
 export interface UsuarioAuth {
   id: number;
@@ -35,6 +35,7 @@ export interface Empleado {
   motivoCambioEstado?: string;
   createdAt?: string;
   fotoPerfil?: string; // Base64 o URL de la foto del empleado
+  contrasenaAcceso?: string; // Contraseña para el torniquete
 }
 
 
